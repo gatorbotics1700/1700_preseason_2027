@@ -99,64 +99,64 @@ public class IntakeSubsystem extends SubsystemBase {
     updateCurrentLimitConfigs();
     // updateDeployStatorLimitForPosition();
 
-    if (!sysIdRunning) { // if sysId is running
-      if (deployManualControl) { // if being controlled manually
-        /* set motor speed and update all of the hall effect position states */
-        deployMotor.set(deployManualSpeed);
-        boolean retractHall = isHallEffectTriggered();
-        boolean deployedHall = isDeployedHallEffectTriggered();
-        boolean seekingRetract = deployManualSpeed > 0;
-        boolean seekingDeploy = deployManualSpeed < 0;
+    // if (!sysIdRunning) { // if sysId is running
+    //   if (deployManualControl) { // if being controlled manually
+    //     /* set motor speed and update all of the hall effect position states */
+    //     deployMotor.set(deployManualSpeed);
+    //     boolean retractHall = isHallEffectTriggered();
+    //     boolean deployedHall = isDeployedHallEffectTriggered();
+    //     boolean seekingRetract = deployManualSpeed > 0;
+    //     boolean seekingDeploy = deployManualSpeed < 0;
 
-        // if we want to retract, we weren't previously retracted, and we are retracted...
-        if (seekingRetract && !prevRetractHall && retractHall) {
-          zeroIntakeDeploy(true);
-          Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "retract");
-        }
-        // if we want to deploy, we weren't previously deployed, and we are fully deployed
-        if (seekingDeploy && !prevDeployedHall && deployedHall) {
-          zeroIntakeDeploy(false);
-          Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "deploy");
-        }
+    //     // if we want to retract, we weren't previously retracted, and we are retracted...
+    //     if (seekingRetract && !prevRetractHall && retractHall) {
+    //       zeroIntakeDeploy(true);
+    //       Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "retract");
+    //     }
+    //     // if we want to deploy, we weren't previously deployed, and we are fully deployed
+    //     if (seekingDeploy && !prevDeployedHall && deployedHall) {
+    //       zeroIntakeDeploy(false);
+    //       Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "deploy");
+    //     }
 
-        prevRetractHall = retractHall;
-        prevDeployedHall = deployedHall;
-        wasSeekingRetractHall = seekingRetract;
-        wasSeekingDeployHall = seekingDeploy;
-      } else {
-        boolean retractHall = isHallEffectTriggered();
-        boolean deployedHall = isDeployedHallEffectTriggered();
+    //     prevRetractHall = retractHall;
+    //     prevDeployedHall = deployedHall;
+    //     wasSeekingRetractHall = seekingRetract;
+    //     wasSeekingDeployHall = seekingDeploy;
+    //   } else {
+    //     boolean retractHall = isHallEffectTriggered();
+    //     boolean deployedHall = isDeployedHallEffectTriggered();
 
-        //
-        if (deployGoalExtended && !deployedHall) {
-          deployMotor.set(-IntakeConstants.HOMING_SPEED);
-          wasSeekingDeployHall = true;
-          wasSeekingRetractHall = false;
-        } else if (!deployGoalExtended && !retractHall) {
-          deployMotor.set(IntakeConstants.HOMING_SPEED);
-          wasSeekingRetractHall = true;
-          wasSeekingDeployHall = false;
-        } else {
-          deployMotor.set(0);
-        }
+    //     //
+    //     if (deployGoalExtended && !deployedHall) {
+    //       deployMotor.set(-IntakeConstants.HOMING_SPEED);
+    //       wasSeekingDeployHall = true;
+    //       wasSeekingRetractHall = false;
+    //     } else if (!deployGoalExtended && !retractHall) {
+    //       deployMotor.set(IntakeConstants.HOMING_SPEED);
+    //       wasSeekingRetractHall = true;
+    //       wasSeekingDeployHall = false;
+    //     } else {
+    //       deployMotor.set(0);
+    //     }
 
-        if (!prevRetractHall && retractHall && wasSeekingRetractHall) {
-          zeroIntakeDeploy(true);
-          Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "retract");
-          wasSeekingRetractHall = false;
-        }
-        if (!prevDeployedHall && deployedHall && wasSeekingDeployHall) {
-          zeroIntakeDeploy(false);
-          Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "deploy");
-          wasSeekingDeployHall = false;
-        }
+    //     if (!prevRetractHall && retractHall && wasSeekingRetractHall) {
+    //       zeroIntakeDeploy(true);
+    //       Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "retract");
+    //       wasSeekingRetractHall = false;
+    //     }
+    //     if (!prevDeployedHall && deployedHall && wasSeekingDeployHall) {
+    //       zeroIntakeDeploy(false);
+    //       Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "deploy");
+    //       wasSeekingDeployHall = false;
+    //     }
 
-        prevRetractHall = retractHall;
-        prevDeployedHall = deployedHall;
-      }
-    }
+    //     prevRetractHall = retractHall;
+    //     prevDeployedHall = deployedHall;
+    //   }
+    // }
 
-    intakeMotor.set(desiredIntakeSpeed);
+    // intakeMotor.set(desiredIntakeSpeed);
     intakeLogs();
   }
 

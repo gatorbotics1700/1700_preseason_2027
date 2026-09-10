@@ -68,6 +68,7 @@ import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class Drive extends SubsystemBase implements Vision.VisionConsumer {
   // TunerConstants doesn't include these constants, so they are declared locally
@@ -153,6 +154,9 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
   private final double ROTATION_MIN_SPEED = 0.3;
   private final double TRANSLATION_MAX_SPEED = 1.8;
 
+  private LoggedNetworkNumber drivekP = new LoggedNetworkNumber("Drive/kP", 9);
+  private LoggedNetworkNumber drivekD = new LoggedNetworkNumber("Drive/kD", 1);
+
   public Drive(
       GyroIO gyroIO,
       ModuleIO flModuleIO,
@@ -179,7 +183,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
         this::setPose,
         this::getChassisSpeeds,
         this::runVelocity,
-        new PPHolonomicDriveController(new PIDConstants(9.0, 0, 1), new PIDConstants(15.0, 0, 0)),
+        new PPHolonomicDriveController(new PIDConstants(3, 0, 0), new PIDConstants(5.0, 0, 0)),
         PP_CONFIG,
         () ->
             false, // Disable alliance flipping - tag poses are already in correct coordinate system

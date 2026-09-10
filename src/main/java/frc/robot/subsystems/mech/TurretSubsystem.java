@@ -117,9 +117,9 @@ public class TurretSubsystem extends SubsystemBase {
     // bring it back and confirm it still works
     // updateSlot0Configs();
 
-    if (!sysIdRunning) {
-      turretMotor.setControl(m_request.withPosition(degreesToRevs(desiredAngle.getDegrees())));
-    }
+    // if (!sysIdRunning) {
+    //   turretMotor.setControl(m_request.withPosition(degreesToRevs(desiredAngle.getDegrees())));
+    // }
 
     turretLogs();
   }
