@@ -184,9 +184,9 @@ public class RobotContainer {
             robotPose,
             chassisSpeeds));
     NamedCommands.registerCommand("Intaking Command", IntakeCommands.RunIntake(intakeSubsystem));
-    NamedCommands.registerCommand(
-        "Stop Shooter Command",
-        new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+
+    // "Stop Shooter Command",
+    // new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
     NamedCommands.registerCommand(
         "Auto Init",
@@ -1048,6 +1048,7 @@ public class RobotContainer {
     Logger.recordOutput("Commands/SchedulerActive", true);
     Logger.recordOutput("Commands/LogTime", System.currentTimeMillis());
 
+
     // Log command information with names
     Command driveCmd = drive.getCurrentCommand();
 
@@ -1058,6 +1059,8 @@ public class RobotContainer {
     Logger.recordOutput(
         "Commands/DriveToFuelActive",
         driveCmd != null ? driveCmd.getName().equals("DriveToFuel") : false);
+
+    //Logger.recordOutput("Commands/ResetHeading", TODO: make named command an then call it here
 
     Logger.recordOutput("DriveToFuel/Fuel", vision.getFuelPose(drive.getPose()));
     Logger.recordOutput("Drive/Odometry/Fuel", vision.getFuelPose(drive.getPose()));
