@@ -1,0 +1,95 @@
+{
+  "version": "2025.0",
+  "waypoints": [
+    {
+      "anchor": {
+        "x": 1.819177777778791,
+        "y": 6.997311111115535
+      },
+      "prevControl": null,
+      "nextControl": {
+        "x": 2.8813222222232353,
+        "y": 7.611211111115535
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.056722222223235,
+        "y": 6.139800000004425
+      },
+      "prevControl": {
+        "x": 3.1054444444454568,
+        "y": 6.666000000004425
+      },
+      "nextControl": {
+        "x": 3.0033729982765287,
+        "y": 5.563628381379995
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 1.5073555555555558,
+        "y": 5.184844444444443
+      },
+      "prevControl": {
+        "x": 1.4488888888888893,
+        "y": 5.740277777777776
+      },
+      "nextControl": {
+        "x": 1.552482158495868,
+        "y": 4.756141716511477
+      },
+      "isLocked": false,
+      "linkedName": null
+    },
+    {
+      "anchor": {
+        "x": 3.1931444444454575,
+        "y": 4.804811111115535
+      },
+      "prevControl": {
+        "x": 2.7449632937777304,
+        "y": 3.03157264543018
+      },
+      "nextControl": null,
+      "isLocked": false,
+      "linkedName": null
+    }
+  ],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.5,
+      "rotationDegrees": 180.0
+    },
+    {
+      "waypointRelativePos": 1.0,
+      "rotationDegrees": 180.0
+    }
+  ],
+  "constraintZones": [],
+  "pointTowardsZones": [],
+  "eventMarkers": [],
+  "globalConstraints": {
+    "maxVelocity": 0.25,
+    "maxAcceleration": 0.5,
+    "maxAngularVelocity": 540.0,
+    "maxAngularAcceleration": 720.0,
+    "nominalVoltage": 12.0,
+    "unlimited": false
+  },
+  "goalEndState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "reversed": false,
+  "folder": null,
+  "idealStartingState": {
+    "velocity": 0,
+    "rotation": 0.0
+  },
+  "useDefaultConstraints": true
+}

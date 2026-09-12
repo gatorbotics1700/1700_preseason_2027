@@ -621,6 +621,7 @@ public class RobotContainer {
           .onTrue(
               Commands.runOnce(
                       () -> {
+                        System.out.println("Reset Heading Started");
                         if (DriverStation.getAlliance().isPresent()
                             && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
                           drive.setPose(
@@ -633,6 +634,8 @@ public class RobotContainer {
                                   drive.getPose().getTranslation(),
                                   new Rotation2d(Math.toRadians(0))));
                         }
+                        System.out.println(
+                            "Robot odometry angle: " + drive.getRotation().getDegrees());
                       },
                       drive)
                   .ignoringDisable(true));
