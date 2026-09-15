@@ -302,7 +302,7 @@ public class RobotContainer {
                   .ignoringDisable(true));
 
       // B -- reverse intake
-      controller
+      /*controller
           .b()
           .whileTrue(
               new InstantCommand(
@@ -314,7 +314,7 @@ public class RobotContainer {
                   () ->
                       CommandScheduler.getInstance()
                           .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
-
+                      */
       // Y -- Drive Over Bump
       controller
           .y()
