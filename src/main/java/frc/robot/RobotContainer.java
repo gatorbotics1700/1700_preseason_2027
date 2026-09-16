@@ -901,10 +901,10 @@ public class RobotContainer {
 
   public void configureButtonBindings() {
     CommandScheduler.getInstance().getActiveButtonLoop().clear();
-    // configureCompDriverButtonBindings();
-    // configureCompCodriverButtonBindings(); // TODO: IMPORTANT SWITCH THIS BEFORE MATCHES
-    configureDriverButtonBindings();
-    configureCodriverButtonBindings();
+    configureCompDriverButtonBindings();
+    configureCompCodriverButtonBindings();
+    // configureDriverButtonBindings();
+    // configureCodriverButtonBindings();
   }
 
   public void configureSystemCheckButtons() {
