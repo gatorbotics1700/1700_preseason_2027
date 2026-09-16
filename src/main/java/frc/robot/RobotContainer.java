@@ -40,7 +40,6 @@ import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.TunerConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.commands.drive.DriveCommands;
-import frc.robot.commands.drive.DriveOverBumpCommand;
 import frc.robot.commands.drive.DriveSystemsCheckCommands;
 import frc.robot.commands.drive.DriveUnderTrenchCommand;
 import frc.robot.commands.drive.PointAtTargetCommand;
@@ -263,20 +262,17 @@ public class RobotContainer {
             .onFalse(DriveCommands.stopDriveCommand(drive));
       }
 
-      // A -- Drive Under Trench
+      // A -- shoot testing
       controller
           .a()
           .onTrue(
               new InstantCommand(
                   () -> {
-                    try {
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              DriveUnderTrenchCommand.driveUnderTrench(drive, shooterSubsystem)
-                                  .withName("DriveUnderTrench"));
-                    } catch (Exception e) {
-                      e.printStackTrace();
-                    }
+                    shooterSubsystem.setDesiredRotorVelocity(30);
+                    shooterSubsystem.setDesiredTransitionSpeed(ShooterConstants.TRANSITION_SPEED);
+                    hopperFloorSubsystem.setDesiredHopperFloorSpeed(
+                        HopperFloorConstants.HOPPER_FLOOR_SPEED);
+                    intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
                   }));
 
       // Start -- Reset Heading
@@ -315,21 +311,20 @@ public class RobotContainer {
                       CommandScheduler.getInstance()
                           .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
 
-      // Y -- Drive Over Bump
+      // Y -- mech stop
       controller
           .y()
           .onTrue(
               new InstantCommand(
-                  () -> {
-                    try {
+                  () ->
                       CommandScheduler.getInstance()
                           .schedule(
-                              DriveOverBumpCommand.driveOverBump(drive, shooterSubsystem)
-                                  .withName("DriveOverBump"));
-                    } catch (Exception e) {
-                      e.printStackTrace();
-                    }
-                  }));
+                              MechStop(
+                                  turretSubsystem,
+                                  shooterSubsystem,
+                                  hopperFloorSubsystem,
+                                  hoodSubsystem,
+                                  intakeSubsystem))));
 
       // Back -- Slow Drive Toggle
       controller
@@ -634,21 +629,19 @@ public class RobotContainer {
                       drive)
                   .ignoringDisable(true));
 
-      // X -- Drive Over Bump
       controller
           .x()
           .onTrue(
               new InstantCommand(
-                  () -> {
-                    try {
+                  () ->
                       CommandScheduler.getInstance()
                           .schedule(
-                              DriveOverBumpCommand.driveOverBump(drive, shooterSubsystem)
-                                  .withName("DriveOverBump"));
-                    } catch (Exception e) {
-                      e.printStackTrace();
-                    }
-                  }));
+                              MechStop(
+                                  turretSubsystem,
+                                  shooterSubsystem,
+                                  hopperFloorSubsystem,
+                                  hoodSubsystem,
+                                  intakeSubsystem))));
 
       // Y -- Slow Drive Toggle
       controller
@@ -1048,7 +1041,6 @@ public class RobotContainer {
     Logger.recordOutput("Commands/SchedulerActive", true);
     Logger.recordOutput("Commands/LogTime", System.currentTimeMillis());
 
-
     // Log command information with names
     Command driveCmd = drive.getCurrentCommand();
 
@@ -1060,7 +1052,7 @@ public class RobotContainer {
         "Commands/DriveToFuelActive",
         driveCmd != null ? driveCmd.getName().equals("DriveToFuel") : false);
 
-    //Logger.recordOutput("Commands/ResetHeading", TODO: make named command an then call it here
+    // Logger.recordOutput("Commands/ResetHeading", TODO: make named command an then call it here
 
     Logger.recordOutput("DriveToFuel/Fuel", vision.getFuelPose(drive.getPose()));
     Logger.recordOutput("Drive/Odometry/Fuel", vision.getFuelPose(drive.getPose()));
