@@ -327,17 +327,17 @@ public class RobotContainer {
                                   intakeSubsystem))));
 
       // Back -- Slow Drive Toggle
-      controller
+      /*controller
           .back()
           .onTrue(
               Commands.runOnce(
                   () -> {
                     drive.toggleSlowDrive();
                   },
-                  drive));
+                  drive));*/
 
       // Left Trigger -- Shoot with Turret (while true)
-      controller
+      /*controller
           .leftTrigger()
           //   .whileTrue(new InstantCommand(() -> shooterSubsystem.runHardCodedShot()))
           //   .onFalse(new InstantCommand(() -> shooterSubsystem.setDesiredTransitionSpeed(0)));
@@ -356,10 +356,10 @@ public class RobotContainer {
                                   .alongWith(new InstantCommand(() -> drive.setSlowDrive(true))))))
           .onFalse(
               new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem)
-                  .alongWith(new InstantCommand(() -> drive.setSlowDrive(false))));
+                  .alongWith(new InstantCommand(() -> drive.setSlowDrive(false))));*/
 
       // X - Point @ Hub & Shoot (without turret) (while true)
-      controller
+      /*controller
           .x()
           .whileTrue(
               Commands.runOnce(
@@ -376,7 +376,7 @@ public class RobotContainer {
                                           robotPose,
                                           chassisSpeeds)))))
           .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
-
+*/
       // Right Trigger -- Run Intake
       controller
           .rightTrigger()
