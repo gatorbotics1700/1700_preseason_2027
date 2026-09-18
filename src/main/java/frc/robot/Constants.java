@@ -588,15 +588,20 @@ public final class Constants {
 
     public static final double EXTENDED_ANGLE_DEGREES = 95;
     public static final double RETRACTED_ANGLE_DEGREES = 0;
+    public static final double HALF_EXTENDED_ANGLE_DEGREES = 45;
 
     public static final Rotation2d EXTENDED_POSITION =
         new Rotation2d(Math.toRadians(EXTENDED_ANGLE_DEGREES));
+    public static final Rotation2d HALF_EXTENDED_POSITION =
+        new Rotation2d(Math.toRadians(HALF_EXTENDED_ANGLE_DEGREES));
     public static final Rotation2d RETRACTED_POSITION =
         new Rotation2d(Math.toRadians(RETRACTED_ANGLE_DEGREES));
 
     public static final double HOMING_SPEED = -0.4; // TODO tune
     public static final double RETRACTING_SPEED = -0.4; // TODO: tune
     public static final double INTAKING_SPEED = -1; // TODO: tune
+
+    public static final double POSITION_DEADBAND = 3;
 
     public static final double ROBOT_TO_INTAKE_YAW_DEGREES = 180;
     public static final double DEPLOYED_CURRENT_LIMIT = 10.0; // amps
