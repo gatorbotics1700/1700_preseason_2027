@@ -328,55 +328,55 @@ public class RobotContainer {
 
       // Back -- Slow Drive Toggle
       /*controller
-          .back()
-          .onTrue(
-              Commands.runOnce(
-                  () -> {
-                    drive.toggleSlowDrive();
-                  },
-                  drive));*/
+      .back()
+      .onTrue(
+          Commands.runOnce(
+              () -> {
+                drive.toggleSlowDrive();
+              },
+              drive));*/
 
       // Left Trigger -- Shoot with Turret (while true)
       /*controller
-          .leftTrigger()
-          //   .whileTrue(new InstantCommand(() -> shooterSubsystem.runHardCodedShot()))
-          //   .onFalse(new InstantCommand(() -> shooterSubsystem.setDesiredTransitionSpeed(0)));
-          .whileTrue(
-              Commands.runOnce(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              new ShootingCommands.ShootOnTheMoveCommand(
-                                      shooterSubsystem,
-                                      hoodSubsystem,
-                                      hopperFloorSubsystem,
-                                      turretSubsystem,
-                                      robotPose,
-                                      chassisSpeeds)
-                                  .alongWith(new InstantCommand(() -> drive.setSlowDrive(true))))))
-          .onFalse(
-              new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem)
-                  .alongWith(new InstantCommand(() -> drive.setSlowDrive(false))));*/
+      .leftTrigger()
+      //   .whileTrue(new InstantCommand(() -> shooterSubsystem.runHardCodedShot()))
+      //   .onFalse(new InstantCommand(() -> shooterSubsystem.setDesiredTransitionSpeed(0)));
+      .whileTrue(
+          Commands.runOnce(
+              () ->
+                  CommandScheduler.getInstance()
+                      .schedule(
+                          new ShootingCommands.ShootOnTheMoveCommand(
+                                  shooterSubsystem,
+                                  hoodSubsystem,
+                                  hopperFloorSubsystem,
+                                  turretSubsystem,
+                                  robotPose,
+                                  chassisSpeeds)
+                              .alongWith(new InstantCommand(() -> drive.setSlowDrive(true))))))
+      .onFalse(
+          new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem)
+              .alongWith(new InstantCommand(() -> drive.setSlowDrive(false))));*/
 
       // X - Point @ Hub & Shoot (without turret) (while true)
       /*controller
-          .x()
-          .whileTrue(
-              Commands.runOnce(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              (new PointAtTargetCommand(drive, robotPose))
-                                  .andThen(
-                                      new ShootingCommands.ShootOnTheMoveCommand(
-                                          shooterSubsystem,
-                                          hoodSubsystem,
-                                          hopperFloorSubsystem,
-                                          turretSubsystem,
-                                          robotPose,
-                                          chassisSpeeds)))))
-          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
-*/
+                .x()
+                .whileTrue(
+                    Commands.runOnce(
+                        () ->
+                            CommandScheduler.getInstance()
+                                .schedule(
+                                    (new PointAtTargetCommand(drive, robotPose))
+                                        .andThen(
+                                            new ShootingCommands.ShootOnTheMoveCommand(
+                                                shooterSubsystem,
+                                                hoodSubsystem,
+                                                hopperFloorSubsystem,
+                                                turretSubsystem,
+                                                robotPose,
+                                                chassisSpeeds)))))
+                .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+      */
       // Right Trigger -- Run Intake
       controller
           .rightTrigger()

@@ -1,5 +1,7 @@
 package frc.robot.commands.mech;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -18,9 +20,6 @@ import frc.robot.util.shooting.ShotCalculator;
 import frc.robot.util.shooting.ShotParameters;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
-
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.path.PathConstraints;
 
 public class ShootingCommands {
   public ShootingCommands() {}
@@ -230,7 +229,7 @@ public class ShootingCommands {
       HoodSubsystem hoodSubsystem,
       HopperFloorSubsystem hopperFloorSubsystem,
       Supplier<Pose2d> drivetrainPose) {
-    ValidStationaryShot closestShot = null;
+    ShotParameters closestShot = null;
     Logger.recordOutput("Mech/Shooter/Stationary/RED_RIGHT", ShooterConstants.RED_RIGHT.pose);
     Logger.recordOutput("Mech/Shooter/Stationary/BLUE_LEFT", ShooterConstants.BLUE_LEFT.pose);
     Logger.recordOutput(
@@ -239,7 +238,7 @@ public class ShootingCommands {
     Logger.recordOutput(
         "Mech/Shooter/Stationary/BLUE_LEFT distance",
         Calculations.distanceToPoseInMeters(drivetrainPose.get(), ShooterConstants.BLUE_LEFT.pose));
-    for (ValidStationaryShot shot : ShooterConstants.STATIONARY_SHOT_ARRAY) {
+    for (ShotParameters shot : ShooterConstants.STATIONARY_SHOT_ARRAY) {
       if (closestShot == null
           || Calculations.distanceToPoseInMeters(drivetrainPose.get(), shot.pose)
               < Calculations.distanceToPoseInMeters(drivetrainPose.get(), closestShot.pose)) {
