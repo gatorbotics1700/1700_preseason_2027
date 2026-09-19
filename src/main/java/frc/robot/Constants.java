@@ -627,6 +627,30 @@ public final class Constants {
     public static final double FLYWHEEL_RADIUS_METERS = 0.0508;
 
     public static final Translation3d BOT_TO_SHOOTER = new Translation3d(0.127, 0, 0.429);
+
+    public static final ValidStationaryShot RED_RIGHT =
+        new ValidStationaryShot(
+            new Pose2d(14.17, 1.25, new Rotation2d(Math.toRadians(129))),
+            new Rotation2d(Math.toRadians(64.4)),
+            62.2);
+    public static final ValidStationaryShot BLUE_LEFT =
+        new ValidStationaryShot(
+            Calculations.mirrorPoseAcrossAlliance(RED_RIGHT.pose),
+            new Rotation2d(Math.toRadians(64.4)),
+            62.2);
+    public static final ValidStationaryShot RED_LEFT =
+        new ValidStationaryShot(
+            Calculations.mirrorPoseAcrossXAxis(RED_RIGHT.pose),
+            new Rotation2d(Math.toRadians(64.4)),
+            62.2);
+    public static final ValidStationaryShot BLUE_RIGHT =
+        new ValidStationaryShot(
+            Calculations.mirrorPoseAcrossXAxis(BLUE_LEFT.pose),
+            new Rotation2d(Math.toRadians(64.4)),
+            62.2);
+    public static final ValidStationaryShot[] STATIONARY_SHOT_ARRAY = {
+      RED_LEFT, RED_RIGHT, BLUE_LEFT, BLUE_RIGHT
+    };
   }
 
   /** REV PDH / CTRE PDP CAN ID and logging. */
