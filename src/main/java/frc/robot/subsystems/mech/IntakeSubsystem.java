@@ -99,65 +99,90 @@ public class IntakeSubsystem extends SubsystemBase {
     updateCurrentLimitConfigs();
     // updateDeployStatorLimitForPosition();
 
-    if (!sysIdRunning) { // if sysId is running
-      if (deployManualControl) { // if being controlled manually
-        /* set motor speed and update all of the hall effect position states */
-        deployMotor.set(deployManualSpeed);
-        boolean retractHall = isHallEffectTriggered();
-        boolean deployedHall = isDeployedHallEffectTriggered();
-        boolean seekingRetract = deployManualSpeed > 0;
-        boolean seekingDeploy = deployManualSpeed < 0;
-
-        // if we want to retract, we weren't previously retracted, and we are retracted...
-        if (seekingRetract && !prevRetractHall && retractHall) {
-          zeroIntakeDeploy(true);
-          Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "retract");
-        }
-        // if we want to deploy, we weren't previously deployed, and we are fully deployed
-        if (seekingDeploy && !prevDeployedHall && deployedHall) {
-          zeroIntakeDeploy(false);
-          Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "deploy");
-        }
-
-        prevRetractHall = retractHall;
-        prevDeployedHall = deployedHall;
-        wasSeekingRetractHall = seekingRetract;
-        wasSeekingDeployHall = seekingDeploy;
+    if (!sysIdRunning) {
+      if (deployManualControl) {
+        runManualDeployControl();
       } else {
-        boolean retractHall = isHallEffectTriggered();
-        boolean deployedHall = isDeployedHallEffectTriggered();
-
-        //
-        if (deployGoalExtended && !deployedHall) {
-          deployMotor.set(-IntakeConstants.HOMING_SPEED);
-          wasSeekingDeployHall = true;
-          wasSeekingRetractHall = false;
-        } else if (!deployGoalExtended && !retractHall) {
-          deployMotor.set(IntakeConstants.HOMING_SPEED);
-          wasSeekingRetractHall = true;
-          wasSeekingDeployHall = false;
-        } else {
-          deployMotor.set(0);
-        }
-
-        if (!prevRetractHall && retractHall && wasSeekingRetractHall) {
-          zeroIntakeDeploy(true);
-          Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "retract");
-          wasSeekingRetractHall = false;
-        }
-        if (!prevDeployedHall && deployedHall && wasSeekingDeployHall) {
-          zeroIntakeDeploy(false);
-          Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "deploy");
-          wasSeekingDeployHall = false;
-        }
-
-        prevRetractHall = retractHall;
-        prevDeployedHall = deployedHall;
+        runGoalBasedDeployControl();
       }
     }
 
     intakeMotor.set(desiredIntakeSpeed);
     intakeLogs();
+  }
+
+  /**
+   * Manual mode directly applies commanded deploy speed. Hall transitions are still watched so we
+   * can re-zero encoder position at the physical endpoints.
+   */
+  private void runManualDeployControl() {
+    deployMotor.set(deployManualSpeed);
+
+    boolean retractHall = isHallEffectTriggered();
+    boolean deployedHall = isDeployedHallEffectTriggered();
+    boolean seekingRetract = deployManualSpeed > 0;
+    boolean seekingDeploy = deployManualSpeed < 0;
+
+    if (seekingRetract && !prevRetractHall && retractHall) {
+      rehomeToRetractedStop();
+    }
+    if (seekingDeploy && !prevDeployedHall && deployedHall) {
+      rehomeToDeployedStop();
+    }
+
+    prevRetractHall = retractHall;
+    prevDeployedHall = deployedHall;
+    wasSeekingRetractHall = seekingRetract;
+    wasSeekingDeployHall = seekingDeploy;
+  }
+
+  /**
+   * Automatic mode drives toward one of the two hall-defined endpoints until it trips, then stops.
+   */
+  private void runGoalBasedDeployControl() {
+    boolean retractHall = isHallEffectTriggered();
+    boolean deployedHall = isDeployedHallEffectTriggered();
+
+    applyDeployGoalMotorOutput(retractHall, deployedHall);
+    handleGoalBasedRehomeTransitions(retractHall, deployedHall);
+
+    prevRetractHall = retractHall;
+    prevDeployedHall = deployedHall;
+  }
+
+  private void applyDeployGoalMotorOutput(boolean retractHall, boolean deployedHall) {
+    if (deployGoalExtended && !deployedHall) {
+      deployMotor.set(-IntakeConstants.HOMING_SPEED);
+      wasSeekingDeployHall = true;
+      wasSeekingRetractHall = false;
+    } else if (!deployGoalExtended && !retractHall) {
+      deployMotor.set(IntakeConstants.HOMING_SPEED);
+      wasSeekingRetractHall = true;
+      wasSeekingDeployHall = false;
+    } else {
+      deployMotor.set(0);
+    }
+  }
+
+  private void handleGoalBasedRehomeTransitions(boolean retractHall, boolean deployedHall) {
+    if (!prevRetractHall && retractHall && wasSeekingRetractHall) {
+      rehomeToRetractedStop();
+      wasSeekingRetractHall = false;
+    }
+    if (!prevDeployedHall && deployedHall && wasSeekingDeployHall) {
+      rehomeToDeployedStop();
+      wasSeekingDeployHall = false;
+    }
+  }
+
+  private void rehomeToRetractedStop() {
+    zeroIntakeDeploy(true);
+    Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "retract");
+  }
+
+  private void rehomeToDeployedStop() {
+    zeroIntakeDeploy(false);
+    Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "deploy");
   }
 
   private void updateDeployStatorLimitForPosition() {
