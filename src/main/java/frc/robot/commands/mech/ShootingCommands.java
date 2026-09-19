@@ -13,10 +13,14 @@ import frc.robot.subsystems.mech.HoodSubsystem;
 import frc.robot.subsystems.mech.HopperFloorSubsystem;
 import frc.robot.subsystems.mech.ShooterSubsystem;
 import frc.robot.subsystems.mech.TurretSubsystem;
+import frc.robot.util.Calculations;
 import frc.robot.util.shooting.ShotCalculator;
 import frc.robot.util.shooting.ShotParameters;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.path.PathConstraints;
 
 public class ShootingCommands {
   public ShootingCommands() {}
@@ -219,5 +223,34 @@ public class ShootingCommands {
       hopperFloorSubsystem.setDesiredHopperFloorSpeed(0);
       shooterSubsystem.setDesiredTransitionSpeed(0);
     }
+  }
+
+  public static Command StationaryShootingCommand(
+      ShooterSubsystem shooterSubsystem,
+      HoodSubsystem hoodSubsystem,
+      HopperFloorSubsystem hopperFloorSubsystem,
+      Supplier<Pose2d> drivetrainPose) {
+    ValidStationaryShot closestShot = null;
+    Logger.recordOutput("Mech/Shooter/Stationary/RED_RIGHT", ShooterConstants.RED_RIGHT.pose);
+    Logger.recordOutput("Mech/Shooter/Stationary/BLUE_LEFT", ShooterConstants.BLUE_LEFT.pose);
+    Logger.recordOutput(
+        "Mech/Shooter/Stationary/RED_RIGHT distance",
+        Calculations.distanceToPoseInMeters(drivetrainPose.get(), ShooterConstants.RED_RIGHT.pose));
+    Logger.recordOutput(
+        "Mech/Shooter/Stationary/BLUE_LEFT distance",
+        Calculations.distanceToPoseInMeters(drivetrainPose.get(), ShooterConstants.BLUE_LEFT.pose));
+    for (ValidStationaryShot shot : ShooterConstants.STATIONARY_SHOT_ARRAY) {
+      if (closestShot == null
+          || Calculations.distanceToPoseInMeters(drivetrainPose.get(), shot.pose)
+              < Calculations.distanceToPoseInMeters(drivetrainPose.get(), closestShot.pose)) {
+        closestShot = shot;
+      }
+    }
+    return AutoBuilder.pathfindToPose(
+            closestShot.pose, new PathConstraints(4, 12, Math.toRadians(700), Math.toRadians(1000)))
+        .andThen(
+            new ShootingCommand(
+                shooterSubsystem, hoodSubsystem, hopperFloorSubsystem, drivetrainPose, closestShot))
+        .withName("StationaryShootingCommand");
   }
 }
