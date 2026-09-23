@@ -8,6 +8,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.FieldCoordinates;
 import frc.robot.Constants.HopperFloorConstants;
 import frc.robot.Constants.ShooterConstants;
@@ -18,6 +19,7 @@ import frc.robot.subsystems.mech.TurretSubsystem;
 import frc.robot.util.Calculations;
 import frc.robot.util.shooting.ShotCalculator;
 import frc.robot.util.shooting.ShotParameters;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
@@ -229,27 +231,43 @@ public class ShootingCommands {
       HoodSubsystem hoodSubsystem,
       HopperFloorSubsystem hopperFloorSubsystem,
       Supplier<Pose2d> drivetrainPose) {
-    ShotParameters closestShot = null;
-    Logger.recordOutput("Mech/Shooter/Stationary/RED_RIGHT", ShooterConstants.RED_RIGHT.pose);
-    Logger.recordOutput("Mech/Shooter/Stationary/BLUE_LEFT", ShooterConstants.BLUE_LEFT.pose);
-    Logger.recordOutput(
-        "Mech/Shooter/Stationary/RED_RIGHT distance",
-        Calculations.distanceToPoseInMeters(drivetrainPose.get(), ShooterConstants.RED_RIGHT.pose));
-    Logger.recordOutput(
-        "Mech/Shooter/Stationary/BLUE_LEFT distance",
-        Calculations.distanceToPoseInMeters(drivetrainPose.get(), ShooterConstants.BLUE_LEFT.pose));
-    for (ShotParameters shot : ShooterConstants.STATIONARY_SHOT_ARRAY) {
-      if (closestShot == null
-          || Calculations.distanceToPoseInMeters(drivetrainPose.get(), shot.pose)
-              < Calculations.distanceToPoseInMeters(drivetrainPose.get(), closestShot.pose)) {
-        closestShot = shot;
-      }
-    }
-    return AutoBuilder.pathfindToPose(
-            closestShot.pose, new PathConstraints(4, 12, Math.toRadians(700), Math.toRadians(1000)))
-        .andThen(
-            new ShootingCommand(
-                shooterSubsystem, hoodSubsystem, hopperFloorSubsystem, drivetrainPose, closestShot))
+    // Use Commands.defer so the nearest shot is calculated when the command RUNS,
+    // not when it's created during robot initialization
+    return Commands.defer(
+            () -> {
+              ShotParameters closestShot = null;
+              Logger.recordOutput(
+                  "Mech/Shooter/Stationary/RED_RIGHT", ShooterConstants.RED_RIGHT.pose);
+              Logger.recordOutput(
+                  "Mech/Shooter/Stationary/BLUE_LEFT", ShooterConstants.BLUE_LEFT.pose);
+              Logger.recordOutput(
+                  "Mech/Shooter/Stationary/RED_RIGHT distance",
+                  Calculations.distanceToPoseInMeters(
+                      drivetrainPose.get(), ShooterConstants.RED_RIGHT.pose));
+              Logger.recordOutput(
+                  "Mech/Shooter/Stationary/BLUE_LEFT distance",
+                  Calculations.distanceToPoseInMeters(
+                      drivetrainPose.get(), ShooterConstants.BLUE_LEFT.pose));
+              for (ShotParameters shot : ShooterConstants.STATIONARY_SHOT_ARRAY) {
+                if (closestShot == null
+                    || Calculations.distanceToPoseInMeters(drivetrainPose.get(), shot.pose)
+                        < Calculations.distanceToPoseInMeters(
+                            drivetrainPose.get(), closestShot.pose)) {
+                  closestShot = shot;
+                }
+              }
+              return AutoBuilder.pathfindToPose(
+                      closestShot.pose,
+                      new PathConstraints(4, 12, Math.toRadians(700), Math.toRadians(1000)))
+                  .andThen(
+                      new ShootingCommand(
+                          shooterSubsystem,
+                          hoodSubsystem,
+                          hopperFloorSubsystem,
+                          drivetrainPose,
+                          closestShot));
+            },
+            Set.of(shooterSubsystem, hoodSubsystem, hopperFloorSubsystem))
         .withName("StationaryShootingCommand");
   }
 }
