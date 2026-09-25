@@ -18,7 +18,7 @@ public class IntakeCommands {
     return Commands.sequence(
         new InstantCommand(
             () -> {
-              if (intakeSubsystem.isHallEffectTriggered()) {
+              if (intakeSubsystem.isRetractedLimitSwitchTriggered()) {
                 intakeSubsystem.zeroIntakeDeploy(true);
               } else {
                 intakeSubsystem.setDeploySpeed(IntakeConstants.HOMING_SPEED);
@@ -26,7 +26,7 @@ public class IntakeCommands {
             },
             intakeSubsystem),
         Commands.deadline(
-                Commands.waitUntil(intakeSubsystem::isHallEffectTriggered).withTimeout(10),
+                Commands.waitUntil(intakeSubsystem::isRetractedLimitSwitchTriggered).withTimeout(10),
                 Commands.run(
                     () -> intakeSubsystem.setDeploySpeed(IntakeConstants.HOMING_SPEED),
                     intakeSubsystem))
