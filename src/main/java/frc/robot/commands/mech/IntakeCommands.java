@@ -52,7 +52,8 @@ public class IntakeCommands {
             },
             intakeSubsystem),
         Commands.deadline(
-                Commands.waitUntil(intakeSubsystem::isDeployedSwitchEffectTriggered).withTimeout(10),
+                Commands.waitUntil(intakeSubsystem::isDeployedSwitchEffectTriggered)
+                    .withTimeout(10),
                 Commands.run(() -> intakeSubsystem.setDeploySpeed(speed), intakeSubsystem))
             .finallyDo(intakeSubsystem::clearDeployManualControl),
         new InstantCommand(() -> intakeSubsystem.setDeployGoalExtended(true), intakeSubsystem));
