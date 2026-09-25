@@ -326,7 +326,6 @@ public class RobotContainer {
                                   hoodSubsystem,
                                   intakeSubsystem))));
 
-
       // Left Trigger -- Shoot with Turret (while true)
       /*controller
       .leftTrigger()
@@ -598,8 +597,6 @@ public class RobotContainer {
                     }
                   }));
 
- 
-
       controller
           .x()
           .onTrue(
@@ -613,7 +610,6 @@ public class RobotContainer {
                                   hopperFloorSubsystem,
                                   hoodSubsystem,
                                   intakeSubsystem))));
-
 
       // Left Trigger -- Shoot with Turret (while true)
       controller
