@@ -119,7 +119,7 @@ public class IntakeSubsystem extends SubsystemBase {
     deployMotor.set(deployManualSpeed);
 
     boolean retractSwitch = isRetractedLimitSwitchTriggered();
-    boolean deployedSwitch = isDeployedHallEffectTriggered();
+    boolean deployedSwitch = isDeployedSwitchEffectTriggered();
     boolean seekingRetract = deployManualSpeed > 0;
     boolean seekingDeploy = deployManualSpeed < 0;
 
@@ -140,22 +140,22 @@ public class IntakeSubsystem extends SubsystemBase {
    * Automatic mode drives toward one of the two hall-defined endpoints until it trips, then stops.
    */
   private void runGoalBasedDeployControl() {
-    boolean retractHall = isRetractedLimitSwitchTriggered();
-    boolean deployedHall = isDeployedHallEffectTriggered();
+    boolean retractSwitch = isRetractedLimitSwitchTriggered();
+    boolean deployedSwitch = isDeployedSwitchEffectTriggered();
 
-    applyDeployGoalMotorOutput(retractHall, deployedHall);
-    handleGoalBasedRehomeTransitions(retractHall, deployedHall);
+    applyDeployGoalMotorOutput(retractSwitch, deployedSwitch);
+    handleGoalBasedRehomeTransitions(retractSwitch, deployedSwitch);
 
-    prevRetractSwitch = retractHall;
-    prevDeployedSwitch = deployedHall;
+    prevRetractSwitch = retractSwitch;
+    prevDeployedSwitch = deployedSwitch;
   }
 
-  private void applyDeployGoalMotorOutput(boolean retractHall, boolean deployedHall) {
-    if (deployGoalExtended && !deployedHall) {
+  private void applyDeployGoalMotorOutput(boolean retractSwitch, boolean deployedSwitch) {
+    if (deployGoalExtended && !deployedSwitch) {
       deployMotor.set(-IntakeConstants.HOMING_SPEED);
       wasSeekingDeploySwitch = true;
       wasSeekingRetractSwitch = false;
-    } else if (!deployGoalExtended && !retractHall) {
+    } else if (!deployGoalExtended && !retractSwitch) {
       deployMotor.set(IntakeConstants.HOMING_SPEED);
       wasSeekingRetractSwitch = true;
       wasSeekingDeploySwitch = false;
@@ -164,12 +164,12 @@ public class IntakeSubsystem extends SubsystemBase {
     }
   }
 
-  private void handleGoalBasedRehomeTransitions(boolean retractHall, boolean deployedHall) {
-    if (!prevRetractSwitch && retractHall && wasSeekingRetractSwitch) {
+  private void handleGoalBasedRehomeTransitions(boolean retractSwitch, boolean deployedSwitch) {
+    if (!prevRetractSwitch && retractSwitch && wasSeekingRetractSwitch) {
       rehomeToRetractedStop();
       wasSeekingRetractSwitch = false;
     }
-    if (!prevDeployedSwitch && deployedHall && wasSeekingDeploySwitch) {
+    if (!prevDeployedSwitch && deployedSwitch && wasSeekingDeploySwitch) {
       rehomeToDeployedStop();
       wasSeekingDeploySwitch = false;
     }
@@ -177,20 +177,20 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private void rehomeToRetractedStop() {
     zeroIntakeDeploy(true);
-    Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "retract");
+    Logger.recordOutput("Mech/Intake/Deploy/RehomeFromSwitch", "retract");
   }
 
   private void rehomeToDeployedStop() {
     zeroIntakeDeploy(false);
-    Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHall", "deploy");
+    Logger.recordOutput("Mech/Intake/Deploy/RehomeFromSwitch", "deploy");
   }
 
   private void updateDeployStatorLimitForPosition() {
-    if (isDeployedHallEffectTriggered() && deployCurrentLimitConfigs.StatorCurrentLimit != 35) {
+    if (isDeployedSwitchEffectTriggered() && deployCurrentLimitConfigs.StatorCurrentLimit != 35) {
       deployCurrentLimitConfigs.StatorCurrentLimit = 35;
       deployMotor.getConfigurator().apply(deployTalonFXConfigs);
     }
-    if (!isDeployedHallEffectTriggered() && deployCurrentLimitConfigs.StatorCurrentLimit != 60) {
+    if (!isDeployedSwitchEffectTriggered() && deployCurrentLimitConfigs.StatorCurrentLimit != 60) {
       deployCurrentLimitConfigs.StatorCurrentLimit = 60;
       deployMotor.getConfigurator().apply(deployTalonFXConfigs);
     }
@@ -252,14 +252,14 @@ public class IntakeSubsystem extends SubsystemBase {
     return !retractedLimitSwitch.get();
   }
 
-  public boolean isDeployedHallEffectTriggered() {
+  public boolean isDeployedSwitchEffectTriggered() {
     return !deployedLimitSwitch.get();
   }
 
   /** True when the deploy goal matches the corresponding hall (at commanded stop). */
   public boolean atDeployGoal() {
     if (deployGoalExtended) {
-      return isDeployedHallEffectTriggered();
+      return isDeployedSwitchEffectTriggered();
     }
     return isRetractedLimitSwitchTriggered();
   }
@@ -291,7 +291,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   /** True when the deployed hall is active (physical end of travel). */
   public BooleanSupplier getIsDeployed() {
-    return this::isDeployedHallEffectTriggered;
+    return this::isDeployedSwitchEffectTriggered;
   }
 
   private double getVelocityRadPerSec() {
@@ -368,9 +368,9 @@ public class IntakeSubsystem extends SubsystemBase {
     Logger.recordOutput(
         "Mech/Intake/Deploy/Current Limit", deployCurrentLimitConfigs.StatorCurrentLimit);
 
-    Logger.recordOutput("Mech/Intake/Intake Hall Effect", isRetractedLimitSwitchTriggered());
-    Logger.recordOutput("Mech/Intake/Deployed Hall Effect", isDeployedHallEffectTriggered());
-    Logger.recordOutput("Mech/Intake/IsDeployed", isDeployedHallEffectTriggered());
+    Logger.recordOutput("Mech/Intake/Intake Switch Effect", isRetractedLimitSwitchTriggered());
+    Logger.recordOutput("Mech/Intake/Deployed Switch Effect", isDeployedSwitchEffectTriggered());
+    Logger.recordOutput("Mech/Intake/IsDeployed", isDeployedSwitchEffectTriggered());
     Logger.recordOutput("Mech/Intake/Intake/Desired Intake Speed", desiredIntakeSpeed);
     Logger.recordOutput(
         "Mech/Intake/Intake/Current Limit", intakeCurrentLimitConfigs.StatorCurrentLimit);

@@ -14,7 +14,7 @@ public class IntakeCommands {
    * Open-loop deploy duty toward the retract hall until it trips, then sync {@code
    * deployGoalExtended} so {@link IntakeSubsystem#periodic()} holds motor off at the hall.
    */
-  private static Command seekUntilRetractHall(IntakeSubsystem intakeSubsystem) {
+  private static Command seekUntilRetractSwitch(IntakeSubsystem intakeSubsystem) {
     return Commands.sequence(
         new InstantCommand(
             () -> {
@@ -26,7 +26,8 @@ public class IntakeCommands {
             },
             intakeSubsystem),
         Commands.deadline(
-                Commands.waitUntil(intakeSubsystem::isRetractedLimitSwitchTriggered).withTimeout(10),
+                Commands.waitUntil(intakeSubsystem::isRetractedLimitSwitchTriggered)
+                    .withTimeout(10),
                 Commands.run(
                     () -> intakeSubsystem.setDeploySpeed(IntakeConstants.HOMING_SPEED),
                     intakeSubsystem))
@@ -38,12 +39,12 @@ public class IntakeCommands {
    * Open-loop deploy duty toward the deployed hall until it trips, then sync goal so periodic holds
    * at the hall.
    */
-  private static Command seekUntilDeployedHall(IntakeSubsystem intakeSubsystem) {
+  private static Command seekUntilDeployedSwitch(IntakeSubsystem intakeSubsystem) {
     double speed = -IntakeConstants.HOMING_SPEED;
     return Commands.sequence(
         new InstantCommand(
             () -> {
-              if (intakeSubsystem.isDeployedHallEffectTriggered()) {
+              if (intakeSubsystem.isDeployedSwitchEffectTriggered()) {
                 intakeSubsystem.zeroIntakeDeploy(false);
               } else {
                 intakeSubsystem.setDeploySpeed(speed);
@@ -51,15 +52,15 @@ public class IntakeCommands {
             },
             intakeSubsystem),
         Commands.deadline(
-                Commands.waitUntil(intakeSubsystem::isDeployedHallEffectTriggered).withTimeout(10),
+                Commands.waitUntil(intakeSubsystem::isDeployedSwitchEffectTriggered).withTimeout(10),
                 Commands.run(() -> intakeSubsystem.setDeploySpeed(speed), intakeSubsystem))
             .finallyDo(intakeSubsystem::clearDeployManualControl),
         new InstantCommand(() -> intakeSubsystem.setDeployGoalExtended(true), intakeSubsystem));
   }
 
-  /** Run open-loop toward the retract hall until it trips (startup / homing). */
+  /** Run open-loop toward the retract it until it trips (startup / homing). */
   public static Command HomeIntake(IntakeSubsystem intakeSubsystem) {
-    return seekUntilRetractHall(intakeSubsystem).withName("Home Intake Retract");
+    return seekUntilRetractSwitch(intakeSubsystem).withName("Home Intake Retract");
   }
 
   public static Command ToggleIntake(IntakeSubsystem intakeSubsystem) {
@@ -71,11 +72,11 @@ public class IntakeCommands {
   }
 
   public static Command RetractIntake(IntakeSubsystem intakeSubsystem) {
-    return seekUntilRetractHall(intakeSubsystem).withName("Retract Intake");
+    return seekUntilRetractSwitch(intakeSubsystem).withName("Retract Intake");
   }
 
   public static Command DeployIntake(IntakeSubsystem intakeSubsystem) {
-    return seekUntilDeployedHall(intakeSubsystem).withName("Deploy Intake");
+    return seekUntilDeployedSwitch(intakeSubsystem).withName("Deploy Intake");
   }
 
   public static Command RunIntake(IntakeSubsystem intakeSubsystem) {
