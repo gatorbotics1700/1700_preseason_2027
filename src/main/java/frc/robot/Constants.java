@@ -42,7 +42,9 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.util.Calculations;
 import frc.robot.util.RobotConfigLoader;
+import frc.robot.util.shooting.ShotParameters;
 
 /**
  * This class defines the runtime mode used by AdvantageKit and loads robot-specific configuration
@@ -576,29 +578,36 @@ public final class Constants {
     public static final double HOPPER_FLOOR_SPEED = -0.15; // TODO: tune this value
   }
 
-  public static final class IntakeConstants {
+  public static final class IntakeConstants { //TODO: Should it be left and right instead of one and two? not sure where motors are on robot
     public static final int INTAKE_MOTOR_CAN_ID_ONE = 9;
-    public static final int INTAKE_MOTOR_CAN_ID_TWO = 22; //TODO: Make this CANID right :)
+    public static final int INTAKE_MOTOR_CAN_ID_TWO = 22; //TODO: Make this CANID correct :)
     public static final int INTAKE_DEPLOY_MOTOR_CAN_ID_ONE = 10;
-    public static final int INTAKE_DEPLOY_MOTOR_CAN_ID_TWO = 4; //TODO: Make this CANID right :)
+    public static final int INTAKE_DEPLOY_MOTOR_CAN_ID_TWO = 4; //TODO: Make this CANID correct :)
     public static final int INTAKE_HALL_EFFECT_PORT = 0;
     public static final int DEPLOYED_HALL_EFFECT_PORT = 7;
+    public static final int RETRACTED_LIMIT_SWITCH_PORT = 3;
+    public static final int DEPLOYED_LIMIT_SWITCH_PORT = 4;
 
     public static final int DEPLOY_GEARBOX_RATIO = 5;
     public static final double DEPLOY_PULLEY_ONE_GEAR_RATIO = 42.0 / 18.0;
-    public static final double DEPLOY_PULLEY_TWO_GEAR_RATIO = 36.0 / 18.0;
+    public static final double DEPLOY_PULLEY_TWO_GEAR_RATIO = 42.0 / 18.0;
 
     public static final double EXTENDED_ANGLE_DEGREES = 95;
     public static final double RETRACTED_ANGLE_DEGREES = 0;
+    public static final double HALF_EXTENDED_ANGLE_DEGREES = 45;
 
     public static final Rotation2d EXTENDED_POSITION =
         new Rotation2d(Math.toRadians(EXTENDED_ANGLE_DEGREES));
+    public static final Rotation2d HALF_EXTENDED_POSITION =
+        new Rotation2d(Math.toRadians(HALF_EXTENDED_ANGLE_DEGREES));
     public static final Rotation2d RETRACTED_POSITION =
         new Rotation2d(Math.toRadians(RETRACTED_ANGLE_DEGREES));
 
     public static final double HOMING_SPEED = -0.4; // TODO tune
     public static final double RETRACTING_SPEED = -0.4; // TODO: tune
     public static final double INTAKING_SPEED = -1; // TODO: tune
+
+    public static final double POSITION_DEADBAND_DEGREES = 3;
 
     public static final double ROBOT_TO_INTAKE_YAW_DEGREES = 180;
     public static final double DEPLOYED_CURRENT_LIMIT = 10.0; // amps
@@ -629,6 +638,30 @@ public final class Constants {
     public static final double FLYWHEEL_RADIUS_METERS = 0.0508;
 
     public static final Translation3d BOT_TO_SHOOTER = new Translation3d(0.127, 0, 0.429);
+
+    public static final ShotParameters RED_RIGHT =
+        new ShotParameters(
+            new Pose2d(14.17, 1.25, new Rotation2d(Math.toRadians(129))),
+            new Rotation2d(Math.toRadians(64.4)),
+            62.2);
+    public static final ShotParameters BLUE_LEFT =
+        new ShotParameters(
+            Calculations.mirrorPoseAcrossAlliance(RED_RIGHT.pose),
+            new Rotation2d(Math.toRadians(64.4)),
+            62.2);
+    public static final ShotParameters RED_LEFT =
+        new ShotParameters(
+            Calculations.mirrorPoseAcrossXAxis(RED_RIGHT.pose),
+            new Rotation2d(Math.toRadians(64.4)),
+            62.2);
+    public static final ShotParameters BLUE_RIGHT =
+        new ShotParameters(
+            Calculations.mirrorPoseAcrossXAxis(BLUE_LEFT.pose),
+            new Rotation2d(Math.toRadians(64.4)),
+            62.2);
+    public static final ShotParameters[] STATIONARY_SHOT_ARRAY = {
+      RED_LEFT, RED_RIGHT, BLUE_LEFT, BLUE_RIGHT
+    };
   }
 
   /** REV PDH / CTRE PDP CAN ID and logging. */
@@ -638,8 +671,9 @@ public final class Constants {
   }
 
   public static final class TurretConstants {
-    public static final int TURRET_MOTOR_CAN_ID = 15;
-    public static final int TURRET_BORE_ENCODER_PORT = 1;
+    public static final int TURRET_MOTOR_CAN_ID =
+        100; // TODO was 15 making it a bad number so the turret does not move
+    public static final int TURRET_BORE_ENCODER_PORT = 12; // TODO was 1 before
 
     public static final double TURRET_DEADBAND = 0.75;
 

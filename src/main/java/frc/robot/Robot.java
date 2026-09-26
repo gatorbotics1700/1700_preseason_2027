@@ -255,6 +255,7 @@ public class Robot extends LoggedRobot {
                 robotContainer.getHoodSubsystem(),
                 robotContainer.getIntakeSubsystem()));
     // robotContainer.configureSysIdButtons();
+    System.out.println("VIVIEN WANTS TO SEE IF WE GOT HERE");
     robotContainer.configureSystemCheckButtons();
   }
 
