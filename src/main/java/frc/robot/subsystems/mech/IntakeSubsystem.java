@@ -27,11 +27,20 @@ public class IntakeSubsystem extends SubsystemBase {
   private final TalonFX intakeMotor; // spins the rollers
   private final TalonFX deployMotor; // deploys the entire intake
 
-  private final DigitalInput hallEffect;
-  private final DigitalInput deployedHallEffect;
+  private final DigitalInput retractedLimitSwitch;
+  private final DigitalInput deployedLimitSwitch;
 
   private static final double SYSID_LIMIT_MARGIN_DEGREES = 3;
-  private boolean sysIdRunning = false;
+
+  public enum IntakeDeployState {
+    SYSID,
+    DEPLOYING,
+    RETRACTING,
+    DEPLOYED_STOPPED,
+    RETRACTED_STOPPED
+  }
+
+  private IntakeDeployState intakeState;
 
   private final TalonFXConfiguration deployTalonFXConfigs;
   private final TalonFXConfiguration intakeTalonFXConfigs;
@@ -46,7 +55,7 @@ public class IntakeSubsystem extends SubsystemBase {
    * periodic().
    */
   public void setSysIdRunning(boolean running) {
-    sysIdRunning = running;
+    intakeState = IntakeDeployState.SYSID;
   }
 
   private static MotionMagicExpoVoltage m_request;
@@ -77,7 +86,6 @@ public class IntakeSubsystem extends SubsystemBase {
   public static final LoggedNetworkNumber intakeCurrentLimit =
       new LoggedNetworkNumber("/Tuning/Intake/Intake Current Limit", 25);
 
-  private Rotation2d desiredAngle = new Rotation2d();
   private boolean useDeployPositionControl = false;
   private double desiredIntakeSpeed;
   private double desiredDeploySpeed;
@@ -104,8 +112,10 @@ public class IntakeSubsystem extends SubsystemBase {
         new TalonFX(IntakeConstants.INTAKE_DEPLOY_MOTOR_CAN_ID, TunerConstants.mechCANBus);
 
     desiredIntakeSpeed = 0;
-    hallEffect = new DigitalInput(IntakeConstants.INTAKE_HALL_EFFECT_PORT);
-    deployedHallEffect = new DigitalInput(IntakeConstants.DEPLOYED_HALL_EFFECT_PORT);
+    retractedLimitSwitch = new DigitalInput(IntakeConstants.INTAKE_HALL_EFFECT_PORT);
+    deployedLimitSwitch = new DigitalInput(IntakeConstants.DEPLOYED_HALL_EFFECT_PORT);
+
+    intakeState = IntakeDeployState.RETRACTED_STOPPED;
 
     intakeTalonFXConfigs =
         new TalonFXConfiguration()
@@ -168,67 +178,41 @@ public class IntakeSubsystem extends SubsystemBase {
     updateMotionMagicConfigs();
     updateCurrentLimitConfigs();
 
-    hallAssistActive = false;
-
-    if (!sysIdRunning) {
-      if (isIntakeDeployMotionCommandActive()) {
-        wasSeekingRetractHall = false;
-        wasSeekingDeployHall = false;
-        if (useDeployPositionControl) {
-          applyDeployPositionControl();
-        }
+    shouldStop();
+    if (intakeState.equals(IntakeDeployState.RETRACTED_STOPPED)
+        || intakeState.equals(IntakeDeployState.DEPLOYED_STOPPED)) {
+      setDeploySpeed(0);
+    } else if (!intakeState.equals(IntakeDeployState.SYSID)) {
+      if (useDeployPositionControl) { // TODO when should we set this to true?
+        setDeploySpeed(desiredDeploySpeed);
       } else {
-        // No deploy/retract/home sequence running: nudge toward the correct hall if state
-        // disagrees.
-        boolean wantDeployed = isDeployed.getAsBoolean();
-        if (wantDeployed && !isDeployedHallEffectTriggered()) {
-          hallAssistActive = true;
-          deployMotor.set(-IntakeConstants.HOMING_SPEED);
-          wasSeekingDeployHall = true;
-          wasSeekingRetractHall = false;
-        } else if (!wantDeployed && !isHallEffectTriggered()) {
-          hallAssistActive = true;
-          deployMotor.set(IntakeConstants.HOMING_SPEED);
-          wasSeekingRetractHall = true;
-          wasSeekingDeployHall = false;
-        } else {
-          if (wasSeekingRetractHall && isHallEffectTriggered()) {
-            rehomeDeployAfterHallSeekRetract();
-            wasSeekingRetractHall = false;
-          }
-          if (wasSeekingDeployHall && isDeployedHallEffectTriggered()) {
-            rehomeDeployAfterHallSeekDeploy();
-            wasSeekingDeployHall = false;
-          }
-          if (useDeployPositionControl) {
-            applyDeployPositionControl();
-          }
-        }
+        applyDeployPositionControl();
       }
     }
+    home();
     intakeLogs();
   }
 
-  /**
-   * True while a command that owns deploy motion is running (including wait steps that retain the
-   * subsystem).
-   */
-  private boolean isIntakeDeployMotionCommandActive() {
-    Command cmd = getCurrentCommand();
-    if (cmd == null) {
-      return false;
+  private void shouldStop() {
+    // we only trust that the intake is in the deploy position deadband if we're actually using
+    // position control
+    boolean atPositionDeadband =
+        useDeployPositionControl
+            && getDesiredAngle().getDegrees() - getCurrentAngle().getDegrees()
+                <= IntakeConstants.POSITION_DEADBAND_DEGREES;
+    if (intakeState.equals(IntakeDeployState.DEPLOYING)) {
+      if (isDeployedLimitSwitchTriggered() || atPositionDeadband) {
+        intakeState = IntakeDeployState.DEPLOYED_STOPPED;
+      }
+    } else if (intakeState.equals(IntakeDeployState.RETRACTING)) {
+      if (isRetractedLimitSwitchTriggered() || atPositionDeadband) {
+        intakeState = IntakeDeployState.RETRACTED_STOPPED;
+      }
     }
-    String name = cmd.getName();
-    return name.equals("Deploy Intake")
-        || name.equals("Retract Intake")
-        || name.equals("Home Intake Retract")
-        || name.equals("Home Intake Deploy")
-        || name.equals("Intake Sequence Wait")
-        || name.equals("Intake Agitate Wait");
   }
 
   private void applyDeployPositionControl() {
-    deployMotor.setControl(m_request.withPosition(degreesToRevs(desiredAngle.getDegrees())));
+    deployMotor.setControl(m_request.withPosition(degreesToRevs(getDesiredAngle().getDegrees())));
     if (isDeployed.getAsBoolean()
         && deployCurrentLimitConfigs.StatorCurrentLimit != 25
         && getCurrentAngle().getDegrees() > 30) {
@@ -242,64 +226,50 @@ public class IntakeSubsystem extends SubsystemBase {
     }
   }
 
-  /**
-   * After open-loop hall assist finds the retract hall, zero and apply the same +2° retract
-   * setpoint offset used when homing on that hall so closed-loop does not command against a stale
-   * encoder.
-   */
-  private void rehomeDeployAfterHallSeekRetract() {
-    zeroIntakeDeploy(true);
-    setDesiredAngle(IntakeConstants.RETRACTED_POSITION.plus(new Rotation2d(Math.toRadians(2))));
-    Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHallAssist", "retract");
-  }
-
-  /**
-   * After open-loop hall assist finds the deployed hall, zero and apply the -2° deployed offset.
-   */
-  private void rehomeDeployAfterHallSeekDeploy() {
-    zeroIntakeDeploy(false);
-    setDesiredAngle(IntakeConstants.EXTENDED_POSITION.minus(new Rotation2d(Math.toRadians(2))));
-    Logger.recordOutput("Mech/Intake/Deploy/RehomeFromHallAssist", "deploy");
-  }
-
-  public void retractDeployMotor() {
-    setDesiredAngle(IntakeConstants.RETRACTED_POSITION);
-  }
-
-  public void extendDeployMotor() {
-    setDesiredAngle(IntakeConstants.EXTENDED_POSITION);
-  }
-
-  public void setDesiredAngle(Rotation2d angle) {
-    useDeployPositionControl = true;
-    if (angle.getDegrees() < IntakeConstants.RETRACTED_POSITION.getDegrees()) {
-      desiredAngle = IntakeConstants.RETRACTED_POSITION;
-    } else if (angle.getDegrees() > IntakeConstants.EXTENDED_POSITION.getDegrees()) {
-      desiredAngle = IntakeConstants.EXTENDED_POSITION;
-    } else {
-      desiredAngle = angle;
+  private void home() {
+    if (isRetractedLimitSwitchTriggered()) {
+      zeroIntakeDeploy(true);
+    } else if (isDeployedLimitSwitchTriggered()) {
+      zeroIntakeDeploy(false);
     }
+  }
+
+  public void setDesiredDeployPosition(boolean isRetracted) {
+    if (isRetracted) {
+      intakeState = IntakeDeployState.RETRACTING;
+    } else {
+      intakeState = IntakeDeployState.DEPLOYING;
+    }
+    useDeployPositionControl = true;
   }
 
   /** Returns the stored desired angle (always the true target, independent of deadband). */
   public Rotation2d getDesiredAngle() {
+    Rotation2d desiredAngle;
+    if (intakeState.equals(IntakeDeployState.RETRACTED_STOPPED)
+        || intakeState.equals(IntakeDeployState.RETRACTING)) {
+      desiredAngle = IntakeConstants.RETRACTED_POSITION;
+    } else if (intakeState.equals(IntakeDeployState.DEPLOYED_STOPPED)
+        || intakeState.equals(IntakeDeployState.DEPLOYING)) {
+      desiredAngle = IntakeConstants.EXTENDED_POSITION;
+    } else { // if it's not an expected state, let's just set it to be retracted automatically
+      desiredAngle = IntakeConstants.RETRACTED_POSITION;
+    }
     return desiredAngle;
   }
 
   public void setDeploySpeed(double speed) {
     useDeployPositionControl = false;
+
+    // based on the direction of the speed, we can determine whether we're extending or retracting
+    if (speed > 0) {
+      intakeState = IntakeDeployState.DEPLOYING; // TODO see if this is possibly flipped irl
+    } else if (speed < 0) {
+      intakeState = IntakeDeployState.RETRACTING;
+    }
+
     desiredDeploySpeed = speed;
-    deployMotor.set(speed);
-  }
-
-  public void clearDeployManualControl() {
-    deployManualControl = false;
-    deployManualSpeed = 0;
-  }
-
-  public void setDeployGoalExtended(boolean extended) {
-    deployGoalExtended = extended;
-    deployManualControl = false;
+    deployMotor.set(speed); // TODO redundant but we can keep it for safety
   }
 
   public void setIntakeSpeed(double speed) {
@@ -336,44 +306,17 @@ public class IntakeSubsystem extends SubsystemBase {
     }
   }
 
-  public boolean isHallEffectTriggered() {
-    return !hallEffect.get();
+  public boolean isRetractedLimitSwitchTriggered() {
+    return !retractedLimitSwitch.get();
   }
 
-  public boolean isDeployedHallEffectTriggered() {
-    return !deployedHallEffect.get();
+  public boolean isDeployedLimitSwitchTriggered() {
+    return !deployedLimitSwitch.get();
   }
 
-  public void toggleIntake() {
-    if (isDeployed.getAsBoolean()) {
-      isDeployed =
-          () -> {
-            return false;
-          };
-    } else {
-      isDeployed =
-          () -> {
-            return true;
-          };
-    }
-  }
-
-  public BooleanSupplier getIsDeployed() {
-    return isDeployed;
-  }
-
-  public void setIsDeployedToTrue() {
-    isDeployed =
-        () -> {
-          return true;
-        };
-  }
-
-  public void setIsDeployedToFalse() {
-    isDeployed =
-        () -> {
-          return false;
-        };
+  public boolean isDeployed() {
+    return intakeState.equals(IntakeDeployState.DEPLOYED_STOPPED)
+        || intakeState.equals(IntakeDeployState.DEPLOYING);
   }
 
   private double getVelocityRadPerSec() {
@@ -498,13 +441,13 @@ public class IntakeSubsystem extends SubsystemBase {
     TalonFXLogger.log(intakeMotor, "Mech", "Intake", "Intake");
 
     Logger.recordOutput("Mech/Intake/Deploy/Current Angle", getCurrentAngle().getDegrees());
-    Logger.recordOutput("Mech/Intake/Deploy/Desired Angle", desiredAngle.getDegrees());
+    Logger.recordOutput("Mech/Intake/Deploy/Desired Angle", getDesiredAngle().getDegrees());
     Logger.recordOutput("Mech/Intake/Deploy/Desired Speed", desiredDeploySpeed);
     Logger.recordOutput(
         "Mech/Intake/Deploy/Current Limit", deployCurrentLimitConfigs.StatorCurrentLimit);
 
-    Logger.recordOutput("Mech/Intake/Intake Hall Effect", isHallEffectTriggered());
-    Logger.recordOutput("Mech/Intake/Deployed Hall Effect", isDeployedHallEffectTriggered());
+    Logger.recordOutput("Mech/Intake/Retracted Limit Switch", isRetractedLimitSwitchTriggered());
+    Logger.recordOutput("Mech/Intake/Deployed Limit Switch", isDeployedLimitSwitchTriggered());
     Logger.recordOutput("Mech/Intake/Hall Assist Active", hallAssistActive);
     Logger.recordOutput("Mech/Intake/IsDeployed", isDeployed.getAsBoolean());
     Logger.recordOutput("Mech/Intake/Intake/Desired Intake Speed", desiredIntakeSpeed);
@@ -512,8 +455,9 @@ public class IntakeSubsystem extends SubsystemBase {
         "Mech/Intake/Intake/Current Limit", intakeCurrentLimitConfigs.StatorCurrentLimit);
 
     // SysID
-    Logger.recordOutput("Mech/Intake/SysID/intakeSysIDRunning", sysIdRunning);
-    if (sysIdRunning) {
+    Logger.recordOutput(
+        "Mech/Intake/SysID/intakeSysIDRunning", intakeState.equals(IntakeDeployState.SYSID));
+    if (intakeState.equals(IntakeDeployState.SYSID)) {
       Logger.recordOutput(
           "Mech/Intake/SysID/intakeVoltage", deployMotor.getMotorVoltage().getValueAsDouble());
       Logger.recordOutput(
