@@ -577,8 +577,10 @@ public final class Constants {
   }
 
   public static final class IntakeConstants {
-    public static final int INTAKE_MOTOR_CAN_ID = 9;
-    public static final int INTAKE_DEPLOY_MOTOR_CAN_ID = 10;
+    public static final int INTAKE_MOTOR_CAN_ID_ONE = 9;
+    public static final int INTAKE_MOTOR_CAN_ID_TWO = 22; //TODO: Make this CANID right :)
+    public static final int INTAKE_DEPLOY_MOTOR_CAN_ID_ONE = 10;
+    public static final int INTAKE_DEPLOY_MOTOR_CAN_ID_TWO = 4; //TODO: Make this CANID right :)
     public static final int INTAKE_HALL_EFFECT_PORT = 0;
     public static final int DEPLOYED_HALL_EFFECT_PORT = 7;
 

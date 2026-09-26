@@ -21,8 +21,10 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class IntakeSubsystem extends SubsystemBase {
 
-  private final TalonFX intakeMotor;
-  private final TalonFX deployMotor;
+  private final TalonFX intakeMotor_One;
+  private final TalonFX intakeMotor_Two;
+  private final TalonFX deployMotor_One;
+  private final TalonFX deployMotor_Two;
 
   private final DigitalInput hallEffect;
   private final DigitalInput deployedHallEffect;
@@ -30,8 +32,10 @@ public class IntakeSubsystem extends SubsystemBase {
   private static final double SYSID_LIMIT_MARGIN_DEGREES = 3;
   private boolean sysIdRunning = false;
 
-  private final TalonFXConfiguration deployTalonFXConfigs;
-  private final TalonFXConfiguration intakeTalonFXConfigs;
+  private final TalonFXConfiguration deploy_OneTalonFXConfigs;
+  private final TalonFXConfiguration deploy_TwoTalonFXConfigs;
+  private final TalonFXConfiguration intake_OneTalonFXConfigs;
+  private final TalonFXConfiguration intake_TwoTalonFXConfigs;
 
   private static CurrentLimitsConfigs deployCurrentLimitConfigs;
   private static CurrentLimitsConfigs intakeCurrentLimitConfigs;
@@ -62,36 +66,50 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public IntakeSubsystem() {
-    intakeMotor = new TalonFX(IntakeConstants.INTAKE_MOTOR_CAN_ID, TunerConstants.mechCANBus);
-    deployMotor =
-        new TalonFX(IntakeConstants.INTAKE_DEPLOY_MOTOR_CAN_ID, TunerConstants.mechCANBus);
+    intakeMotor_One = new TalonFX(IntakeConstants.INTAKE_MOTOR_CAN_ID_ONE, TunerConstants.mechCANBus);
+    intakeMotor_Two = new TalonFX(IntakeConstants.INTAKE_MOTOR_CAN_ID_TWO, TunerConstants.mechCANBus);
+    deployMotor_One =
+        new TalonFX(IntakeConstants.INTAKE_DEPLOY_MOTOR_CAN_ID_ONE, TunerConstants.mechCANBus);
+    deployMotor_Two =
+        new TalonFX(IntakeConstants.INTAKE_DEPLOY_MOTOR_CAN_ID_TWO, TunerConstants.mechCANBus);
 
     desiredIntakeSpeed = 0;
     hallEffect = new DigitalInput(IntakeConstants.INTAKE_HALL_EFFECT_PORT);
     deployedHallEffect = new DigitalInput(IntakeConstants.DEPLOYED_HALL_EFFECT_PORT);
 
-    intakeTalonFXConfigs =
+    intake_OneTalonFXConfigs =
         new TalonFXConfiguration()
             .withMotorOutput(
                 new MotorOutputConfigs().withInverted(InvertedValue.CounterClockwise_Positive));
 
-    deployTalonFXConfigs = new TalonFXConfiguration();
+    intake_TwoTalonFXConfigs =
+        new TalonFXConfiguration()
+            .withMotorOutput(
+                new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive)); //TODO: Check inversion!
 
-    deployTalonFXConfigs.withMotorOutput(
+    deploy_OneTalonFXConfigs = new TalonFXConfiguration();
+    deploy_TwoTalonFXConfigs = new TalonFXConfiguration();
+
+    deploy_OneTalonFXConfigs.withMotorOutput(
         new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
+    deploy_TwoTalonFXConfigs.withMotorOutput(
+        new MotorOutputConfigs().withInverted(InvertedValue.CounterClockwise_Positive)); //TODO: Check inversion!
 
-    intakeCurrentLimitConfigs = intakeTalonFXConfigs.CurrentLimits;
+    intakeCurrentLimitConfigs = intake_OneTalonFXConfigs.CurrentLimits;
     intakeCurrentLimitConfigs.StatorCurrentLimit = 25;
     intakeCurrentLimitConfigs.StatorCurrentLimitEnable = true;
 
-    deployCurrentLimitConfigs = deployTalonFXConfigs.CurrentLimits;
+    deployCurrentLimitConfigs = deploy_OneTalonFXConfigs.CurrentLimits;
     deployCurrentLimitConfigs.StatorCurrentLimit = 35;
     deployCurrentLimitConfigs.StatorCurrentLimitEnable = true;
 
-    deployMotor.getConfigurator().apply(deployTalonFXConfigs);
-    intakeMotor.getConfigurator().apply(intakeTalonFXConfigs);
+    deployMotor_One.getConfigurator().apply(deploy_OneTalonFXConfigs);
+    deployMotor_Two.getConfigurator().apply(deploy_TwoTalonFXConfigs);
+    intakeMotor_One.getConfigurator().apply(intake_OneTalonFXConfigs);
+    intakeMotor_Two.getConfigurator().apply(intake_TwoTalonFXConfigs);
 
-    intakeMotor.set(0);
+    intakeMotor_One.set(0);
+    intakeMotor_Two.set(0);
   }
 
   @Override
@@ -102,7 +120,8 @@ public class IntakeSubsystem extends SubsystemBase {
     if (!sysIdRunning) { // if sysId is running
       if (deployManualControl) { // if being controlled manually
         /* set motor speed and update all of the hall effect position states */
-        deployMotor.set(deployManualSpeed);
+        deployMotor_One.set(deployManualSpeed);
+        deployMotor_Two.set(deployManualSpeed);
         boolean retractHall = isHallEffectTriggered();
         boolean deployedHall = isDeployedHallEffectTriggered();
         boolean seekingRetract = deployManualSpeed > 0;
@@ -129,15 +148,18 @@ public class IntakeSubsystem extends SubsystemBase {
 
         //
         if (deployGoalExtended && !deployedHall) {
-          deployMotor.set(-IntakeConstants.HOMING_SPEED);
+          deployMotor_One.set(-IntakeConstants.HOMING_SPEED);
+          deployMotor_Two.set(-IntakeConstants.HOMING_SPEED);
           wasSeekingDeployHall = true;
           wasSeekingRetractHall = false;
         } else if (!deployGoalExtended && !retractHall) {
-          deployMotor.set(IntakeConstants.HOMING_SPEED);
+          deployMotor_One.set(IntakeConstants.HOMING_SPEED);
+          deployMotor_Two.set(IntakeConstants.HOMING_SPEED);
           wasSeekingRetractHall = true;
           wasSeekingDeployHall = false;
         } else {
-          deployMotor.set(0);
+          deployMotor_One.set(0);
+          deployMotor_Two.set(0);
         }
 
         if (!prevRetractHall && retractHall && wasSeekingRetractHall) {
@@ -156,18 +178,21 @@ public class IntakeSubsystem extends SubsystemBase {
       }
     }
 
-    intakeMotor.set(desiredIntakeSpeed);
+    intakeMotor_One.set(desiredIntakeSpeed);
+    intakeMotor_Two.set(desiredIntakeSpeed);
     intakeLogs();
   }
 
   private void updateDeployStatorLimitForPosition() {
     if (isDeployedHallEffectTriggered() && deployCurrentLimitConfigs.StatorCurrentLimit != 35) {
       deployCurrentLimitConfigs.StatorCurrentLimit = 35;
-      deployMotor.getConfigurator().apply(deployTalonFXConfigs);
+      deployMotor_One.getConfigurator().apply(deploy_OneTalonFXConfigs);
+      deployMotor_Two.getConfigurator().apply(deploy_TwoTalonFXConfigs);
     }
     if (!isDeployedHallEffectTriggered() && deployCurrentLimitConfigs.StatorCurrentLimit != 60) {
       deployCurrentLimitConfigs.StatorCurrentLimit = 60;
-      deployMotor.getConfigurator().apply(deployTalonFXConfigs);
+      deployMotor_One.getConfigurator().apply(deploy_OneTalonFXConfigs);
+      deployMotor_Two.getConfigurator().apply(deploy_TwoTalonFXConfigs);
     }
   }
 
@@ -195,8 +220,8 @@ public class IntakeSubsystem extends SubsystemBase {
     desiredIntakeSpeed = speed;
   }
 
-  public Rotation2d getCurrentAngle() {
-    double motorPositionRevs = deployMotor.getPosition().getValueAsDouble();
+  public Rotation2d getCurrentAngle() { //even with two motors, getting position from motor one for simplicity
+    double motorPositionRevs = deployMotor_One.getPosition().getValueAsDouble();
     double deployAngleDegrees =
         motorPositionRevs
             / IntakeConstants.DEPLOY_GEARBOX_RATIO
@@ -217,9 +242,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public void zeroIntakeDeploy(boolean isRetracted) {
     if (isRetracted) {
-      deployMotor.setPosition(degreesToRevs(IntakeConstants.RETRACTED_POSITION.getDegrees()));
+      deployMotor_One.setPosition(degreesToRevs(IntakeConstants.RETRACTED_POSITION.getDegrees()));
+      deployMotor_Two.setPosition(degreesToRevs(IntakeConstants.RETRACTED_POSITION.getDegrees()));
     } else {
-      deployMotor.setPosition(degreesToRevs(IntakeConstants.EXTENDED_POSITION.getDegrees()));
+      deployMotor_One.setPosition(degreesToRevs(IntakeConstants.EXTENDED_POSITION.getDegrees()));
+      deployMotor_Two.setPosition(degreesToRevs(IntakeConstants.EXTENDED_POSITION.getDegrees()));
     }
   }
 
@@ -270,7 +297,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   private double getVelocityRadPerSec() {
-    double motorRPS = deployMotor.getVelocity().getValueAsDouble();
+    double motorRPS = deployMotor_One.getVelocity().getValueAsDouble(); //TODO: Does this also need to be tested for motor two?
     return motorRPS
         / IntakeConstants.DEPLOY_PULLEY_ONE_GEAR_RATIO
         / IntakeConstants.DEPLOY_PULLEY_TWO_GEAR_RATIO
@@ -289,7 +316,13 @@ public class IntakeSubsystem extends SubsystemBase {
 
     SysIdRoutine.Mechanism mechanism =
         new SysIdRoutine.Mechanism(
-            (voltage) -> deployMotor.setVoltage(voltage.in(Volts)), null, this, "intake");
+            (voltage) -> 
+              {
+                deployMotor_One.setVoltage(voltage.in(Volts)); //TODO: Should this be intake? seems  like it should be deploy...
+                deployMotor_Two.setVoltage(voltage.in(Volts));
+                }, null, this, "intake");
+                
+                
     return new SysIdRoutine(config, mechanism);
   }
 
@@ -328,13 +361,16 @@ public class IntakeSubsystem extends SubsystemBase {
 
     if (newIntakeCurrentLimit != intakeCurrentLimitConfigs.StatorCurrentLimit) {
       intakeCurrentLimitConfigs.StatorCurrentLimit = newIntakeCurrentLimit;
-      intakeMotor.getConfigurator().apply(intakeTalonFXConfigs);
+      intakeMotor_One.getConfigurator().apply(intake_OneTalonFXConfigs);
+      intakeMotor_Two.getConfigurator().apply(intake_TwoTalonFXConfigs);
     }
   }
 
   public void intakeLogs() {
-    TalonFXLogger.log(deployMotor, "Mech", "Intake", "Deploy");
-    TalonFXLogger.log(intakeMotor, "Mech", "Intake", "Intake");
+    TalonFXLogger.log(deployMotor_One, "Mech", "Intake", "DeployOne");
+    TalonFXLogger.log(deployMotor_Two, "Mech", "Intake", "DeployTwo");
+    TalonFXLogger.log(intakeMotor_One, "Mech", "Intake", "IntakeOne");
+    TalonFXLogger.log(intakeMotor_Two, "Mech", "Intake", "IntakeOne");
 
     Logger.recordOutput("Mech/Intake/Deploy/Current Angle", getCurrentAngle().getDegrees());
     Logger.recordOutput("Mech/Intake/Deploy/Goal Extended", deployGoalExtended);
@@ -353,7 +389,9 @@ public class IntakeSubsystem extends SubsystemBase {
     Logger.recordOutput("Mech/Intake/SysID/intakeSysIDRunning", sysIdRunning);
     if (sysIdRunning) {
       Logger.recordOutput(
-          "Mech/Intake/SysID/intakeVoltage", deployMotor.getMotorVoltage().getValueAsDouble());
+          "Mech/Intake/SysID/intakeVoltageMotorOne", deployMotor_One.getMotorVoltage().getValueAsDouble());
+      Logger.recordOutput(
+          "Mech/Intake/SysID/intakeVoltageMotorTwo", deployMotor_Two.getMotorVoltage().getValueAsDouble());
       Logger.recordOutput(
           "Mech/Intake/SysID/intakePosition", getCurrentAngle().getRadians() / (2.0 * Math.PI));
       Logger.recordOutput(
