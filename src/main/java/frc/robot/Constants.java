@@ -580,8 +580,8 @@ public final class Constants {
 
   public static final class IntakeConstants {
     public static final int INTAKE_MOTOR_CAN_ID = 8;
-    public static final int INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID = 9;
-    public static final int INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID = 10;
+    public static final int INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID = 10;
+    public static final int INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID = 9;
     public static final int RETRACTED_LIMIT_SWITCH_PORT = 3;
     public static final int DEPLOYED_LIMIT_SWITCH_PORT = 4;
 
