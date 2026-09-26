@@ -579,8 +579,8 @@ public final class Constants {
   public static final class IntakeConstants {
     public static final int INTAKE_MOTOR_CAN_ID = 9;
     public static final int INTAKE_DEPLOY_MOTOR_CAN_ID = 10;
-    public static final int INTAKE_HALL_EFFECT_PORT = 3;
-    public static final int DEPLOYED_HALL_EFFECT_PORT = 4;
+    public static final int RETRACTED_LIMIT_SWITCH_PORT = 3;
+    public static final int DEPLOYED_LIMIT_SWITCH_PORT = 4;
 
     public static final int DEPLOY_GEARBOX_RATIO = 5;
     public static final double DEPLOY_PULLEY_ONE_GEAR_RATIO = 42.0 / 18.0;

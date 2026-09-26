@@ -22,10 +22,12 @@ public class IntakeCommands {
             },
             intakeSubsystem),
         Commands.deadline(
-            Commands.waitUntil(intakeSubsystem::isRetractedLimitSwitchTriggered).withTimeout(10),
-            Commands.run(
-                () -> intakeSubsystem.setDeploySpeed(IntakeConstants.HOMING_SPEED),
-                intakeSubsystem)));
+                Commands.waitUntil(intakeSubsystem::isRetractedLimitSwitchTriggered)
+                    .withTimeout(10),
+                Commands.run(
+                    () -> intakeSubsystem.setDeploySpeed(IntakeConstants.HOMING_SPEED),
+                    intakeSubsystem))
+            .finallyDo(() -> intakeSubsystem.setDeploySpeed(0)));
   }
 
   public static Command ToggleIntake(IntakeSubsystem intakeSubsystem) {

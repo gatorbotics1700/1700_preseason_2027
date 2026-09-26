@@ -18,7 +18,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.TunerConstants;
 import frc.robot.util.logging.TalonFXLogger;
-import java.util.function.BooleanSupplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
@@ -49,14 +48,6 @@ public class IntakeSubsystem extends SubsystemBase {
   private static MotionMagicConfigs motionMagicConfigs;
   private static CurrentLimitsConfigs deployCurrentLimitConfigs;
   private static CurrentLimitsConfigs intakeCurrentLimitConfigs;
-
-  /**
-   * Called by SysId commands to indicate test is running; we log voltage/position/velocity in
-   * periodic().
-   */
-  public void setSysIdRunning(boolean running) {
-    intakeState = IntakeDeployState.SYSID;
-  }
 
   private static MotionMagicExpoVoltage m_request;
 
@@ -89,22 +80,8 @@ public class IntakeSubsystem extends SubsystemBase {
   private boolean useDeployPositionControl = false;
   private double desiredIntakeSpeed;
   private double desiredDeploySpeed;
-  private BooleanSupplier isDeployed;
 
-  private boolean deployManualControl = false;
-  private double deployManualSpeed = 0.0;
-  private boolean deployGoalExtended = false;
-
-  /** True while periodic is driving deploy open-loop to find a hall (not a command). */
-  private boolean hallAssistActive = false;
-
-  /**
-   * Tracks open-loop hall-seek so we can rehome once when the hall trips, before PID takes over
-   * again.
-   */
-  private boolean wasSeekingRetractHall = false;
-
-  private boolean wasSeekingDeployHall = false;
+  // private BooleanSupplier isDeployed;
 
   public IntakeSubsystem() {
     intakeMotor = new TalonFX(IntakeConstants.INTAKE_MOTOR_CAN_ID, TunerConstants.mechCANBus);
@@ -112,8 +89,8 @@ public class IntakeSubsystem extends SubsystemBase {
         new TalonFX(IntakeConstants.INTAKE_DEPLOY_MOTOR_CAN_ID, TunerConstants.mechCANBus);
 
     desiredIntakeSpeed = 0;
-    retractedLimitSwitch = new DigitalInput(IntakeConstants.INTAKE_HALL_EFFECT_PORT);
-    deployedLimitSwitch = new DigitalInput(IntakeConstants.DEPLOYED_HALL_EFFECT_PORT);
+    retractedLimitSwitch = new DigitalInput(IntakeConstants.RETRACTED_LIMIT_SWITCH_PORT);
+    deployedLimitSwitch = new DigitalInput(IntakeConstants.DEPLOYED_LIMIT_SWITCH_PORT);
 
     intakeState = IntakeDeployState.RETRACTED_STOPPED;
 
@@ -165,10 +142,10 @@ public class IntakeSubsystem extends SubsystemBase {
 
     intakeMotor.set(0);
 
-    isDeployed =
-        () -> {
-          return false;
-        };
+    // isDeployed =
+    //     () -> {
+    //       return false;
+    //     };
   }
 
   @Override
@@ -183,10 +160,10 @@ public class IntakeSubsystem extends SubsystemBase {
         || intakeState.equals(IntakeDeployState.DEPLOYED_STOPPED)) {
       setDeploySpeed(0);
     } else if (!intakeState.equals(IntakeDeployState.SYSID)) {
-      if (useDeployPositionControl) { // TODO when should we set this to true?
-        setDeploySpeed(desiredDeploySpeed);
-      } else {
+      if (useDeployPositionControl) {
         applyDeployPositionControl();
+      } else {
+        setDeploySpeed(desiredDeploySpeed);
       }
     }
     home();
@@ -198,7 +175,7 @@ public class IntakeSubsystem extends SubsystemBase {
     // position control
     boolean atPositionDeadband =
         useDeployPositionControl
-            && getDesiredAngle().getDegrees() - getCurrentAngle().getDegrees()
+            && Math.abs(getDesiredAngle().getDegrees() - getCurrentAngle().getDegrees())
                 <= IntakeConstants.POSITION_DEADBAND_DEGREES;
     if (intakeState.equals(IntakeDeployState.DEPLOYING)) {
       if (isDeployedLimitSwitchTriggered() || atPositionDeadband) {
@@ -213,17 +190,17 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private void applyDeployPositionControl() {
     deployMotor.setControl(m_request.withPosition(degreesToRevs(getDesiredAngle().getDegrees())));
-    if (isDeployed.getAsBoolean()
-        && deployCurrentLimitConfigs.StatorCurrentLimit != 25
-        && getCurrentAngle().getDegrees() > 30) {
-      deployCurrentLimitConfigs.StatorCurrentLimit = 25;
-      deployMotor.getConfigurator().apply(deployTalonFXConfigs);
-    }
-    if ((!isDeployed.getAsBoolean() || getCurrentAngle().getDegrees() < 30)
-        && deployCurrentLimitConfigs.StatorCurrentLimit != 60) {
-      deployCurrentLimitConfigs.StatorCurrentLimit = 60;
-      deployMotor.getConfigurator().apply(deployTalonFXConfigs);
-    }
+    // if (isDeployed.getAsBoolean()
+    //     && deployCurrentLimitConfigs.StatorCurrentLimit != 25
+    //     && getCurrentAngle().getDegrees() > 30) {
+    //   deployCurrentLimitConfigs.StatorCurrentLimit = 25;
+    //   deployMotor.getConfigurator().apply(deployTalonFXConfigs);
+    // }
+    // if ((!isDeployed.getAsBoolean() || getCurrentAngle().getDegrees() < 30)
+    //     && deployCurrentLimitConfigs.StatorCurrentLimit != 60) {
+    //   deployCurrentLimitConfigs.StatorCurrentLimit = 60;
+    //   deployMotor.getConfigurator().apply(deployTalonFXConfigs);
+    // }
   }
 
   private void home() {
@@ -327,6 +304,19 @@ public class IntakeSubsystem extends SubsystemBase {
         / IntakeConstants.DEPLOY_GEARBOX_RATIO
         * 2
         * Math.PI;
+  }
+
+  /**
+   * Called by SysId commands to indicate test is running; we log voltage/position/velocity in
+   * periodic().
+   */
+  private void setSysIdRunning(boolean running) {
+    if (running) {
+      intakeState = IntakeDeployState.SYSID;
+    } else {
+      intakeState =
+          IntakeDeployState.RETRACTED_STOPPED; // TODO possibly change but it doesn't really matter
+    }
   }
 
   private SysIdRoutine sysIdRoutine() {
@@ -448,8 +438,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     Logger.recordOutput("Mech/Intake/Retracted Limit Switch", isRetractedLimitSwitchTriggered());
     Logger.recordOutput("Mech/Intake/Deployed Limit Switch", isDeployedLimitSwitchTriggered());
-    Logger.recordOutput("Mech/Intake/Hall Assist Active", hallAssistActive);
-    Logger.recordOutput("Mech/Intake/IsDeployed", isDeployed.getAsBoolean());
+    Logger.recordOutput("Mech/Intake/IsDeployed", isDeployed());
     Logger.recordOutput("Mech/Intake/Intake/Desired Intake Speed", desiredIntakeSpeed);
     Logger.recordOutput(
         "Mech/Intake/Intake/Current Limit", intakeCurrentLimitConfigs.StatorCurrentLimit);
