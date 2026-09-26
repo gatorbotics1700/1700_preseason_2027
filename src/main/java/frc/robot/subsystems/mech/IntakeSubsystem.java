@@ -25,6 +25,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private final TalonFX intakeMotor; // spins the rollers
   private final TalonFX deployMotor; // deploys the entire intake
+  private final TalonFX rightDeployMotor; // deploys the entire intake
 
   private final DigitalInput retractedLimitSwitch;
   private final DigitalInput deployedLimitSwitch;
@@ -87,6 +88,8 @@ public class IntakeSubsystem extends SubsystemBase {
     intakeMotor = new TalonFX(IntakeConstants.INTAKE_MOTOR_CAN_ID, TunerConstants.mechCANBus);
     deployMotor =
         new TalonFX(IntakeConstants.INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID, TunerConstants.mechCANBus);
+    rightDeployMotor =
+        new TalonFX(IntakeConstants.INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID, TunerConstants.mechCANBus);
 
     desiredIntakeSpeed = 0;
     retractedLimitSwitch = new DigitalInput(IntakeConstants.RETRACTED_LIMIT_SWITCH_PORT);
@@ -136,6 +139,7 @@ public class IntakeSubsystem extends SubsystemBase {
     deployCurrentLimitConfigs.StatorCurrentLimitEnable = true;
 
     deployMotor.getConfigurator().apply(deployTalonFXConfigs);
+    rightDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
     intakeMotor.getConfigurator().apply(intakeTalonFXConfigs);
 
     m_request = new MotionMagicExpoVoltage(0);
@@ -190,6 +194,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private void applyDeployPositionControl() {
     deployMotor.setControl(m_request.withPosition(degreesToRevs(getDesiredAngle().getDegrees())));
+    rightDeployMotor.setControl(
+        m_request.withPosition(degreesToRevs(getDesiredAngle().getDegrees())));
     // if (isDeployed.getAsBoolean()
     //     && deployCurrentLimitConfigs.StatorCurrentLimit != 25
     //     && getCurrentAngle().getDegrees() > 30) {
@@ -247,6 +253,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     desiredDeploySpeed = speed;
     deployMotor.set(speed); // TODO redundant but we can keep it for safety
+    rightDeployMotor.set(speed);
   }
 
   public void setIntakeSpeed(double speed) {
@@ -277,9 +284,11 @@ public class IntakeSubsystem extends SubsystemBase {
   public void zeroIntakeDeploy(boolean isRetracted) {
     if (isRetracted) {
       deployMotor.setPosition(degreesToRevs(IntakeConstants.RETRACTED_POSITION.getDegrees()));
+      rightDeployMotor.setPosition(degreesToRevs(IntakeConstants.RETRACTED_POSITION.getDegrees()));
 
     } else {
       deployMotor.setPosition(degreesToRevs(IntakeConstants.EXTENDED_POSITION.getDegrees()));
+      rightDeployMotor.setPosition(degreesToRevs(IntakeConstants.EXTENDED_POSITION.getDegrees()));
     }
   }
 
@@ -337,7 +346,10 @@ public class IntakeSubsystem extends SubsystemBase {
     // periodic()
     SysIdRoutine.Mechanism mechanism =
         new SysIdRoutine.Mechanism(
-            (voltage) -> deployMotor.setVoltage(voltage.in(Volts)),
+            (voltage) -> {
+              deployMotor.setVoltage(voltage.in(Volts));
+              rightDeployMotor.setVoltage(voltage.in(Volts));
+            },
             null, // Log via AdvantageKit in periodic() so data goes to the same log file
             this,
             "intake");
@@ -401,6 +413,7 @@ public class IntakeSubsystem extends SubsystemBase {
       slot0Configs.kA = newKa;
       slot0Configs.kV = newKv;
       deployMotor.getConfigurator().apply(deployTalonFXConfigs);
+      rightDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
     }
   }
 
@@ -414,6 +427,7 @@ public class IntakeSubsystem extends SubsystemBase {
       motionMagicConfigs.MotionMagicExpo_kA = newExpoKa;
       motionMagicConfigs.MotionMagicExpo_kV = newExpoKv;
       deployMotor.getConfigurator().apply(deployTalonFXConfigs);
+      rightDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
     }
   }
 
@@ -428,6 +442,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public void intakeLogs() {
     TalonFXLogger.log(deployMotor, "Mech", "Intake", "Deploy");
+    TalonFXLogger.log(rightDeployMotor, "Mech", "Intake", "Right Deploy");
     TalonFXLogger.log(intakeMotor, "Mech", "Intake", "Intake");
 
     Logger.recordOutput("Mech/Intake/Deploy/Current Angle", getCurrentAngle().getDegrees());
