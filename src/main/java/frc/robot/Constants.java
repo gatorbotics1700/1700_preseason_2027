@@ -42,7 +42,9 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.util.Calculations;
 import frc.robot.util.RobotConfigLoader;
+import frc.robot.util.shooting.ShotParameters;
 
 /**
  * This class defines the runtime mode used by AdvantageKit and loads robot-specific configuration
@@ -632,6 +634,30 @@ public final class Constants {
     public static final double FLYWHEEL_RADIUS_METERS = 0.0508;
 
     public static final Translation3d BOT_TO_SHOOTER = new Translation3d(0.127, 0, 0.429);
+
+    public static final ShotParameters RED_RIGHT =
+        new ShotParameters(
+            new Pose2d(14.17, 1.25, new Rotation2d(Math.toRadians(129))),
+            new Rotation2d(Math.toRadians(64.4)),
+            62.2);
+    public static final ShotParameters BLUE_LEFT =
+        new ShotParameters(
+            Calculations.mirrorPoseAcrossAlliance(RED_RIGHT.pose),
+            new Rotation2d(Math.toRadians(64.4)),
+            62.2);
+    public static final ShotParameters RED_LEFT =
+        new ShotParameters(
+            Calculations.mirrorPoseAcrossXAxis(RED_RIGHT.pose),
+            new Rotation2d(Math.toRadians(64.4)),
+            62.2);
+    public static final ShotParameters BLUE_RIGHT =
+        new ShotParameters(
+            Calculations.mirrorPoseAcrossXAxis(BLUE_LEFT.pose),
+            new Rotation2d(Math.toRadians(64.4)),
+            62.2);
+    public static final ShotParameters[] STATIONARY_SHOT_ARRAY = {
+      RED_LEFT, RED_RIGHT, BLUE_LEFT, BLUE_RIGHT
+    };
   }
 
   /** REV PDH / CTRE PDP CAN ID and logging. */

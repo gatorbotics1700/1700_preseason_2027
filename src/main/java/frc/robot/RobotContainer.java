@@ -93,6 +93,7 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
   private Supplier<Pose2d> robotPose;
   private Supplier<ChassisSpeeds> chassisSpeeds;
+  private Supplier<Pose2d> drivetrainPose;
 
   /** Null when {@link Constants.Mode#REPLAY} (no hardware). */
 
@@ -689,19 +690,35 @@ public class RobotContainer {
                                           chassisSpeeds)))))
           .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
-      // Right Trigger -- Run Intake
-      controller
-          .rightTrigger()
-          .whileTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.RunIntake(intakeSubsystem))))
-          .onFalse(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
+    //   controller
+    //       .rightTrigger()
+    //       .whileTrue(
+    //           Commands.runOnce(
+    //               () ->
+    //                   CommandScheduler.getInstance()
+    //                       .schedule(
+    //                           (new PointAtTargetCommand(drive, robotPose))
+    //                               .andThen(
+    //                                   ShootingCommands.StationaryShootingCommand(
+    //                                       shooterSubsystem,
+    //                                       hoodSubsystem,
+    //                                       hopperFloorSubsystem,
+    //                                       drivetrainPose)))))
+    //       .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+
+      Right Trigger -- Run Intake
+        controller
+            .rightTrigger()
+            .whileTrue(
+                new InstantCommand(
+                    () ->
+                        CommandScheduler.getInstance()
+                            .schedule(IntakeCommands.RunIntake(intakeSubsystem))))
+            .onFalse(
+                new InstantCommand(
+                    () ->
+                        CommandScheduler.getInstance()
+                            .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
 
       // Right Bumper -- Deploy / Retract Intake Toggle
       controller
