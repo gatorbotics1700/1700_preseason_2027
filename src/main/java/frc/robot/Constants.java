@@ -586,7 +586,7 @@ public final class Constants {
 
     public static final int DEPLOY_GEARBOX_RATIO = 5;
     public static final double DEPLOY_PULLEY_ONE_GEAR_RATIO = 42.0 / 18.0;
-    public static final double DEPLOY_PULLEY_TWO_GEAR_RATIO = 36.0 / 18.0;
+    public static final double DEPLOY_PULLEY_TWO_GEAR_RATIO = 42.0 / 18.0;
 
     public static final double EXTENDED_ANGLE_DEGREES = 95;
     public static final double RETRACTED_ANGLE_DEGREES = 0;
