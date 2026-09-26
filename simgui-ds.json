@@ -1,9 +1,4 @@
 {
-  "Keyboard 0 Settings": {
-    "window": {
-      "visible": true
-    }
-  },
   "keyboardJoysticks": [
     {
       "axisConfig": [
@@ -102,7 +97,7 @@
       "guid": "Keyboard1"
     },
     {
-      "useGamepad": true
+      "guid": "Keyboard2"
     },
     {
       "useGamepad": true
