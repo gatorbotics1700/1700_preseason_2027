@@ -86,7 +86,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public IntakeSubsystem() {
     intakeMotor = new TalonFX(IntakeConstants.INTAKE_MOTOR_CAN_ID, TunerConstants.mechCANBus);
     deployMotor =
-        new TalonFX(IntakeConstants.INTAKE_DEPLOY_MOTOR_CAN_ID, TunerConstants.mechCANBus);
+        new TalonFX(IntakeConstants.INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID, TunerConstants.mechCANBus);
 
     desiredIntakeSpeed = 0;
     retractedLimitSwitch = new DigitalInput(IntakeConstants.RETRACTED_LIMIT_SWITCH_PORT);
@@ -128,7 +128,7 @@ public class IntakeSubsystem extends SubsystemBase {
     // and slower
 
     intakeCurrentLimitConfigs = intakeTalonFXConfigs.CurrentLimits;
-    intakeCurrentLimitConfigs.StatorCurrentLimit = 25;
+    intakeCurrentLimitConfigs.StatorCurrentLimit = 50;
     intakeCurrentLimitConfigs.StatorCurrentLimitEnable = true;
 
     deployCurrentLimitConfigs = deployTalonFXConfigs.CurrentLimits;

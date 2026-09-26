@@ -95,6 +95,15 @@ public class RobotContainer {
   private Supplier<ChassisSpeeds> chassisSpeeds;
   private Supplier<Pose2d> drivetrainPose;
 
+  //   private final DigitalInput testing0 = new DigitalInput(0);
+  //   private final DigitalInput testing1 = new DigitalInput(1);
+  //   private final DigitalInput testing2 = new DigitalInput(2);
+  //   private final DigitalInput testing3 = new DigitalInput(3);
+  //   private final DigitalInput testing4 = new DigitalInput(4);
+  //   private final DigitalInput testing5 = new DigitalInput(5);
+  //   private final DigitalInput testing6 = new DigitalInput(6);
+  //   private final DigitalInput testing7 = new DigitalInput(7);
+
   /** Null when {@link Constants.Mode#REPLAY} (no hardware). */
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
@@ -268,13 +277,15 @@ public class RobotContainer {
           .a()
           .onTrue(
               new InstantCommand(
-                  () -> {
-                    shooterSubsystem.setDesiredRotorVelocity(30);
-                    shooterSubsystem.setDesiredTransitionSpeed(ShooterConstants.TRANSITION_SPEED);
-                    hopperFloorSubsystem.setDesiredHopperFloorSpeed(
-                        HopperFloorConstants.HOPPER_FLOOR_SPEED);
-                    intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
-                  }));
+                      () -> {
+                        shooterSubsystem.setDesiredRotorVelocity(30);
+                        shooterSubsystem.setDesiredTransitionSpeed(
+                            ShooterConstants.TRANSITION_SPEED);
+                        hopperFloorSubsystem.setDesiredHopperFloorSpeed(
+                            HopperFloorConstants.HOPPER_FLOOR_SPEED);
+                        intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
+                      })
+                  .withName("Shooter Transition Testing"));
 
       // Start -- Reset Heading
       controller
@@ -918,10 +929,10 @@ public class RobotContainer {
 
   public void configureButtonBindings() {
     CommandScheduler.getInstance().getActiveButtonLoop().clear();
-    configureCompDriverButtonBindings();
-    configureCompCodriverButtonBindings();
-    // configureDriverButtonBindings();
-    // configureCodriverButtonBindings();
+    // configureCompDriverButtonBindings();
+    // configureCompCodriverButtonBindings();
+    configureDriverButtonBindings();
+    configureCodriverButtonBindings();
   }
 
   public void configureSystemCheckButtons() {
@@ -1069,12 +1080,25 @@ public class RobotContainer {
         "Commands/DriveToFuelActive",
         driveCmd != null ? driveCmd.getName().equals("DriveToFuel") : false);
 
+    Command shooterCmd = shooterSubsystem.getCurrentCommand();
+    Logger.recordOutput(
+        "Commands/ShooterCommand", shooterCmd != null ? shooterCmd.getName() : "None");
+
     // Logger.recordOutput("Commands/ResetHeading", TODO: make named command an then call it here
 
     Logger.recordOutput("DriveToFuel/Fuel", vision.getFuelPose(drive.getPose()));
     Logger.recordOutput("Drive/Odometry/Fuel", vision.getFuelPose(drive.getPose()));
 
     Logger.recordOutput("Mech/Valid Shot", getValidShot());
+
+    // Logger.recordOutput("Limit Switches/zero", testing0.get());
+    // Logger.recordOutput("Limit Switches/one", testing1.get());
+    // Logger.recordOutput("Limit Switches/two", testing2.get());
+    // Logger.recordOutput("Limit Switches/three", testing3.get());
+    // Logger.recordOutput("Limit Switches/four", testing4.get());
+    // Logger.recordOutput("Limit Switches/five", testing5.get());
+    // Logger.recordOutput("Limit Switches/six", testing6.get());
+    // Logger.recordOutput("Limit Switches/seven", testing7.get());
   }
 
   public boolean getValidShot() {
