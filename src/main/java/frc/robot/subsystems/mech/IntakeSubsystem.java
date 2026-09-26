@@ -284,11 +284,11 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   public boolean isRetractedLimitSwitchTriggered() {
-    return !retractedLimitSwitch.get();
+    return retractedLimitSwitch.get();
   }
 
   public boolean isDeployedLimitSwitchTriggered() {
-    return !deployedLimitSwitch.get();
+    return deployedLimitSwitch.get();
   }
 
   public boolean isDeployed() {
