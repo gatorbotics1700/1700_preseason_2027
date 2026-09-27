@@ -263,20 +263,20 @@ public class RobotContainer {
             .onFalse(DriveCommands.stopDriveCommand(drive));
       }
 
-      // A -- shoot testing
-      controller
-          .a()
-          .onTrue(
-              new InstantCommand(
-                      () -> {
-                        shooterSubsystem.setDesiredRotorVelocity(30);
-                        shooterSubsystem.setDesiredTransitionSpeed(
-                            ShooterConstants.TRANSITION_SPEED);
-                        hopperFloorSubsystem.setDesiredHopperFloorSpeed(
-                            HopperFloorConstants.HOPPER_FLOOR_SPEED);
-                        intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
-                      })
-                  .withName("Shooter Transition Testing"));
+     // A -- shoot testing
+        // controller
+        //     .a()
+        //     .onTrue(
+        //         new InstantCommand(
+        //                 () -> {
+        //                   shooterSubsystem.setDesiredRotorVelocity(30);
+        //                   shooterSubsystem.setDesiredTransitionSpeed(
+        //                       ShooterConstants.TRANSITION_SPEED);
+        //                   hopperFloorSubsystem.setDesiredHopperFloorSpeed(
+        //                       HopperFloorConstants.HOPPER_FLOOR_SPEED);
+        //                   intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
+        //                 })
+        //             .withName("Shooter Transition Testing"));
 
       // Start -- Reset Heading
       controller
@@ -299,20 +299,6 @@ public class RobotContainer {
                       },
                       drive)
                   .ignoringDisable(true));
-
-      // B -- reverse intake
-      controller
-          .b()
-          .whileTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.ReverseIntake(intakeSubsystem))))
-          .onFalse(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
 
       // Y -- mech stop
       controller
@@ -388,6 +374,20 @@ public class RobotContainer {
                   () ->
                       CommandScheduler.getInstance()
                           .schedule(IntakeCommands.RunIntake(intakeSubsystem))))
+          .onFalse(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
+
+      // B -- reverse intake
+      controller
+          .b()
+          .whileTrue(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(IntakeCommands.ReverseIntake(intakeSubsystem))))
           .onFalse(
               new InstantCommand(
                   () ->
@@ -594,21 +594,21 @@ public class RobotContainer {
             .onFalse(DriveCommands.stopDriveCommand(drive));
       }
 
-      // A -- Drive Under Trench
-      controller
-          .a()
-          .onTrue(
-              new InstantCommand(
-                  () -> {
-                    try {
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              DriveUnderTrenchCommand.driveUnderTrench(drive, shooterSubsystem)
-                                  .withName("DriveUnderTrench"));
-                    } catch (Exception e) {
-                      e.printStackTrace();
-                    }
-                  }));
+    //  A -- Drive Under Trench
+        controller
+            .a()
+            .onTrue(
+                new InstantCommand(
+                    () -> {
+                      try {
+                        CommandScheduler.getInstance()
+                            .schedule(
+                                DriveUnderTrenchCommand.driveUnderTrench(drive, shooterSubsystem)
+                                    .withName("DriveUnderTrench"));
+                      } catch (Exception e) {
+                        e.printStackTrace();
+                      }
+                    }));
 
       // B -- Reset Heading
       controller
