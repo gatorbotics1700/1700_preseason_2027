@@ -69,6 +69,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class RobotContainer {
   // Subsystems
@@ -96,6 +97,13 @@ public class RobotContainer {
   private Supplier<Pose2d> drivetrainPose;
 
   /** Null when {@link Constants.Mode#REPLAY} (no hardware). */
+
+  // testing stuff for shooter
+  public static final LoggedNetworkNumber shotSpeed =
+      new LoggedNetworkNumber("/Tuning/Shooter/Shot Speed", 0.0); // TODO this later
+
+  public static final LoggedNetworkNumber hoodAngle =
+      new LoggedNetworkNumber("/Tuning/Hood/Hood Angle", 0.0); // TODO tune
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -263,20 +271,38 @@ public class RobotContainer {
             .onFalse(DriveCommands.stopDriveCommand(drive));
       }
 
-     // A -- shoot testing
-        // controller
-        //     .a()
-        //     .onTrue(
-        //         new InstantCommand(
-        //                 () -> {
-        //                   shooterSubsystem.setDesiredRotorVelocity(30);
-        //                   shooterSubsystem.setDesiredTransitionSpeed(
-        //                       ShooterConstants.TRANSITION_SPEED);
-        //                   hopperFloorSubsystem.setDesiredHopperFloorSpeed(
-        //                       HopperFloorConstants.HOPPER_FLOOR_SPEED);
-        //                   intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
-        //                 })
-        //             .withName("Shooter Transition Testing"));
+      // A -- shoot testing
+      // controller
+      //     .a()
+      //     .onTrue(
+      //         new InstantCommand(
+      //                 () -> {
+      //                   shooterSubsystem.setDesiredRotorVelocity(30);
+      //                   shooterSubsystem.setDesiredTransitionSpeed(
+      //                       ShooterConstants.TRANSITION_SPEED);
+      //                   hopperFloorSubsystem.setDesiredHopperFloorSpeed(
+      //                       HopperFloorConstants.HOPPER_FLOOR_SPEED);
+      //                   intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
+      //                 })
+      //             .withName("Shooter Transition Testing"));
+
+      // POV Up - shoot testing
+      controller
+          .povUp()
+          .onTrue(
+              new InstantCommand(
+                      () -> {
+                        shooterSubsystem.setDesiredRotorVelocity(shotSpeed.get());
+                        shooterSubsystem.setDesiredTransitionSpeed(
+                            ShooterConstants.TRANSITION_SPEED);
+                        hopperFloorSubsystem.setDesiredHopperFloorSpeed(
+                            HopperFloorConstants.HOPPER_FLOOR_SPEED);
+                        intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
+                        hoodSubsystem.setHoodPosition(new Rotation2d(hoodAngle.get()));
+                        System.out.println(
+                            "shot at " + shotSpeed.get() + "and at " + hoodAngle.get());
+                      })
+                  .withName("Shooter Testing with Tuneables"));
 
       // Start -- Reset Heading
       controller
@@ -594,21 +620,21 @@ public class RobotContainer {
             .onFalse(DriveCommands.stopDriveCommand(drive));
       }
 
-    //  A -- Drive Under Trench
-        controller
-            .a()
-            .onTrue(
-                new InstantCommand(
-                    () -> {
-                      try {
-                        CommandScheduler.getInstance()
-                            .schedule(
-                                DriveUnderTrenchCommand.driveUnderTrench(drive, shooterSubsystem)
-                                    .withName("DriveUnderTrench"));
-                      } catch (Exception e) {
-                        e.printStackTrace();
-                      }
-                    }));
+      //  A -- Drive Under Trench
+      controller
+          .a()
+          .onTrue(
+              new InstantCommand(
+                  () -> {
+                    try {
+                      CommandScheduler.getInstance()
+                          .schedule(
+                              DriveUnderTrenchCommand.driveUnderTrench(drive, shooterSubsystem)
+                                  .withName("DriveUnderTrench"));
+                    } catch (Exception e) {
+                      e.printStackTrace();
+                    }
+                  }));
 
       // B -- Reset Heading
       controller
