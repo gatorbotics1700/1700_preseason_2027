@@ -202,6 +202,14 @@ public class RobotContainer {
             .andThen(IntakeCommands.DeployIntake(intakeSubsystem))
             .andThen(IntakeCommands.RunIntake(intakeSubsystem)));
 
+    NamedCommands.registerCommand(
+        "Stationary Shot Command",
+        ShootingCommands.StationaryShootingCommand(
+                                            shooterSubsystem,
+                                            hoodSubsystem,
+                                            hopperFloorSubsystem,
+                                            drivetrainPose));
+
     // Set up auto routines with PathPlanner's auto chooser (using pre-made .auto files)
     autoChooser =
         new LoggedDashboardChooser<>("Auto/PathPlanner Auto", AutoBuilder.buildAutoChooser());
