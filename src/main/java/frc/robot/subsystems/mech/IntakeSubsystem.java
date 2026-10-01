@@ -99,13 +99,15 @@ public class IntakeSubsystem extends SubsystemBase {
     updateCurrentLimitConfigs();
     // updateDeployStatorLimitForPosition();
 
-    if (!sysIdRunning) {
-      if (deployManualControl) {
-        runManualDeployControl();
-      } else {
-        runGoalBasedDeployControl();
-      }
-    }
+    // COMMENTED OUT - Deploy motor stalling, disabled for driver's practice
+    // if (!sysIdRunning) {
+    //   if (deployManualControl) {
+    //     runManualDeployControl();
+    //   } else {
+    //     runGoalBasedDeployControl();
+    //   }
+    // }
+    deployMotor.set(0); // Keep deploy motor stopped
 
     intakeMotor.set(desiredIntakeSpeed);
     intakeLogs();
