@@ -97,7 +97,7 @@ public class HoodSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // desiredAngle = new Rotation2d(Math.toRadians(tunableHoodAngle.get()));
+    desiredAngle = new Rotation2d(Math.toRadians(tunableHoodAngle.get()));
     // Update PID gains from NetworkTables if they've changed, and reapply configs
     Slot0Configs slot0Configs = talonFXConfigs.Slot0;
 
@@ -181,7 +181,7 @@ public class HoodSubsystem extends SubsystemBase {
   }
 
   // sets the current hood position (resets)
-  public void setHoodPosition(Rotation2d desiredAngle) {
+  private void setHoodPosition(Rotation2d desiredAngle) {
     positionControl = true;
     hoodMotor.setControl(m_request.withPosition(degreesToRevs(desiredAngle.getDegrees())));
   }
