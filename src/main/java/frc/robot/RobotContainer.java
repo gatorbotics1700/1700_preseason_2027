@@ -94,7 +94,6 @@ public class RobotContainer {
   private final LoggedDashboardChooser<Command> autoChooser;
   private Supplier<Pose2d> robotPose;
   private Supplier<ChassisSpeeds> chassisSpeeds;
-  private Supplier<Pose2d> drivetrainPose;
 
   /** Null when {@link Constants.Mode#REPLAY} (no hardware). */
 
@@ -205,10 +204,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Stationary Shot Command",
         ShootingCommands.StationaryShootingCommand(
-                                            shooterSubsystem,
-                                            hoodSubsystem,
-                                            hopperFloorSubsystem,
-                                            drivetrainPose));
+            shooterSubsystem, hoodSubsystem, hopperFloorSubsystem, robotPose));
 
     // Set up auto routines with PathPlanner's auto chooser (using pre-made .auto files)
     autoChooser =
@@ -293,6 +289,21 @@ public class RobotContainer {
       //                   intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
       //                 })
       //             .withName("Shooter Transition Testing"));
+      controller
+          .a()
+          .whileTrue(
+              Commands.runOnce(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(
+                              (new PointAtTargetCommand(drive, robotPose))
+                                  .andThen(
+                                      ShootingCommands.StationaryShootingCommand(
+                                          shooterSubsystem,
+                                          hoodSubsystem,
+                                          hopperFloorSubsystem,
+                                          robotPose)))))
+          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
       // POV Up - shoot testing
       controller
@@ -383,23 +394,23 @@ public class RobotContainer {
 
       // X - Point @ Hub & Shoot (without turret) (while true)
       controller
-                .x()
-                .whileTrue(
-                    Commands.runOnce(
-                        () ->
-                            CommandScheduler.getInstance()
-                                .schedule(
-                                    (new PointAtTargetCommand(drive, robotPose))
-                                        .andThen(
-                                            new ShootingCommands.ShootOnTheMoveCommand(
-                                                shooterSubsystem,
-                                                hoodSubsystem,
-                                                hopperFloorSubsystem,
-                                                turretSubsystem,
-                                                robotPose,
-                                                chassisSpeeds)))))
-                .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
-      
+          .x()
+          .whileTrue(
+              Commands.runOnce(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(
+                              (new PointAtTargetCommand(drive, robotPose))
+                                  .andThen(
+                                      new ShootingCommands.ShootOnTheMoveCommand(
+                                          shooterSubsystem,
+                                          hoodSubsystem,
+                                          hopperFloorSubsystem,
+                                          turretSubsystem,
+                                          robotPose,
+                                          chassisSpeeds)))))
+          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+
       // Right Trigger -- Run Intake
       controller
           .rightTrigger()
@@ -725,22 +736,6 @@ public class RobotContainer {
                                           robotPose,
                                           chassisSpeeds)))))
           .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
-
-      //   controller
-      //       .rightTrigger()
-      //       .whileTrue(
-      //           Commands.runOnce(
-      //               () ->
-      //                   CommandScheduler.getInstance()
-      //                       .schedule(
-      //                           (new PointAtTargetCommand(drive, robotPose))
-      //                               .andThen(
-      //                                   ShootingCommands.StationaryShootingCommand(
-      //                                       shooterSubsystem,
-      //                                       hoodSubsystem,
-      //                                       hopperFloorSubsystem,
-      //                                       drivetrainPose)))))
-      //       .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
       // Right Trigger -- Run Intake
       controller
