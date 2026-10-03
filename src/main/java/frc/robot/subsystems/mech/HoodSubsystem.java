@@ -98,7 +98,7 @@ public class HoodSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
-    desiredAngle = new Rotation2d(Math.toRadians(tunableHoodAngle.get()));
+    // desiredAngle = new Rotation2d(Math.toRadians(tunableHoodAngle.get()));
     // Update PID gains from NetworkTables if they've changed, and reapply configs
     Slot0Configs slot0Configs = talonFXConfigs.Slot0;
 
@@ -334,7 +334,7 @@ public class HoodSubsystem extends SubsystemBase {
     Logger.recordOutput("Mech/Hood/Current Limit Reached", isCurrentLimitReached());
     Logger.recordOutput(
         "Mech/Hood/Control Mode", positionControl ? "position control" : "voltage control");
-    Logger.recordOutput("Mech/Hood/tunable value", tunableHoodAngle.get());
+    // Logger.recordOutput("Mech/Hood/tunable value", tunableHoodAngle.get());
     // SysID
     Logger.recordOutput("Mech/Hood/SysID/hoodSysIDRunning", sysIdRunning);
     if (sysIdRunning) {

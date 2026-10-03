@@ -662,6 +662,7 @@ public final class Constants {
             new Pose2d(2.6, 4.034, new Rotation2d(0)), new Rotation2d(Math.toRadians(60)), 48);
     public static final ShotParameters RED_SHOOT_M =
         new ShotParameters(
+            // 13.9 4.034
             Calculations.mirrorPoseAcrossAlliance(BLUE_SHOOT_M.pose),
             new Rotation2d(Math.toRadians(60)),
             48);
