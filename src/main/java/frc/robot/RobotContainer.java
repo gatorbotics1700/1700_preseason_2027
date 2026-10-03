@@ -86,7 +86,7 @@ public class RobotContainer {
 
   // Controllers
   private CommandXboxController controller = null; // port 0
-  private CommandXboxController controller_two = null; // port 3
+  private CommandXboxController controller_two = null; // port 1
 
   // Dashboard inputs
   // private final MultiStepAutoChooser multiStepAutoChooser; // COMMENTED OUT - using PathPlanner
