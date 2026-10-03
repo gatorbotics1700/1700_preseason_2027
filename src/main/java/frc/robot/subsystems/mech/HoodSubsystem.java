@@ -181,7 +181,7 @@ public class HoodSubsystem extends SubsystemBase {
   }
 
   // sets the current hood position (resets)
-  public void setHoodPosition(Rotation2d desiredAngle) {
+  private void setHoodPosition(Rotation2d desiredAngle) {
     positionControl = true;
     hoodMotor.setControl(m_request.withPosition(degreesToRevs(desiredAngle.getDegrees())));
   }

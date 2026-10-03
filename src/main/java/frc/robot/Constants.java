@@ -657,8 +657,16 @@ public final class Constants {
             Calculations.mirrorPoseAcrossXAxis(BLUE_LEFT.pose),
             new Rotation2d(Math.toRadians(64.4)),
             62.2);
+    public static final ShotParameters BLUE_SHOOT_M =
+        new ShotParameters(
+            new Pose2d(2.6, 4.034, new Rotation2d(0)), new Rotation2d(Math.toRadians(60)), 48);
+    public static final ShotParameters RED_SHOOT_M =
+        new ShotParameters(
+            Calculations.mirrorPoseAcrossAlliance(BLUE_SHOOT_M.pose),
+            new Rotation2d(Math.toRadians(60)),
+            48);
     public static final ShotParameters[] STATIONARY_SHOT_ARRAY = {
-      RED_LEFT, RED_RIGHT, BLUE_LEFT, BLUE_RIGHT
+      RED_LEFT, RED_RIGHT, BLUE_LEFT, BLUE_RIGHT, RED_SHOOT_M, BLUE_SHOOT_M
     };
   }
 
