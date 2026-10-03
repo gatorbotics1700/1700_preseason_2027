@@ -101,9 +101,6 @@ public class RobotContainer {
   public static final LoggedNetworkNumber shotSpeed =
       new LoggedNetworkNumber("/Tuning/Shooter/Shot Speed", 0.0); // TODO this later
 
-  public static final LoggedNetworkNumber hoodAngle =
-      new LoggedNetworkNumber("/Tuning/Hood/Hood Angle", 77); // TODO tune
-
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
 
@@ -317,9 +314,7 @@ public class RobotContainer {
                         hopperFloorSubsystem.setDesiredHopperFloorSpeed(
                             HopperFloorConstants.HOPPER_FLOOR_SPEED);
                         // intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
-                        hoodSubsystem.setDesiredAngle(new Rotation2d(hoodAngle.get()));
-                        System.out.println(
-                            "shot at " + shotSpeed.get() + "and at " + hoodAngle.get());
+
                       })
                   .withName("Shooter Testing with Tuneables"));
 
