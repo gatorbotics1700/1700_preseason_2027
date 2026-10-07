@@ -275,36 +275,36 @@ public class RobotContainer {
             .onFalse(DriveCommands.stopDriveCommand(drive));
       }
 
-      // A -- shoot testing
-      // controller
-      //     .a()
-      //     .onTrue(
-      //         new InstantCommand(
-      //                 () -> {
-      //                   shooterSubsystem.setDesiredRotorVelocity(30);
-      //                   shooterSubsystem.setDesiredTransitionSpeed(
-      //                       ShooterConstants.TRANSITION_SPEED);
-      //                   hopperFloorSubsystem.setDesiredHopperFloorSpeed(
-      //                       HopperFloorConstants.HOPPER_FLOOR_SPEED);
-      //                   intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
-      //                 })
-      //             .withName("Shooter Transition Testing"));
-      controller
-          .a()
-          .whileTrue(
-              Commands.runOnce(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              (new PointAtTargetCommand(drive, robotPose))
-                                  .andThen(
-                                      ShootingCommands.StationaryShootingCommand(
-                                          shooterSubsystem,
-                                          hoodSubsystem,
-                                          hopperFloorSubsystem,
-                                          robotPose)))))
-          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
-
+      //  A -- shoot testing
+      //   controller
+      //       .a()
+      //       .onTrue(
+      //           new InstantCommand(
+      //                   () -> {
+      //                     shooterSubsystem.setDesiredRotorVelocity(30);
+      //                     shooterSubsystem.setDesiredTransitionSpeed(
+      //                         ShooterConstants.TRANSITION_SPEED);
+      //                     hopperFloorSubsystem.setDesiredHopperFloorSpeed(
+      //                         HopperFloorConstants.HOPPER_FLOOR_SPEED);
+      //                     intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
+      //                   })
+      //               .withName("Shooter Transition Testing"));
+      /*  controller
+                .a()
+                .whileTrue(
+                    Commands.runOnce(
+                        () ->
+                            CommandScheduler.getInstance()
+                                .schedule(
+                                    (new PointAtTargetCommand(drive, robotPose))
+                                        .andThen(
+                                            ShootingCommands.StationaryShootingCommand(
+                                                shooterSubsystem,
+                                                hoodSubsystem,
+                                                hopperFloorSubsystem,
+                                                robotPose)))))
+                .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+      */
       // POV Up - shoot testing
       controller
           .povUp()
