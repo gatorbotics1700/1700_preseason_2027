@@ -29,7 +29,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Shooter Command"
+                  "name": "Stationary Shot Command"
                 }
               }
             ]
