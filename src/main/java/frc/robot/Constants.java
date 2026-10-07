@@ -604,6 +604,7 @@ public final class Constants {
     public static final double HOMING_SPEED = -0.4; // TODO tune
     public static final double RETRACTING_SPEED = -0.4; // TODO: tune
     public static final double INTAKING_SPEED = -0.4; // TODO: tune
+    public static final double OUTTAKING_SPEED = 0.2; // TODO tune
 
     public static final double POSITION_DEADBAND_DEGREES = 3;
 

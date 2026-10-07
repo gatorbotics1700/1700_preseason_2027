@@ -29,7 +29,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Shooter Command"
+                  "name": "Stationery Shot Command"
                 }
               }
             ]
@@ -60,7 +60,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Intaking Command"
+                  "name": "Stationery Shot Command"
                 }
               }
             ]
@@ -85,7 +85,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Shooter Command"
+                  "name": "Stationery Shot Command"
                 }
               }
             ]
