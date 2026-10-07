@@ -657,8 +657,8 @@ public final class Constants {
             Calculations.mirrorPoseAcrossXAxis(BLUE_LEFT.pose),
             new Rotation2d(Math.toRadians(64.4)),
             62.2);
-    //1M means 1M away from being pressed up against hub
-     public static final ShotParameters BLUE_SHOOT_1M =
+    // 1M means 1M away from being pressed up against hub
+    public static final ShotParameters BLUE_SHOOT_1M =
         new ShotParameters(
             new Pose2d(2.6, 4.034, new Rotation2d(0)), new Rotation2d(Math.toRadians(60)), 48);
     public static final ShotParameters RED_SHOOT_1M =
@@ -684,7 +684,14 @@ public final class Constants {
             new Rotation2d(Math.toRadians(72)),
             50);
     public static final ShotParameters[] STATIONARY_SHOT_ARRAY = {
-      RED_LEFT, RED_RIGHT, BLUE_LEFT, BLUE_RIGHT, RED_SHOOT_1M, BLUE_SHOOT_1M, BLUE_AGAINST_HUB, RED_AGAINST_HUB
+      RED_LEFT,
+      RED_RIGHT,
+      BLUE_LEFT,
+      BLUE_RIGHT,
+      RED_SHOOT_1M,
+      BLUE_SHOOT_1M,
+      BLUE_AGAINST_HUB,
+      RED_AGAINST_HUB
     };
   }
 

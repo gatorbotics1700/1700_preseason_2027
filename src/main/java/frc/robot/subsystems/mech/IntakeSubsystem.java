@@ -150,7 +150,7 @@ public class IntakeSubsystem extends SubsystemBase {
     rightIntakeCurrentLimitConfigs.StatorCurrentLimitEnable = true;
 
     deployCurrentLimitConfigs = deployTalonFXConfigs.CurrentLimits;
-    deployCurrentLimitConfigs.StatorCurrentLimit = 25;
+    deployCurrentLimitConfigs.StatorCurrentLimit = 50;
     deployCurrentLimitConfigs.StatorCurrentLimitEnable = true;
 
     leftDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
@@ -198,12 +198,15 @@ public class IntakeSubsystem extends SubsystemBase {
         useDeployPositionControl
             && Math.abs(getDesiredAngle().getDegrees() - getCurrentAngle().getDegrees())
                 <= IntakeConstants.POSITION_DEADBAND_DEGREES;
+    boolean currentLimitReached =
+        leftDeployMotor.getStatorCurrent().getValueAsDouble() >= 50
+            || rightDeployMotor.getStatorCurrent().getValueAsDouble() >= 50;
     if (intakeState.equals(IntakeDeployState.DEPLOYING)) {
-      if (isDeployedLimitSwitchTriggered() || atPositionDeadband) {
+      if (isDeployedLimitSwitchTriggered() || atPositionDeadband || currentLimitReached) {
         intakeState = IntakeDeployState.DEPLOYED_STOPPED;
       }
     } else if (intakeState.equals(IntakeDeployState.RETRACTING)) {
-      if (isRetractedLimitSwitchTriggered() || atPositionDeadband) {
+      if (isRetractedLimitSwitchTriggered() || atPositionDeadband || currentLimitReached) {
         intakeState = IntakeDeployState.RETRACTED_STOPPED;
       }
     }
@@ -477,7 +480,7 @@ public class IntakeSubsystem extends SubsystemBase {
     Logger.recordOutput("Mech/Intake/Intake/Desired Intake Speed", desiredIntakeSpeed);
     Logger.recordOutput(
         "Mech/Intake/Intake/Current Limit", leftIntakeCurrentLimitConfigs.StatorCurrentLimit);
-
+    Logger.recordOutput("Mech/Intake/intake deploy state", intakeState.toString());
     // SysID
     Logger.recordOutput(
         "Mech/Intake/SysID/intakeSysIDRunning", intakeState.equals(IntakeDeployState.SYSID));
