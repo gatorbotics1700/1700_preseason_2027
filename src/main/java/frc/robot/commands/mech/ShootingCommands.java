@@ -230,14 +230,6 @@ public class ShootingCommands {
       HopperFloorSubsystem hopperFloorSubsystem,
       Supplier<Pose2d> drivetrainPose) {
     ShotParameters closestShot = null;
-    Logger.recordOutput("Mech/Shooter/Stationary/RED_RIGHT", ShooterConstants.RED_RIGHT.pose);
-    Logger.recordOutput("Mech/Shooter/Stationary/BLUE_LEFT", ShooterConstants.BLUE_LEFT.pose);
-    Logger.recordOutput(
-        "Mech/Shooter/Stationary/RED_RIGHT distance",
-        Calculations.distanceToPoseInMeters(drivetrainPose.get(), ShooterConstants.RED_RIGHT.pose));
-    Logger.recordOutput(
-        "Mech/Shooter/Stationary/BLUE_LEFT distance",
-        Calculations.distanceToPoseInMeters(drivetrainPose.get(), ShooterConstants.BLUE_LEFT.pose));
     for (ShotParameters shot : ShooterConstants.STATIONARY_SHOT_ARRAY) {
       if (closestShot == null
           || Calculations.distanceToPoseInMeters(drivetrainPose.get(), shot.pose)
@@ -246,7 +238,7 @@ public class ShootingCommands {
       }
     }
     return AutoBuilder.pathfindToPose(
-            closestShot.pose, new PathConstraints(4, 12, Math.toRadians(700), Math.toRadians(1000)))
+            closestShot.pose, new PathConstraints(1, 1, Math.toRadians(700), Math.toRadians(1000)))
         .andThen(
             new ShootingCommand(
                 shooterSubsystem, hoodSubsystem, hopperFloorSubsystem, drivetrainPose, closestShot))

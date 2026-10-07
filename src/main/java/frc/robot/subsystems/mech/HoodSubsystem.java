@@ -54,9 +54,10 @@ public class HoodSubsystem extends SubsystemBase {
       new LoggedNetworkNumber("/Tuning/Hood/MM kV", 0.16);
   public static final LoggedNetworkNumber hoodMMKa =
       new LoggedNetworkNumber("/Tuning/Hood/MM kA", 0.1);
-  public static final LoggedNetworkNumber tunableHoodAngle =
-      new LoggedNetworkNumber(
-          "/Tuning/Hood/tunableHoodAngle", HoodConstants.RETRACTED_POSITION.getDegrees());
+
+  // public static final LoggedNetworkNumber tunableHoodAngle =
+  //     new LoggedNetworkNumber(
+  //         "/Tuning/Hood/tunableHoodAngle", HoodConstants.RETRACTED_POSITION.getDegrees());
 
   public HoodSubsystem() {
     // MOTION MAGIC PID/FEEDFORWARD CONFIGS
@@ -181,7 +182,7 @@ public class HoodSubsystem extends SubsystemBase {
   }
 
   // sets the current hood position (resets)
-  public void setHoodPosition(Rotation2d desiredAngle) {
+  private void setHoodPosition(Rotation2d desiredAngle) {
     positionControl = true;
     hoodMotor.setControl(m_request.withPosition(degreesToRevs(desiredAngle.getDegrees())));
   }
@@ -333,7 +334,7 @@ public class HoodSubsystem extends SubsystemBase {
     Logger.recordOutput("Mech/Hood/Current Limit Reached", isCurrentLimitReached());
     Logger.recordOutput(
         "Mech/Hood/Control Mode", positionControl ? "position control" : "voltage control");
-
+    // Logger.recordOutput("Mech/Hood/tunable value", tunableHoodAngle.get());
     // SysID
     Logger.recordOutput("Mech/Hood/SysID/hoodSysIDRunning", sysIdRunning);
     if (sysIdRunning) {
