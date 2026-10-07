@@ -687,14 +687,15 @@ public class RobotContainer {
                               intakeSubsystem)))); */
 
       // X -- Slow Drive Toggle
-      controller
-          .x()
-          .onTrue(
-              Commands.runOnce(
-                  () -> {
-                    drive.toggleSlowDrive();
-                  },
-                  drive));
+      /*   controller
+      .x()
+      .onTrue(
+          Commands.runOnce(
+              () -> {
+                drive.toggleSlowDrive();
+              },
+              drive));
+              */
 
       /* // Left Trigger -- Shoot with Turret (while true)
       controller
@@ -799,10 +800,10 @@ public class RobotContainer {
                                   hoodSubsystem,
                                   intakeSubsystem))));
 
-      // B - toggle on and off shoot
+      // B - stationary shoot
       controller_two
           .b()
-          .whileTrue(
+          .onTrue(
               Commands.runOnce(
                   () ->
                       CommandScheduler.getInstance()
@@ -813,18 +814,22 @@ public class RobotContainer {
                                           shooterSubsystem,
                                           hoodSubsystem,
                                           hopperFloorSubsystem,
-                                          robotPose)))))
-          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+                                          robotPose)))));
 
-    // X vomit/outtake
+      // Y - stop shooting
+      controller_two
+          .y()
+          .onTrue(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+
+      // X vomit/outtake
       controller_two
           .x()
           .onTrue(
               new InstantCommand(
                   () -> intakeSubsystem.setIntakeSpeed(Constants.IntakeConstants.OUTTAKING_SPEED)));
 
-    // TODO may need to check if we're still in bounds
-    // manual hood adjustment - plus 5 degree
+      // TODO may need to check if we're still in bounds
+      // manual hood adjustment - plus 5 degree
       controller_two
           .povUp()
           .onTrue(
@@ -833,7 +838,7 @@ public class RobotContainer {
                       hoodSubsystem.setDesiredAngle(
                           new Rotation2d(hoodSubsystem.getCurrentAngle().getDegrees() + 5))));
 
-    // manual hood adjustment - minus 5 degree
+      // manual hood adjustment - minus 5 degree
       controller_two
           .povDown()
           .onTrue(
