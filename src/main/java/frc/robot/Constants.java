@@ -619,7 +619,9 @@ public final class Constants {
     public static final int LEFT_TRANSITION_MOTOR_CAN_ID = 18;
     public static final int RIGHT_TRANSITION_MOTOR_CAN_ID = 19;
 
-    public static final double TRANSITION_SPEED = 0.4;
+    public static final double TRANSITION_SPEED = 0.2;
+
+    // 0.4
 
     /**
      * Stator current limit for transition rollers (A). Limits torque when a ball is jammed so the

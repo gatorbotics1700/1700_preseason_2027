@@ -238,7 +238,7 @@ public class ShootingCommands {
       }
     }
     return AutoBuilder.pathfindToPose(
-            closestShot.pose, new PathConstraints(1, 1, Math.toRadians(700), Math.toRadians(1000)))
+            closestShot.pose, new PathConstraints(1, 1, Math.toRadians(300), Math.toRadians(400)))
         .andThen(
             new ShootingCommand(
                 shooterSubsystem, hoodSubsystem, hopperFloorSubsystem, drivetrainPose, closestShot))

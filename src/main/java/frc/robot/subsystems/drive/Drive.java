@@ -148,7 +148,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
   private boolean slowDrive;
 
   private static final double TRANSLATION_kP = 2.5;
-  private static final double ROTATION_kP = 0.2;
+  private static final double ROTATION_kP = 0.1;
   private final double TRANSLATION_MIN_SPEED = 0.5;
   private final double ROTATION_MIN_SPEED = 0.3;
   private final double TRANSLATION_MAX_SPEED = 1.8;

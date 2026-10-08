@@ -803,18 +803,18 @@ public class RobotContainer {
       // B - stationary shoot
       controller_two
           .b()
-          .onTrue(
+          .whileTrue(
               Commands.runOnce(
                   () ->
                       CommandScheduler.getInstance()
                           .schedule(
-                              (new PointAtTargetCommand(drive, robotPose))
-                                  .andThen(
-                                      ShootingCommands.StationaryShootingCommand(
-                                          shooterSubsystem,
-                                          hoodSubsystem,
-                                          hopperFloorSubsystem,
-                                          robotPose)))));
+                              ShootingCommands.StationaryShootingCommand(
+                                      shooterSubsystem,
+                                      hoodSubsystem,
+                                      hopperFloorSubsystem,
+                                      robotPose)
+                                  .andThen(new PointAtTargetCommand(drive, robotPose)))))
+          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
       // Y - stop shooting
       controller_two
@@ -1000,10 +1000,10 @@ public class RobotContainer {
 
   public void configureButtonBindings() {
     CommandScheduler.getInstance().getActiveButtonLoop().clear();
-    // configureCompDriverButtonBindings();
-    // configureCompCodriverButtonBindings();
-    configureDriverButtonBindings();
-    configureCodriverButtonBindings();
+    configureCompDriverButtonBindings();
+    configureCompCodriverButtonBindings();
+    // configureDriverButtonBindings();
+    // configureCodriverButtonBindings();
   }
 
   public void configureSystemCheckButtons() {

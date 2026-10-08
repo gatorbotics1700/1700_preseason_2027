@@ -142,11 +142,11 @@ public class IntakeSubsystem extends SubsystemBase {
     // and slower
 
     leftIntakeCurrentLimitConfigs = leftIntakeTalonFXConfigs.CurrentLimits;
-    leftIntakeCurrentLimitConfigs.StatorCurrentLimit = 50;
+    leftIntakeCurrentLimitConfigs.StatorCurrentLimit = 90;
     leftIntakeCurrentLimitConfigs.StatorCurrentLimitEnable = true;
 
     rightIntakeCurrentLimitConfigs = rightIntakeTalonFXConfigs.CurrentLimits;
-    rightIntakeCurrentLimitConfigs.StatorCurrentLimit = 50;
+    rightIntakeCurrentLimitConfigs.StatorCurrentLimit = 90;
     rightIntakeCurrentLimitConfigs.StatorCurrentLimitEnable = true;
 
     deployCurrentLimitConfigs = deployTalonFXConfigs.CurrentLimits;
@@ -456,9 +456,9 @@ public class IntakeSubsystem extends SubsystemBase {
   public void updateCurrentLimitConfigs() {
     double newIntakeCurrentLimit = intakeCurrentLimit.get();
 
-    if (newIntakeCurrentLimit != leftIntakeCurrentLimitConfigs.StatorCurrentLimit) {
-      leftIntakeCurrentLimitConfigs.StatorCurrentLimit = newIntakeCurrentLimit;
-      leftIntakeMotor.getConfigurator().apply(leftIntakeTalonFXConfigs);
+    if (newIntakeCurrentLimit != rightIntakeCurrentLimitConfigs.StatorCurrentLimit) {
+      rightIntakeCurrentLimitConfigs.StatorCurrentLimit = newIntakeCurrentLimit;
+      rightIntakeMotor.getConfigurator().apply(rightIntakeTalonFXConfigs);
     }
   }
 
