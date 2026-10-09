@@ -794,11 +794,11 @@ public class RobotContainer {
                       CommandScheduler.getInstance()
                           .schedule(
                               ShootingCommands.StationaryShootingCommand(
-                                      shooterSubsystem,
-                                      hoodSubsystem,
-                                      hopperFloorSubsystem,
-                                      drive,
-                                      robotPose))))
+                                  shooterSubsystem,
+                                  hoodSubsystem,
+                                  hopperFloorSubsystem,
+                                  drive,
+                                  robotPose))))
           .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
       // Y - stop shooting

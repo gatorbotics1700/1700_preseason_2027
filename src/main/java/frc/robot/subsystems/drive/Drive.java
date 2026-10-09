@@ -179,7 +179,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
         this::setPose,
         this::getChassisSpeeds,
         this::runVelocity,
-        new PPHolonomicDriveController(new PIDConstants(9.0, 0, 1), new PIDConstants(15.0, 0, 0)),
+        new PPHolonomicDriveController(new PIDConstants(7.0, 0, 0.4), new PIDConstants(15.0, 0, 0)),
         PP_CONFIG,
         () ->
             false, // Disable alliance flipping - tag poses are already in correct coordinate system
