@@ -11,6 +11,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FieldCoordinates;
 import frc.robot.Constants.HopperFloorConstants;
 import frc.robot.Constants.ShooterConstants;
+import frc.robot.commands.drive.PointAtTargetCommand;
+import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.mech.HoodSubsystem;
 import frc.robot.subsystems.mech.HopperFloorSubsystem;
 import frc.robot.subsystems.mech.ShooterSubsystem;
@@ -228,6 +230,7 @@ public class ShootingCommands {
       ShooterSubsystem shooterSubsystem,
       HoodSubsystem hoodSubsystem,
       HopperFloorSubsystem hopperFloorSubsystem,
+      Drive drive,
       Supplier<Pose2d> drivetrainPose) {
     ShotParameters closestShot = null;
     for (ShotParameters shot : ShooterConstants.STATIONARY_SHOT_ARRAY) {
@@ -239,6 +242,7 @@ public class ShootingCommands {
     }
     return AutoBuilder.pathfindToPose(
             closestShot.pose, new PathConstraints(1, 1, Math.toRadians(300), Math.toRadians(400)))
+        .andThen(new PointAtTargetCommand(drive, drivetrainPose))
         .andThen(
             new ShootingCommand(
                 shooterSubsystem, hoodSubsystem, hopperFloorSubsystem, drivetrainPose, closestShot))

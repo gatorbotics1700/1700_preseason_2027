@@ -201,7 +201,7 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Stationary Shot Command",
         ShootingCommands.StationaryShootingCommand(
-            shooterSubsystem, hoodSubsystem, hopperFloorSubsystem, robotPose));
+            shooterSubsystem, hoodSubsystem, hopperFloorSubsystem, drive, robotPose));
 
     // Set up auto routines with PathPlanner's auto chooser (using pre-made .auto files)
     autoChooser =
@@ -286,21 +286,6 @@ public class RobotContainer {
                         intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
                       })
                   .withName("Shooter Transition Testing"));
-      //   controller
-      //       .a()
-      //       .whileTrue(
-      //           Commands.runOnce(
-      //               () ->
-      //                   CommandScheduler.getInstance()
-      //                       .schedule(
-      //                           (new PointAtTargetCommand(drive, robotPose))
-      //                               .andThen(
-      //                                   ShootingCommands.StationaryShootingCommand(
-      //                                       shooterSubsystem,
-      //                                       hoodSubsystem,
-      //                                       hopperFloorSubsystem,
-      //                                       robotPose)))))
-      //       .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
       // POV Up - shoot testing
       controller
@@ -812,8 +797,8 @@ public class RobotContainer {
                                       shooterSubsystem,
                                       hoodSubsystem,
                                       hopperFloorSubsystem,
-                                      robotPose)
-                                  .andThen(new PointAtTargetCommand(drive, robotPose)))))
+                                      drive,
+                                      robotPose))))
           .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
       // Y - stop shooting
