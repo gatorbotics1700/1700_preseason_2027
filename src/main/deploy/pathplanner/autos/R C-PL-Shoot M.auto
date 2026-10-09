@@ -29,7 +29,11 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Shooter Command"
+<<<<<<< HEAD
+                  "name": "Stationery Shot Command"
+=======
+                  "name": "Stationary Shot Command"
+>>>>>>> refs/remotes/origin/main
                 }
               }
             ]
