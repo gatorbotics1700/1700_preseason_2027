@@ -79,7 +79,7 @@ public class IntakeSubsystem extends SubsystemBase {
       new LoggedNetworkNumber("/Tuning/Intake/Expo kV", 0.1);
 
   public static final LoggedNetworkNumber intakeCurrentLimit =
-      new LoggedNetworkNumber("/Tuning/Intake/Intake Current Limit", 25);
+      new LoggedNetworkNumber("/Tuning/Intake/Intake Current Limit", 90);
 
   private boolean useDeployPositionControl = false;
   private double desiredIntakeSpeed;

@@ -580,7 +580,7 @@ public final class Constants {
 
   public static final class IntakeConstants {
     public static final int LEFT_INTAKE_MOTOR_CAN_ID = 8;
-    public static final int RIGHT_INTAKE_MOTOR_CAN_ID = 11; // TODO arbitrary, set real id
+    public static final int RIGHT_INTAKE_MOTOR_CAN_ID = 11;
     public static final int INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID = 9;
     public static final int INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID = 10;
     public static final int RETRACTED_LIMIT_SWITCH_PORT = 3;
@@ -603,7 +603,7 @@ public final class Constants {
 
     public static final double HOMING_SPEED = -0.4; // TODO tune
     public static final double RETRACTING_SPEED = -0.4; // TODO: tune
-    public static final double INTAKING_SPEED = -0.8; // TODO: tune
+    public static final double INTAKING_SPEED = -0.4; // TODO: tune
     public static final double OUTTAKING_SPEED = 0.2; // TODO tune
 
     public static final double POSITION_DEADBAND_DEGREES = 3;
