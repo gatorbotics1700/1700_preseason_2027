@@ -29,7 +29,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Stationery Shot Command"
+                  "name": "Stationary Shot Command"
                 }
               }
             ]
@@ -91,7 +91,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Stationery Shot Command"
+                  "name": "Stationary Shot Command"
                 }
               }
             ]
@@ -107,6 +107,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Center Autos",
+  "folder": null,
   "choreoAuto": false
 }

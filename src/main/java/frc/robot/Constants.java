@@ -581,7 +581,7 @@ public final class Constants {
 
   public static final class IntakeConstants {
     public static final int LEFT_INTAKE_MOTOR_CAN_ID = 8;
-    public static final int RIGHT_INTAKE_MOTOR_CAN_ID = 11; // TODO arbitrary, set real id
+    public static final int RIGHT_INTAKE_MOTOR_CAN_ID = 11;
     public static final int INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID = 9;
     public static final int INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID = 10;
     public static final int RETRACTED_LIMIT_SWITCH_PORT = 3;
@@ -641,27 +641,27 @@ public final class Constants {
 
     public static final Translation3d BOT_TO_SHOOTER = new Translation3d(0.127, 0, 0.429);
 
-    public static final ShotParameters RED_RIGHT =
-        new ShotParameters(
-            new Pose2d(14.17, 1.25, new Rotation2d(Math.toRadians(129))),
-            new Rotation2d(Math.toRadians(64.4)),
-            62.2);
-    public static final ShotParameters BLUE_LEFT =
-        new ShotParameters(
-            Calculations.mirrorPoseAcrossAlliance(RED_RIGHT.pose),
-            new Rotation2d(Math.toRadians(64.4)),
-            62.2);
-    public static final ShotParameters RED_LEFT =
-        new ShotParameters(
-            Calculations.mirrorPoseAcrossXAxis(RED_RIGHT.pose),
-            new Rotation2d(Math.toRadians(64.4)),
-            62.2);
-    public static final ShotParameters BLUE_RIGHT =
-        new ShotParameters(
-            Calculations.mirrorPoseAcrossXAxis(BLUE_LEFT.pose),
-            new Rotation2d(Math.toRadians(64.4)),
-            62.2);
-    // 1M means 1M away from being pressed up against hub
+    // public static final ShotParameters RED_RIGHT =
+    //     new ShotParameters(
+    //         new Pose2d(14.17, 1.25, new Rotation2d(Math.toRadians(129))),
+    //         new Rotation2d(Math.toRadians(64.4)),
+    //         62.2);
+    // public static final ShotParameters BLUE_LEFT =
+    //     new ShotParameters(
+    //         Calculations.mirrorPoseAcrossAlliance(RED_RIGHT.pose),
+    //         new Rotation2d(Math.toRadians(64.4)),
+    //         62.2);
+    // public static final ShotParameters RED_LEFT =
+    //     new ShotParameters(
+    //         Calculations.mirrorPoseAcrossXAxis(RED_RIGHT.pose),
+    //         new Rotation2d(Math.toRadians(64.4)),
+    //         62.2);
+    // public static final ShotParameters BLUE_RIGHT =
+    //     new ShotParameters(
+    //         Calculations.mirrorPoseAcrossXAxis(BLUE_LEFT.pose),
+    //         new Rotation2d(Math.toRadians(64.4)),
+    //         62.2);
+    // // 1M means 1M away from being pressed up against hub
     public static final ShotParameters BLUE_SHOOT_1M =
         new ShotParameters(
             new Pose2d(2.6, 4.034, new Rotation2d(0)), new Rotation2d(Math.toRadians(60)), 48);
@@ -688,14 +688,11 @@ public final class Constants {
             new Rotation2d(Math.toRadians(72)),
             50);
     public static final ShotParameters[] STATIONARY_SHOT_ARRAY = {
-      RED_LEFT,
-      RED_RIGHT,
-      BLUE_LEFT,
-      BLUE_RIGHT,
-      RED_SHOOT_1M,
-      BLUE_SHOOT_1M,
-      BLUE_AGAINST_HUB,
-      RED_AGAINST_HUB
+      //   RED_LEFT,
+      //   RED_RIGHT,
+      //   BLUE_LEFT,
+      //   BLUE_RIGHT,
+      RED_SHOOT_1M, BLUE_SHOOT_1M, BLUE_AGAINST_HUB, RED_AGAINST_HUB
     };
   }
 
