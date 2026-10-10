@@ -179,7 +179,6 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
 
-    // BLAKELY TODO TAKE OUT WHEN DONEEE
     // Configure AutoBuilder for PathPlanner
     AutoBuilder.configure(
         this::getPose,
