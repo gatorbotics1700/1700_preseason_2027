@@ -15,6 +15,8 @@ public class CoralShooterCommand extends Command {
 
   /* TODO: declare the CoralShooterSubsystem, voltage, and start time variables here */
 
+
+
   /** Creates a new CoralShooterCommand. */
   public CoralShooterCommand(CoralShooterSubsystem coralShooterSubsystem, double voltage) {
     /* TODO: assign the values of the parameters to the variables you instantiated */

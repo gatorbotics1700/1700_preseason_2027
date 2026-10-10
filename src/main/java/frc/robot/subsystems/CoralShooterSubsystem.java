@@ -15,21 +15,32 @@ import frc.robot.Constants;
 public class CoralShooterSubsystem extends SubsystemBase {
   // You need to have two TalonFX motors (left and right) and a DigitalInput limit switch
   /* TODO: declare your motors and limit switch here */
+  private final TalonFX flywheelMotor;
+  private final TalonFX kickerMotor;
+  private final TalonFX leftTransitionMotor;
+  private final TalonFX rightTransitionMotor;
 
   /** Creates a new CoralShooterSubsystem. */
   public CoralShooterSubsystem() {
     // To instantiate your motor, you want to create a new TalonFX object
       // Make sure to include both the CAN ID and the CANBus name from Constants.java
     /* TODO: instantiate your motors here */
+    flywheelMotor =
+      new TalonFX(ShooterConstants.LEFT_FLYWHEEL_MOTOR_CAN_ID, TunerConstants.mechCANBus);
+    kickerMotor = new TalonFX(ShooterConstants.TRANSITION_MOTOR_CAN_ID, TunerConstants.mechCANBus);
+    leftTransitionMotor = 
+      new TalonFX(ShooterConstants.LEFT_TRANSITION_MOTOR_CAN_ID, TunerConstants.mechCANBus);
+    rightTransitionMotor =
+      new TalonFX(ShooterConstants.RIGHT_TRANSITION_MOTOR_CAN_ID, TunerConstants.mechCANBus);
 
     // This part of the code is making it so if we give the motors the same voltage, they'll go in opposite directions
       // Since the wheels have to spin the same direction but the motors are mounted on opposite sides
     /* TODO: put your right motor name here and uncomment the next few lines */
-        // .getConfigurator()
-        // .apply(
-        //     new TalonFXConfiguration()
-        //         .withMotorOutput(
-        //             new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive)));
+         .getConfigurator()
+         .apply(
+             new TalonFXConfiguration()
+                 .withMotorOutput(
+                     new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive)));
 
     // You must also instantiate your limit switch by creating a new DigitalInput object
       // Make sure to use the limit switch constant in Constants.java
