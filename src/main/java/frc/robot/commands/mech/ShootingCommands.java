@@ -2,7 +2,11 @@ package frc.robot.commands.mech;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.path.PathConstraints;
+
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -231,21 +235,83 @@ public class ShootingCommands {
       HoodSubsystem hoodSubsystem,
       HopperFloorSubsystem hopperFloorSubsystem,
       Drive drive,
-      Supplier<Pose2d> drivetrainPose) {
+      Supplier<Pose2d> drivetrainPose,
+      DriverStation.Alliance alliance) {
     ShotParameters closestShot = null;
-    for (ShotParameters shot : ShooterConstants.STATIONARY_SHOT_ARRAY) {
-      if (closestShot == null
-          || Calculations.distanceToPoseInMeters(drivetrainPose.get(), shot.pose)
-              < Calculations.distanceToPoseInMeters(drivetrainPose.get(), closestShot.pose)) {
-        closestShot = shot;
-      }
-    }
-    return AutoBuilder.pathfindToPose(
-            closestShot.pose, new PathConstraints(1, 1, Math.toRadians(300), Math.toRadians(400)))
-        .andThen(new PointAtTargetCommand(drive, drivetrainPose))
-        .andThen(
-            new ShootingCommand(
-                shooterSubsystem, hoodSubsystem, hopperFloorSubsystem, drivetrainPose, closestShot))
-        .withName("StationaryShootingCommand");
+    double orbitRadius = 2.0; // TODO change and make this a constant
+    Translation2d hubCenter = alliance == Alliance.Red ? FieldCoordinates.RED_HUB.toTranslation2d() : FieldCoordinates.BLUE_HUB.toTranslation2d();
+    
+    Translation2d toRobot = drivetrainPose.get().minus(hubCenter); // finds vector of hub to robot
+        double angle = Math.atan2(toRobot.getY(), toRobot.getX()); // extracts angle from hub to robot
+        if (alliance == Alliance.Red) {
+            angle = MathUtil.clamp(angle, -Math.PI / 2.0, Math.PI / 2.0);
+        } else {
+            // Clamp to [π/2, π] ∪ [-π, -π/2] — keep angle on left half
+            if (angle > 0) angle = MathUtil.clamp(angle, Math.PI / 2.0, Math.PI);
+            else           angle = MathUtil.clamp(angle, -Math.PI, -Math.PI / 2.0);
+        // Red Alliance: robot should be on the right half of hub → angles in [-π/2, +π/2].
+        // Blue alliance: robot shuld be on left half → angles in [π/2, 3π/2] (or [-π, -π/2] ∪ [π/2, π])
+        // if angle out of bounds then it is clamped to closest in bound angle
+        // Bounds might need to be adjusted
+        Translation2d closestarcPoint = new Translation2d(
+                hubCenter.getX() + orbitRadius * Math.cos(angle),
+                hubCenter.getY() + orbitRadius * Math.sin(angle)
+        );
+        // a point on unit circle is (cos(angle),sin(angle),)
+        // multiply the coordinates by the orbit radius to scale up to orbit arc
+        // then add hub coordinates to scale to correct position on field
+        // this gives us ideal robot pose on arc
+    // for (ShotParameters shot : ShooterConstants.STATIONARY_SHOT_ARRAY) {
+    //   if (closestShot == null
+    //       || Calculations.distanceToPoseInMeters(drivetrainPose.get(), shot.pose)
+    //           < Calculations.distanceToPoseInMeters(drivetrainPose.get(), closestShot.pose)) {
+    //     closestShot = shot;
+    //   }
+    // }
+    
+    // return AutoBuilder.pathfindToPose(
+    //         closestShot.pose, new PathConstraints(1, 1, Math.toRadians(300), Math.toRadians(400)))
+    //     .andThen(new PointAtTargetCommand(drive, drivetrainPose))
+    //     .andThen(
+    //         new ShootingCommand(
+    //             shooterSubsystem, hoodSubsystem, hopperFloorSubsystem, drivetrainPose, closestShot))
+    //     .withName("StationaryShootingCommand");
   }
+  
 }
+
+
+    private Translation2d closestArcPoint(Translation2d robotPos) {
+        Translation2d toRobot = robotPos.minus(HUB_CENTER); // finds vector of hub to robot
+        double angle = Math.atan2(toRobot.getY(), toRobot.getX()); // extracts angle from hub to robot
+
+        if (isRedAlliance) {
+            angle = MathUtil.clamp(angle, -Math.PI / 2.0, Math.PI / 2.0);
+        } else {
+            // Clamp to [π/2, π] ∪ [-π, -π/2] — keep angle on left half
+            if (angle > 0) angle = MathUtil.clamp(angle, Math.PI / 2.0, Math.PI);
+            else           angle = MathUtil.clamp(angle, -Math.PI, -Math.PI / 2.0);
+        }
+        // Red Alliance: robot should be on the right half of hub → angles in [-π/2, +π/2].
+        // Blue alliance: robot shuld be on left half → angles in [π/2, 3π/2] (or [-π, -π/2] ∪ [π/2, π])
+        // if angle out of bounds then it is clamped to closest in bound angle
+        // Bounds might need to be adjusted
+        return new Translation2d(
+                HUB_CENTER.getX() + ORBIT_RADIUS * Math.cos(angle),
+                HUB_CENTER.getY() + ORBIT_RADIUS * Math.sin(angle)
+        ); 
+        // a point on unit circle is (cos(angle),sin(angle),)
+        // multiply the coordinates by the orbit radius to scale up to orbit arc
+        // then add hub coordinates to scale to correct position on field
+        // this gives us ideal robot pose on arc
+    }
+ 
+    /**
+     * Returns the rotation that makes the robot face the hub from {@code pos}.
+     */
+    private Rotation2d headingToHub(Translation2d pos) {
+        Translation2d toHub = HUB_CENTER.minus(pos);
+        // vector of robot to hub
+        return new Rotation2d(Math.atan2(toHub.getY(), toHub.getX()));
+        // extract angle from where robot is facing to hub
+    }

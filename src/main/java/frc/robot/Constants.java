@@ -551,6 +551,7 @@ public final class Constants {
         2.5; // TODO change based off real life
   }
 
+
   public static final class HoodConstants {
     public static final int HOOD_MOTOR_CAN_ID = 17;
     public static final int HOOD_LIMIT_SWITCH_PORT = 9;
