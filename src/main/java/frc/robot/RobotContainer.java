@@ -760,8 +760,12 @@ public class RobotContainer {
       // that??
       // TODO Write commands for the following taks and bind em to the indicated buttons
       // Right button - Shot line up have like 3 spots that we go to to shoot
-      // X - Vomit outtake TODO: write the vomit command
+      // X - Vomit outtake TODO: write the vomit comman
+      //   controller_two
+      //   .a()
+      //   .onTrue(
 
+      //   )
       /*  controller_two //not in the dahlia edition
       .b()
       .onTrue(

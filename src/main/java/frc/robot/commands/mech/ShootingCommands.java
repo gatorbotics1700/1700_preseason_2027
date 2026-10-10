@@ -241,7 +241,7 @@ public class ShootingCommands {
       }
     }
     return AutoBuilder.pathfindToPose(
-            closestShot.pose, new PathConstraints(1, 1, Math.toRadians(300), Math.toRadians(400)))
+            closestShot.pose, new PathConstraints(4, 6, Math.toRadians(300), Math.toRadians(400)))
         .andThen(new PointAtTargetCommand(drive, drivetrainPose))
         .andThen(
             new ShootingCommand(
