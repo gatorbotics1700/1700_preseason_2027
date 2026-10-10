@@ -68,8 +68,14 @@ import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class Drive extends SubsystemBase implements Vision.VisionConsumer {
+  public static final LoggedNetworkNumber pathKp = new LoggedNetworkNumber("/Tuning/Drive/kP", 7.0);
+  public static final LoggedNetworkNumber pathKi = new LoggedNetworkNumber("/Tuning/Drive/kI", 0);
+  public static final LoggedNetworkNumber pathKd = new LoggedNetworkNumber("/Tuning/Drive/kD", 0.4);
+  public static final LoggedNetworkNumber pathRotationKp =
+      new LoggedNetworkNumber("/Tuning/Drive/RotationkP", 15);
   // TunerConstants doesn't include these constants, so they are declared locally
   static final double ODOMETRY_FREQUENCY =
       new CANBus(TunerConstants.DrivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
@@ -173,13 +179,16 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     // Start odometry thread
     PhoenixOdometryThread.getInstance().start();
 
+    // BLAKELY TODO TAKE OUT WHEN DONEEE
     // Configure AutoBuilder for PathPlanner
     AutoBuilder.configure(
         this::getPose,
         this::setPose,
         this::getChassisSpeeds,
         this::runVelocity,
-        new PPHolonomicDriveController(new PIDConstants(7.0, 0, 0.4), new PIDConstants(15.0, 0, 0)),
+        new PPHolonomicDriveController(
+            //     new PIDConstants(pathKp.get(), pathKi.get(), pathKd.get()),
+            new PIDConstants(8, 0, 0), new PIDConstants(15, 0, 0)),
         PP_CONFIG,
         () ->
             false, // Disable alliance flipping - tag poses are already in correct coordinate system
