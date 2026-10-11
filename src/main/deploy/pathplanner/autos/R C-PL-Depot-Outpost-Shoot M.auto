@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "R C to to Shoot M"
+            "pathName": "R C to Shoot M"
           }
         },
         {
@@ -126,6 +126,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Center Autos",
   "choreoAuto": false
 }

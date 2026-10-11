@@ -101,6 +101,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Left Autos",
   "choreoAuto": false
 }
