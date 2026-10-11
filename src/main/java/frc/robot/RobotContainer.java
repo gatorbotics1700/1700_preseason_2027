@@ -1186,6 +1186,18 @@ public class RobotContainer {
     return true;
   }
 
+  public Command runIntakeAgitateTransition(
+    ShooterSubsystem shooterSubsystem,
+    IntakeSubsystem intakeSubsystem) {
+        return (new InstantCommand(
+            () -> {
+                shooterSubsystem.setDesiredTransitionSpeed(-0.1);
+            },
+            shooterSubsystem
+        ).alongWith(IntakeCommands.RunIntake(intakeSubsystem)));
+    }
+  
+
   public Command MechStop(
       TurretSubsystem turretSubsystem,
       ShooterSubsystem shooterSubsystem,
