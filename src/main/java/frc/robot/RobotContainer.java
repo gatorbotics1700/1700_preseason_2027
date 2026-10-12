@@ -189,8 +189,9 @@ public class RobotContainer {
             chassisSpeeds));
     NamedCommands.registerCommand("Intaking Command", IntakeCommands.RunIntake(intakeSubsystem));
 
-    // "Stop Shooter Command",
-    // new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+    NamedCommands.registerCommand(
+        "Stop Shooter Command",
+        new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
     NamedCommands.registerCommand(
         "Auto Init",
@@ -634,7 +635,19 @@ public class RobotContainer {
                       e.printStackTrace();
                     }
                   }));
-
+      controller
+          .y()
+          .whileTrue(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(runIntakeAgitateTransition(shooterSubsystem, intakeSubsystem))))
+          .onFalse(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(
+                              stopIntakeAgitateTransition(shooterSubsystem, intakeSubsystem))));
       // START-- Reset Heading
       controller
           .start()
@@ -1187,16 +1200,24 @@ public class RobotContainer {
   }
 
   public Command runIntakeAgitateTransition(
-    ShooterSubsystem shooterSubsystem,
-    IntakeSubsystem intakeSubsystem) {
-        return (new InstantCommand(
+      ShooterSubsystem shooterSubsystem, IntakeSubsystem intakeSubsystem) {
+    return (new InstantCommand(
             () -> {
-                shooterSubsystem.setDesiredTransitionSpeed(-0.1);
+              shooterSubsystem.setDesiredTransitionSpeed(-0.1);
             },
-            shooterSubsystem
-        ).alongWith(IntakeCommands.RunIntake(intakeSubsystem)));
-    }
-  
+            shooterSubsystem)
+        .alongWith(IntakeCommands.RunIntake(intakeSubsystem)));
+  }
+
+  public Command stopIntakeAgitateTransition(
+      ShooterSubsystem shooterSubsystem, IntakeSubsystem intakeSubsystem) {
+    return (new InstantCommand(
+            () -> {
+              shooterSubsystem.setDesiredTransitionSpeed(0);
+            },
+            shooterSubsystem)
+        .alongWith(IntakeCommands.StopIntake(intakeSubsystem)));
+  }
 
   public Command MechStop(
       TurretSubsystem turretSubsystem,
