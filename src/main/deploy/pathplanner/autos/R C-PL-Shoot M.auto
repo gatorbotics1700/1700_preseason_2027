@@ -7,12 +7,6 @@
         {
           "type": "named",
           "data": {
-            "name": "Home Mechanisms"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
             "name": "Auto Init"
           }
         },
