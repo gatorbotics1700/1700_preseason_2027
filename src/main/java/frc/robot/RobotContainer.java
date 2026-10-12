@@ -720,8 +720,9 @@ public class RobotContainer {
                                                     ShooterConstants.TRANSITION_SPEED);
                                                 hopperFloorSubsystem.setDesiredHopperFloorSpeed(
                                                     HopperFloorConstants.HOPPER_FLOOR_SPEED);
-                                                hoodSubsystem.setDesiredAngle(HoodConstants.MIN_ANGLE);
-                      })
+                                                hoodSubsystem.setDesiredAngle(
+                                                    HoodConstants.MIN_ANGLE);
+                                              })
                                           .withName("Manual Shooting")))))
           .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 

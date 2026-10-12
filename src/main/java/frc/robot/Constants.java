@@ -675,7 +675,7 @@ public final class Constants {
             new Pose2d(1.6, 4.034, new Rotation2d(0)), new Rotation2d(Math.toRadians(57)), 55);
     public static final ShotParameters RED_SHOOT_2M =
         new ShotParameters(
-            Calculations.mirrorPoseAcrossAlliance(BLUE_SHOOT_1M.pose),
+            Calculations.mirrorPoseAcrossAlliance(BLUE_SHOOT_2M.pose),
             new Rotation2d(Math.toRadians(57)),
             55);
     public static final ShotParameters BLUE_AGAINST_HUB =
@@ -683,7 +683,7 @@ public final class Constants {
             new Pose2d(3.6, 4.034, new Rotation2d(0)), new Rotation2d(Math.toRadians(72)), 50);
     public static final ShotParameters RED_AGAINST_HUB =
         new ShotParameters(
-            Calculations.mirrorPoseAcrossAlliance(BLUE_SHOOT_1M.pose),
+            Calculations.mirrorPoseAcrossAlliance(BLUE_AGAINST_HUB.pose),
             new Rotation2d(Math.toRadians(72)),
             50);
     public static final ShotParameters[] STATIONARY_SHOT_ARRAY = {
