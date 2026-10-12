@@ -707,15 +707,21 @@ public class RobotContainer {
       controller_two
           .rightTrigger()
           .whileTrue(
-              new InstantCommand(
-                      () -> {
-                        shooterSubsystem.setDesiredRotorVelocity(50);
-                        shooterSubsystem.setDesiredTransitionSpeed(
-                            ShooterConstants.TRANSITION_SPEED);
-                        hopperFloorSubsystem.setDesiredHopperFloorSpeed(
-                            HopperFloorConstants.HOPPER_FLOOR_SPEED);
-                      })
-                  .withName("Manual Shooting"))
+              Commands.runOnce(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(
+                              new PointAtTargetCommand(drive, robotPose)
+                                  .andThen(
+                                      new InstantCommand(
+                                              () -> {
+                                                shooterSubsystem.setDesiredRotorVelocity(50);
+                                                shooterSubsystem.setDesiredTransitionSpeed(
+                                                    ShooterConstants.TRANSITION_SPEED);
+                                                hopperFloorSubsystem.setDesiredHopperFloorSpeed(
+                                                    HopperFloorConstants.HOPPER_FLOOR_SPEED);
+                                              })
+                                          .withName("Manual Shooting")))))
           .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
       // Y - stop shooting
