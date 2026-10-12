@@ -11,6 +11,12 @@
           }
         },
         {
+          "type": "named",
+          "data": {
+            "name": "Auto Init"
+          }
+        },
+        {
           "type": "path",
           "data": {
             "pathName": "R C to Shoot M"
