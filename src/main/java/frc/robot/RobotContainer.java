@@ -59,6 +59,7 @@ import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.CommandSimMacXboxController;
 import frc.robot.util.RobotConfigLoader;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -173,10 +174,14 @@ public class RobotContainer {
     NamedCommands.registerCommand(
         "Auto Init", HomeMechanisms().andThen(IntakeCommands.DeployIntake(intakeSubsystem)));
 
+    // Deferred so the closest shot is picked from the pose when the command runs, not at boot
     NamedCommands.registerCommand(
         "Stationary Shot Command",
-        ShootingCommands.StationaryShootingCommand(
-            shooterSubsystem, hoodSubsystem, hopperFloorSubsystem, drive, robotPose));
+        Commands.defer(
+            () ->
+                ShootingCommands.StationaryShootingCommand(
+                    shooterSubsystem, hoodSubsystem, hopperFloorSubsystem, drive, robotPose),
+            Set.of(drive, shooterSubsystem, hoodSubsystem, hopperFloorSubsystem)));
 
     // Set up auto routines with PathPlanner's auto chooser (using pre-made .auto files)
     autoChooser =
