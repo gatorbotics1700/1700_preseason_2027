@@ -15,13 +15,10 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,7 +29,6 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants.FieldCoordinates;
 import frc.robot.Constants.HoodConstants;
 import frc.robot.Constants.HopperFloorConstants;
 import frc.robot.Constants.IntakeConstants;
@@ -62,9 +58,6 @@ import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.CommandSimMacXboxController;
 import frc.robot.util.RobotConfigLoader;
-import frc.robot.util.shooting.GamePieceSimulation;
-import frc.robot.util.shooting.ShotCalculator;
-import frc.robot.util.shooting.ShotParameters;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
@@ -80,8 +73,6 @@ public class RobotContainer {
   private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   private final TurretSubsystem turretSubsystem = new TurretSubsystem();
-
-  private final GamePieceSimulation gamePieceSimulation = new GamePieceSimulation();
 
   // Controllers
   private CommandXboxController controller = null; // port 0
@@ -173,15 +164,6 @@ public class RobotContainer {
 
     NamedCommands.registerCommand(
         "Point At Hub Command", new PointAtTargetCommand(drive, robotPose));
-    NamedCommands.registerCommand(
-        "Shooter Command",
-        new ShootingCommands.ShootOnTheMoveCommand(
-            shooterSubsystem,
-            hoodSubsystem,
-            hopperFloorSubsystem,
-            turretSubsystem,
-            robotPose,
-            chassisSpeeds));
     NamedCommands.registerCommand("Intaking Command", IntakeCommands.RunIntake(intakeSubsystem));
 
     NamedCommands.registerCommand(
@@ -369,23 +351,23 @@ public class RobotContainer {
               .alongWith(new InstantCommand(() -> drive.setSlowDrive(false))));*/
 
       // X - Point @ Hub & Shoot (without turret) (while true)
-      controller
-          .x()
-          .whileTrue(
-              Commands.runOnce(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              (new PointAtTargetCommand(drive, robotPose))
-                                  .andThen(
-                                      new ShootingCommands.ShootOnTheMoveCommand(
-                                          shooterSubsystem,
-                                          hoodSubsystem,
-                                          hopperFloorSubsystem,
-                                          turretSubsystem,
-                                          robotPose,
-                                          chassisSpeeds)))))
-          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+      //   controller
+      //       .x()
+      //       .whileTrue(
+      //           Commands.runOnce(
+      //               () ->
+      //                   CommandScheduler.getInstance()
+      //                       .schedule(
+      //                           (new PointAtTargetCommand(drive, robotPose))
+      //                               .andThen(
+      //                                   new ShootingCommands.ShootOnTheMoveCommand(
+      //                                       shooterSubsystem,
+      //                                       hoodSubsystem,
+      //                                       hopperFloorSubsystem,
+      //                                       turretSubsystem,
+      //                                       robotPose,
+      //                                       chassisSpeeds)))))
+      //       .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
       // Right Trigger -- Run Intake
       controller
@@ -444,62 +426,7 @@ public class RobotContainer {
         controller_two = new CommandXboxController(1);
       }
 
-      if (Constants.currentMode == Constants.Mode.SIM) {
-        controller_two
-            .a()
-            .onTrue(
-                new InstantCommand(
-                    () -> {
-                      // Use current pose and chassis speeds at this instant so all values match.
-                      Pose2d pose = drive.getPose();
-
-                      ChassisSpeeds cs = drive.getChassisSpeeds();
-                      ShotParameters params =
-                          ShotCalculator.calculateShot(pose, cs, FieldCoordinates.BLUE_HUB);
-
-                      gamePieceSimulation.launchFuelBall(
-                          ShotCalculator.getFieldToShooter(pose, ShooterConstants.BOT_TO_SHOOTER),
-                          cs,
-                          drive.getRotation(),
-                          params.shotSpeed,
-                          params.turretAngle,
-                          params.hoodAngle);
-                    }));
-        controller_two
-            .b()
-            .onTrue(
-                AutoBuilder.pathfindToPose(
-                        new Pose2d(1, FieldCoordinates.BLUE_HUB.getY(), new Rotation2d()),
-                        new PathConstraints(4, 12, Math.toRadians(700), Math.toRadians(1000)))
-                    .andThen(
-                        Commands.parallel(
-                            AutoBuilder.pathfindToPose(
-                                new Pose2d(3, FieldCoordinates.BLUE_HUB.getY(), new Rotation2d()),
-                                new PathConstraints(
-                                    0.75, 12, Math.toRadians(700), Math.toRadians(1000))),
-                            Commands.waitSeconds(0.2)
-                                .andThen(
-                                    Commands.runOnce(
-                                        () -> {
-                                          // Use current pose and chassis speeds at this instant so
-                                          // all values match.
-                                          Pose2d pose = drive.getPose();
-
-                                          ChassisSpeeds cs = drive.getChassisSpeeds();
-                                          ShotParameters params =
-                                              ShotCalculator.calculateShot(
-                                                  pose, cs, FieldCoordinates.BLUE_HUB);
-
-                                          gamePieceSimulation.launchFuelBall(
-                                              ShotCalculator.getFieldToShooter(
-                                                  pose, ShooterConstants.BOT_TO_SHOOTER),
-                                              cs,
-                                              pose.getRotation(),
-                                              params.shotSpeed,
-                                              params.turretAngle,
-                                              params.hoodAngle);
-                                        })))));
-      } else {
+      if (Constants.currentMode == Constants.Mode.REAL) {
         // A -- Retract Intake
         controller_two
             .a()
@@ -550,21 +477,21 @@ public class RobotContainer {
                             .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
 
         // Left Trigger -- Shoot with Turret (while true)
-        controller_two
-            .leftTrigger()
-            .whileTrue(
-                Commands.runOnce(
-                    () ->
-                        CommandScheduler.getInstance()
-                            .schedule(
-                                new ShootingCommands.ShootOnTheMoveCommand(
-                                    shooterSubsystem,
-                                    hoodSubsystem,
-                                    hopperFloorSubsystem,
-                                    turretSubsystem,
-                                    robotPose,
-                                    chassisSpeeds))))
-            .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+        // controller_two
+        //     .leftTrigger()
+        //     .whileTrue(
+        //         Commands.runOnce(
+        //             () ->
+        //                 CommandScheduler.getInstance()
+        //                     .schedule(
+        //                         new ShootingCommands.ShootOnTheMoveCommand(
+        //                             shooterSubsystem,
+        //                             hoodSubsystem,
+        //                             hopperFloorSubsystem,
+        //                             turretSubsystem,
+        //                             robotPose,
+        //                             chassisSpeeds))))
+        //     .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
         // Right Bumper -- Home Hood
         controller_two
@@ -1097,9 +1024,6 @@ public class RobotContainer {
   }
 
   public void periodic() {
-    if (Constants.currentMode == Constants.simMode) {
-      gamePieceSimulation.updateBalls();
-    }
 
     robotContainerLogs();
 
@@ -1134,42 +1058,6 @@ public class RobotContainer {
 
     Logger.recordOutput("DriveToFuel/Fuel", vision.getFuelPose(drive.getPose()));
     Logger.recordOutput("Drive/Odometry/Fuel", vision.getFuelPose(drive.getPose()));
-
-    Logger.recordOutput("Mech/Valid Shot", getValidShot());
-  }
-
-  public boolean getValidShot() {
-    Translation3d target;
-
-    if (FieldCoordinates.BLUE_BUMP_AND_TRENCH_X <= drive.getPose().getX()
-        && drive.getPose().getX() < FieldCoordinates.RED_BUMP_AND_TRENCH_X) {
-      if (FieldCoordinates.FIELD_CENTER.getY() < drive.getPose().getY()) {
-        target =
-            DriverStation.getAlliance().get() == Alliance.Blue
-                ? FieldCoordinates.BLUE_RIGHT_FUNNELING
-                : FieldCoordinates.RED_LEFT_FUNNELING;
-
-      } else {
-        target =
-            DriverStation.getAlliance().get() == Alliance.Blue
-                ? FieldCoordinates.BLUE_LEFT_FUNNELING
-                : FieldCoordinates.RED_RIGHT_FUNNELING;
-      }
-
-    } else {
-      target =
-          DriverStation.getAlliance().get() == Alliance.Blue
-              ? FieldCoordinates.BLUE_HUB
-              : FieldCoordinates.RED_HUB;
-    }
-
-    ShotParameters params =
-        ShotCalculator.calculateShot(drive.getPose(), chassisSpeeds.get(), target);
-
-    if (params.shotSpeed == 0) {
-      return false;
-    }
-    return true;
   }
 
   public Command runIntakeAgitateTransition(
