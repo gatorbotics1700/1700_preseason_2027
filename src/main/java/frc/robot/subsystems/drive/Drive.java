@@ -187,7 +187,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
         this::setPose,
         this::getChassisSpeeds,
         this::runVelocity,
-        new PPHolonomicDriveController(new PIDConstants(10, 0, 0.2), new PIDConstants(15, 0, 0)),
+        new PPHolonomicDriveController(new PIDConstants(6, 0, 0.2), new PIDConstants(15, 0, 0)),
         PP_CONFIG,
         () ->
             false, // Disable alliance flipping - tag poses are already in correct coordinate system
@@ -292,7 +292,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
 
-    updateAutoPid();
+    //  updateAutoPid();
   }
 
   /**
@@ -616,18 +616,19 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     return error;
   }
 
-  public void updateAutoPid() {
-    AutoBuilder.configure(
-        this::getPose,
-        this::setPose,
-        this::getChassisSpeeds,
-        this::runVelocity,
-        new PPHolonomicDriveController(
-            new PIDConstants(pathKp.get(), 0, pathKd.get()),
-            new PIDConstants(pathRotationKp.get(), 0, 0)),
-        PP_CONFIG,
-        () ->
-            false, // Disable alliance flipping - tag poses are already in correct coordinate system
-        this);
-  }
+  //   public void updateAutoPid() {
+  //     AutoBuilder.configure(
+  //         this::getPose,
+  //         this::setPose,
+  //         this::getChassisSpeeds,
+  //         this::runVelocity,
+  //         new PPHolonomicDriveController(
+  //             new PIDConstants(pathKp.get(), 0, pathKd.get()),
+  //             new PIDConstants(pathRotationKp.get(), 0, 0)),
+  //         PP_CONFIG,
+  //         () ->
+  //             false, // Disable alliance flipping - tag poses are already in correct coordinate
+  // system
+  //         this);
+  //   }
 }
