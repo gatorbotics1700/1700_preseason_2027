@@ -29,6 +29,12 @@ public class ShooterSubsystem extends SubsystemBase {
   private final TalonFX rightTransitionMotor;
 
   private double desiredTransitionSpeed;
+  private LoggedNetworkNumber desiredKickerVelocity =
+      new LoggedNetworkNumber("/Tuning/Mech/Shooter/Desired Kicker Velo", 0.4);
+  private LoggedNetworkNumber desiredLeftTransitionVelocity =
+      new LoggedNetworkNumber("/Tuning/Mech/Shooter/Desired Left Transition Velo", 0.3);
+  private LoggedNetworkNumber desiredRightTransitionVelocity =
+      new LoggedNetworkNumber("/Tuning/Mech/Shooter/Desired Right Transition Velo", 0.3);
 
   private static MotionMagicVelocityVoltage m_request;
 
@@ -136,9 +142,12 @@ public class ShooterSubsystem extends SubsystemBase {
       }
     }
 
-    kickerMotor.set(desiredTransitionSpeed * 2.0); // originally *2.5
+    kickerMotor.set(desiredTransitionSpeed * 2.0);
     leftTransitionMotor.set(desiredTransitionSpeed * 1.5);
     rightTransitionMotor.set(desiredTransitionSpeed * 1.5);
+    // kickerMotor.set(desiredKickerVelocity.get());
+    // leftTransitionMotor.set(desiredLeftTransitionVelocity.get());
+    // rightTransitionMotor.set(desiredRightTransitionVelocity.get());
 
     shooterLogs();
   }
