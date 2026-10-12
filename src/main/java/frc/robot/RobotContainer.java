@@ -171,10 +171,7 @@ public class RobotContainer {
         new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
     NamedCommands.registerCommand(
-        "Auto Init",
-        HomeMechanisms()
-            .andThen(IntakeCommands.DeployIntake(intakeSubsystem))
-            .andThen(IntakeCommands.RunIntake(intakeSubsystem)));
+        "Auto Init", HomeMechanisms().andThen(IntakeCommands.DeployIntake(intakeSubsystem)));
 
     NamedCommands.registerCommand(
         "Stationary Shot Command",
