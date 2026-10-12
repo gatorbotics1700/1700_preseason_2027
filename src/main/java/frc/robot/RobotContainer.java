@@ -69,7 +69,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class RobotContainer {
   // Subsystems
@@ -96,10 +95,6 @@ public class RobotContainer {
   private Supplier<ChassisSpeeds> chassisSpeeds;
 
   /** Null when {@link Constants.Mode#REPLAY} (no hardware). */
-
-  // testing stuff for shooter
-  public static final LoggedNetworkNumber shotSpeed =
-      new LoggedNetworkNumber("/Tuning/Shooter/Shot Speed", 0.0); // TODO this later
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -288,20 +283,20 @@ public class RobotContainer {
                   .withName("Shooter Transition Testing"));
 
       // POV Up - shoot testing
-      controller
-          .povUp()
-          .onTrue(
-              new InstantCommand(
-                      () -> {
-                        shooterSubsystem.setDesiredRotorVelocity(shotSpeed.get());
-                        shooterSubsystem.setDesiredTransitionSpeed(
-                            ShooterConstants.TRANSITION_SPEED);
-                        hopperFloorSubsystem.setDesiredHopperFloorSpeed(
-                            HopperFloorConstants.HOPPER_FLOOR_SPEED);
-                        // intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
+      //   controller
+      //       .povUp()
+      //       .onTrue(
+      //           new InstantCommand(
+      //                   () -> {
+      //                     shooterSubsystem.setDesiredRotorVelocity(shotSpeed.get());
+      //                     shooterSubsystem.setDesiredTransitionSpeed(
+      //                         ShooterConstants.TRANSITION_SPEED);
+      //                     hopperFloorSubsystem.setDesiredHopperFloorSpeed(
+      //                         HopperFloorConstants.HOPPER_FLOOR_SPEED);
+      //                     // intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
 
-                      })
-                  .withName("Shooter Testing with Tuneables"));
+      //                   })
+      //               .withName("Shooter Testing with Tuneables"));
 
       // Start -- Reset Heading
       controller
@@ -682,43 +677,6 @@ public class RobotContainer {
               drive));
               */
 
-      /* // Left Trigger -- Shoot with Turret (while true)
-      controller
-          .leftTrigger()
-          .whileTrue(
-              Commands.runOnce(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              new ShootingCommands.ShootOnTheMoveCommand(
-                                  shooterSubsystem,
-                                  hoodSubsystem,
-                                  hopperFloorSubsystem,
-                                  turretSubsystem,
-                                  robotPose,
-                                  chassisSpeeds))))
-          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
-
-          */
-      // Left Bumper -- Point @ Hub & Shoot (without turret) (while true)
-      /*controller
-                .leftBumper()
-                .whileTrue(
-                    Commands.runOnce(
-                        () ->
-                            CommandScheduler.getInstance()
-                                .schedule(
-                                    (new PointAtTargetCommand(drive, robotPose))
-                                        .andThen(
-                                            new ShootingCommands.ShootOnTheMoveCommand(
-                                                shooterSubsystem,
-                                                hoodSubsystem,
-                                                hopperFloorSubsystem,
-                                                turretSubsystem,
-                                                robotPose,
-                                                chassisSpeeds)))))
-                .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
-      */
       // B -- Run Intake Hold
       controller
           .b()
@@ -760,7 +718,7 @@ public class RobotContainer {
       // that??
       // TODO Write commands for the following taks and bind em to the indicated buttons
       // Right button - Shot line up have like 3 spots that we go to to shoot
-      // X - Vomit outtake TODO: write the vomit comman
+      // X - Vomit outtake TODO: write the vomit command
       //   controller_two
       //   .a()
       //   .onTrue(
@@ -803,6 +761,21 @@ public class RobotContainer {
                                   hopperFloorSubsystem,
                                   drive,
                                   robotPose))))
+          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+
+      // Right trigger - manual shooting
+      controller_two
+          .rightTrigger()
+          .whileTrue(
+              new InstantCommand(
+                      () -> {
+                        shooterSubsystem.setDesiredRotorVelocity(50);
+                        shooterSubsystem.setDesiredTransitionSpeed(
+                            ShooterConstants.TRANSITION_SPEED);
+                        hopperFloorSubsystem.setDesiredHopperFloorSpeed(
+                            HopperFloorConstants.HOPPER_FLOOR_SPEED);
+                      })
+                  .withName("Manual Shooting"))
           .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
       // Y - stop shooting
@@ -1187,16 +1160,14 @@ public class RobotContainer {
   }
 
   public Command runIntakeAgitateTransition(
-    ShooterSubsystem shooterSubsystem,
-    IntakeSubsystem intakeSubsystem) {
-        return (new InstantCommand(
+      ShooterSubsystem shooterSubsystem, IntakeSubsystem intakeSubsystem) {
+    return (new InstantCommand(
             () -> {
-                shooterSubsystem.setDesiredTransitionSpeed(-0.1);
+              shooterSubsystem.setDesiredTransitionSpeed(-0.1);
             },
-            shooterSubsystem
-        ).alongWith(IntakeCommands.RunIntake(intakeSubsystem)));
-    }
-  
+            shooterSubsystem)
+        .alongWith(IntakeCommands.RunIntake(intakeSubsystem)));
+  }
 
   public Command MechStop(
       TurretSubsystem turretSubsystem,

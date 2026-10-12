@@ -71,11 +71,6 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class Drive extends SubsystemBase implements Vision.VisionConsumer {
-  public static final LoggedNetworkNumber pathKp = new LoggedNetworkNumber("/Tuning/Drive/kP", 7.0);
-  public static final LoggedNetworkNumber pathKi = new LoggedNetworkNumber("/Tuning/Drive/kI", 0);
-  public static final LoggedNetworkNumber pathKd = new LoggedNetworkNumber("/Tuning/Drive/kD", 0.4);
-  public static final LoggedNetworkNumber pathRotationKp =
-      new LoggedNetworkNumber("/Tuning/Drive/RotationkP", 15);
   // TunerConstants doesn't include these constants, so they are declared locally
   static final double ODOMETRY_FREQUENCY =
       new CANBus(TunerConstants.DrivetrainConstants.CANBusName).isNetworkFD() ? 250.0 : 100.0;
@@ -159,6 +154,13 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
   private final double ROTATION_MIN_SPEED = 0.3;
   private final double TRANSLATION_MAX_SPEED = 1.8;
 
+  private static final LoggedNetworkNumber pathKp =
+      new LoggedNetworkNumber("/Tuning/Drive/kP", 10.0);
+  private static final LoggedNetworkNumber pathKd =
+      new LoggedNetworkNumber("/Tuning/Drive/kD", 0.2);
+  private static final LoggedNetworkNumber pathRotationKp =
+      new LoggedNetworkNumber("/Tuning/Drive/RotationkP", 15);
+
   public Drive(
       GyroIO gyroIO,
       ModuleIO flModuleIO,
@@ -185,9 +187,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
         this::setPose,
         this::getChassisSpeeds,
         this::runVelocity,
-        new PPHolonomicDriveController(
-            //     new PIDConstants(pathKp.get(), pathKi.get(), pathKd.get()),
-            new PIDConstants(10, 0, 0.2), new PIDConstants(15, 0, 0)),
+        new PPHolonomicDriveController(new PIDConstants(10, 0, 0.2), new PIDConstants(15, 0, 0)),
         PP_CONFIG,
         () ->
             false, // Disable alliance flipping - tag poses are already in correct coordinate system
@@ -291,6 +291,8 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
 
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
+
+    updateAutoPid();
   }
 
   /**
@@ -612,5 +614,20 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
       error = 0.0;
     }
     return error;
+  }
+
+  public void updateAutoPid() {
+    AutoBuilder.configure(
+        this::getPose,
+        this::setPose,
+        this::getChassisSpeeds,
+        this::runVelocity,
+        new PPHolonomicDriveController(
+            new PIDConstants(pathKp.get(), 0, pathKd.get()),
+            new PIDConstants(pathRotationKp.get(), 0, 0)),
+        PP_CONFIG,
+        () ->
+            false, // Disable alliance flipping - tag poses are already in correct coordinate system
+        this);
   }
 }
