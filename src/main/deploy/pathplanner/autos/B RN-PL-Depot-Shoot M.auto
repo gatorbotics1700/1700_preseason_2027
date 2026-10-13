@@ -5,12 +5,6 @@
     "data": {
       "commands": [
         {
-          "type": "path",
-          "data": {
-            "pathName": "B RN to Shoot M"
-          }
-        },
-        {
           "type": "deadline",
           "data": {
             "commands": [
@@ -27,6 +21,12 @@
                 }
               }
             ]
+          }
+        },
+        {
+          "type": "path",
+          "data": {
+            "pathName": "B RN to Shoot M"
           }
         },
         {
@@ -86,7 +86,7 @@
           }
         },
         {
-          "type": "parallel",
+          "type": "deadline",
           "data": {
             "commands": [
               {
