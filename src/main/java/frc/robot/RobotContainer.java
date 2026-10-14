@@ -559,19 +559,21 @@ public class RobotContainer {
                       e.printStackTrace();
                     }
                   }));
-      controller
-          .y()
-          .whileTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(runIntakeAgitateTransition(shooterSubsystem, intakeSubsystem))))
-          .onFalse(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              stopIntakeAgitateTransition(shooterSubsystem, intakeSubsystem))));
+      //   controller
+      //       .y()
+      //       .whileTrue(
+      //           new InstantCommand(
+      //               () ->
+      //                   CommandScheduler.getInstance()
+      //                       .schedule(runIntakeAgitateTransition(shooterSubsystem,
+      // intakeSubsystem))))
+      //       .onFalse(
+      //           new InstantCommand(
+      //               () ->
+      //                   CommandScheduler.getInstance()
+      //                       .schedule(
+      //                           stopIntakeAgitateTransition(shooterSubsystem,
+      // intakeSubsystem))));
       // START-- Reset Heading
       controller
           .start()
@@ -593,6 +595,19 @@ public class RobotContainer {
                       },
                       drive)
                   .ignoringDisable(true));
+
+      controller
+          .x()
+          .whileTrue(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(IntakeCommands.ReverseIntake(intakeSubsystem))))
+          .onFalse(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
 
       /*    controller
       .x()
@@ -1070,7 +1085,7 @@ public class RobotContainer {
     Logger.recordOutput("Drive/Odometry/Fuel", vision.getFuelPose(drive.getPose()));
   }
 
-  public Command runIntakeAgitateTransition(
+  public Command runIntakeTransition(
       ShooterSubsystem shooterSubsystem, IntakeSubsystem intakeSubsystem) {
     return (new InstantCommand(
             () -> {

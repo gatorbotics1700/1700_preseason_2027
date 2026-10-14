@@ -143,7 +143,7 @@ public class ShooterSubsystem extends SubsystemBase {
     }
 
     kickerMotor.set(desiredTransitionSpeed * 2.0);
-    leftTransitionMotor.set(desiredTransitionSpeed * 1.5);
+    leftTransitionMotor.set(desiredTransitionSpeed * 1.5); // TODO
     rightTransitionMotor.set(desiredTransitionSpeed * 1.5);
     // kickerMotor.set(desiredKickerVelocity.get());
     // leftTransitionMotor.set(desiredLeftTransitionVelocity.get());
