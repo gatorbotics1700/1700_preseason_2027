@@ -559,21 +559,18 @@ public class RobotContainer {
                       e.printStackTrace();
                     }
                   }));
-      //   controller
-      //       .y()
-      //       .whileTrue(
-      //           new InstantCommand(
-      //               () ->
-      //                   CommandScheduler.getInstance()
-      //                       .schedule(runIntakeAgitateTransition(shooterSubsystem,
-      // intakeSubsystem))))
-      //       .onFalse(
-      //           new InstantCommand(
-      //               () ->
-      //                   CommandScheduler.getInstance()
-      //                       .schedule(
-      //                           stopIntakeAgitateTransition(shooterSubsystem,
-      // intakeSubsystem))));
+      controller
+          .y()
+          .whileTrue(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(runAgitateTransition(shooterSubsystem, intakeSubsystem))))
+          .onFalse(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(stopAgitateTransition(shooterSubsystem, intakeSubsystem))));
       // START-- Reset Heading
       controller
           .start()
@@ -1085,24 +1082,22 @@ public class RobotContainer {
     Logger.recordOutput("Drive/Odometry/Fuel", vision.getFuelPose(drive.getPose()));
   }
 
-  public Command runIntakeTransition(
+  public Command runAgitateTransition(
       ShooterSubsystem shooterSubsystem, IntakeSubsystem intakeSubsystem) {
     return (new InstantCommand(
-            () -> {
-              shooterSubsystem.setDesiredTransitionSpeed(-0.1);
-            },
-            shooterSubsystem)
-        .alongWith(IntakeCommands.RunIntake(intakeSubsystem)));
+        () -> {
+          shooterSubsystem.setDesiredTransitionSpeed(-0.1);
+        },
+        shooterSubsystem));
   }
 
-  public Command stopIntakeAgitateTransition(
+  public Command stopAgitateTransition(
       ShooterSubsystem shooterSubsystem, IntakeSubsystem intakeSubsystem) {
     return (new InstantCommand(
-            () -> {
-              shooterSubsystem.setDesiredTransitionSpeed(0);
-            },
-            shooterSubsystem)
-        .alongWith(IntakeCommands.StopIntake(intakeSubsystem)));
+        () -> {
+          shooterSubsystem.setDesiredTransitionSpeed(0);
+        },
+        shooterSubsystem));
   }
 
   public Command MechStop(
