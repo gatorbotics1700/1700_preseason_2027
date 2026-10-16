@@ -59,7 +59,6 @@ import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.CommandSimMacXboxController;
 import frc.robot.util.RobotConfigLoader;
 import frc.robot.util.shooting.ShotParameters;
-
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -720,13 +719,13 @@ public class RobotContainer {
           .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
       // Right trigger - manual shooting
-    //   ShootingCommand(
-    //     ShooterSubsystem shooterSubsystem,
-    //     HoodSubsystem hoodSubsystem,
-    //     HopperFloorSubsystem hopperFloorSubsystem,
-    //     // TurretSubsystem turretSubsystem,
-    //     Supplier<Pose2d> drivetrainPose,
-    //     ShotParameters shotParameters)
+      //   ShootingCommand(
+      //     ShooterSubsystem shooterSubsystem,
+      //     HoodSubsystem hoodSubsystem,
+      //     HopperFloorSubsystem hopperFloorSubsystem,
+      //     // TurretSubsystem turretSubsystem,
+      //     Supplier<Pose2d> drivetrainPose,
+      //     ShotParameters shotParameters)
       controller_two
           .rightTrigger()
           .whileTrue(
@@ -736,7 +735,13 @@ public class RobotContainer {
                           .schedule(
                               new PointAtTargetCommand(drive, robotPose)
                                   .andThen(
-                                      new ShootingCommands.ShootingCommand(shooterSubsystem,hoodSubsystem,hopperFloorSubsystem,robotPose,new ShotParameters(robotPose.get(),HoodConstants.MIN_ANGLE, 50))
+                                      new ShootingCommands.ShootingCommand(
+                                              shooterSubsystem,
+                                              hoodSubsystem,
+                                              hopperFloorSubsystem,
+                                              robotPose,
+                                              new ShotParameters(
+                                                  robotPose.get(), HoodConstants.MIN_ANGLE, 50))
                                           .withName("Manual Shooting")))))
           .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 

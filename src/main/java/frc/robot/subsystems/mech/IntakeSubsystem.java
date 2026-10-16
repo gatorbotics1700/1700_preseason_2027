@@ -150,7 +150,7 @@ public class IntakeSubsystem extends SubsystemBase {
     rightIntakeCurrentLimitConfigs.StatorCurrentLimitEnable = true;
 
     deployCurrentLimitConfigs = deployTalonFXConfigs.CurrentLimits;
-    deployCurrentLimitConfigs.StatorCurrentLimit = 50;
+    deployCurrentLimitConfigs.StatorCurrentLimit = 40;
     deployCurrentLimitConfigs.StatorCurrentLimitEnable = true;
 
     leftDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
@@ -199,8 +199,8 @@ public class IntakeSubsystem extends SubsystemBase {
             && Math.abs(getDesiredAngle().getDegrees() - getCurrentAngle().getDegrees())
                 <= IntakeConstants.POSITION_DEADBAND_DEGREES;
     boolean currentLimitReached =
-        leftDeployMotor.getStatorCurrent().getValueAsDouble() >= 50
-            || rightDeployMotor.getStatorCurrent().getValueAsDouble() >= 50;
+        leftDeployMotor.getStatorCurrent().getValueAsDouble() >= 40
+            || rightDeployMotor.getStatorCurrent().getValueAsDouble() >= 40;
     if (intakeState.equals(IntakeDeployState.DEPLOYING)) {
       if (isDeployedLimitSwitchTriggered() || atPositionDeadband || currentLimitReached) {
         intakeState = IntakeDeployState.DEPLOYED_STOPPED;
