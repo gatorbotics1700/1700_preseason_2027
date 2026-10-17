@@ -646,6 +646,20 @@ public class RobotContainer {
                       CommandScheduler.getInstance()
                           .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
 
+        // Left bumper -- also Run Intake Hold
+      controller
+          .leftBumper()
+          .whileTrue(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(IntakeCommands.RunIntake(intakeSubsystem))))
+          .onFalse(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
+
       // Right Bumper -- Deploy / Retract Intake Toggle
       controller
           .rightBumper()
