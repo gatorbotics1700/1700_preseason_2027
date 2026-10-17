@@ -50,6 +50,7 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.mech.HoodSubsystem;
 import frc.robot.subsystems.mech.HopperFloorSubsystem;
+import frc.robot.subsystems.mech.HubTrackerSubsystem;
 import frc.robot.subsystems.mech.IntakeSubsystem;
 import frc.robot.subsystems.mech.ShooterSubsystem;
 import frc.robot.subsystems.mech.TurretSubsystem;
@@ -1066,6 +1067,7 @@ public class RobotContainer {
   }
 
   public void periodic() {
+    HubTrackerSubsystem hubTracker = new HubTrackerSubsystem();
 
     robotContainerLogs();
 
