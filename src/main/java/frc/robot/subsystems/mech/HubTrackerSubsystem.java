@@ -19,7 +19,7 @@ public class HubTrackerSubsystem extends SubsystemBase {
     hubActiveLogger = new BooleanLogEntry(log, "/subsystems/HubTracker/isHubActive");
 
     // Push initial state to SmartDashboard/Elastic Dashboard
-    SmartDashboard.putBoolean("Hub Active", false);
+    SmartDashboard.putBoolean("HubActive", false);
   }
 
   /**
@@ -80,6 +80,6 @@ public class HubTrackerSubsystem extends SubsystemBase {
     }
 
     // Continually feed dashboards (Elastic Dashboard, NetworkTables)
-    SmartDashboard.putBoolean("Hub Active", currentHubState);
+    SmartDashboard.putBoolean("HubActive", currentHubState);
   }
 }
