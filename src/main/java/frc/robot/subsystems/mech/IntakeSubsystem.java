@@ -142,11 +142,11 @@ public class IntakeSubsystem extends SubsystemBase {
     // and slower
 
     leftIntakeCurrentLimitConfigs = leftIntakeTalonFXConfigs.CurrentLimits;
-    leftIntakeCurrentLimitConfigs.StatorCurrentLimit = 80;
+    leftIntakeCurrentLimitConfigs.StatorCurrentLimit = 70;
     leftIntakeCurrentLimitConfigs.StatorCurrentLimitEnable = true;
 
     rightIntakeCurrentLimitConfigs = rightIntakeTalonFXConfigs.CurrentLimits;
-    rightIntakeCurrentLimitConfigs.StatorCurrentLimit = 80;
+    rightIntakeCurrentLimitConfigs.StatorCurrentLimit = 70;
     rightIntakeCurrentLimitConfigs.StatorCurrentLimitEnable = true;
 
     deployCurrentLimitConfigs = deployTalonFXConfigs.CurrentLimits;
