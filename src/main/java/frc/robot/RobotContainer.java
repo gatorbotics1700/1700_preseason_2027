@@ -869,7 +869,7 @@ public class RobotContainer {
       //     .b()
       //     .whileTrue(shooterSubsystem.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
 
-      // TODO: turret sysid buttons -- uncomment for use
+      // TODO: turret sysid buttons -- uncomment or use
       // controller_two.x().whileTrue(turretSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
       // controller_two.y().whileTrue(turretSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
       // controller_two
