@@ -16,8 +16,6 @@ package frc.robot;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.commands.CoralShooterCommand;
-import frc.robot.subsystems.CoralShooterSubsystem;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -45,14 +43,15 @@ public class RobotContainer {
    */
   private void configureButtonBindings() {
     // We need buttons for:
-      // 1. Shooting L4
-      // 2. Shooting Trough
-      // 3. Intaking
-      // 4. Stop
+    // 1. Shooting L4
+    // 2. Shooting Trough
+    // 3. Intaking
+    // 4. Stop
 
     // How to set up an Xbox Controller button:
-      // controllerName.buttonName().onTrue(new CommandToRun(parameters));
-        // ex: codriver.rightBumper().onTrue(new ClimberCommand(climberSubsystem, Constants.CLIMBING_SPEED));
+    // controllerName.buttonName().onTrue(new CommandToRun(parameters));
+    // ex: codriver.rightBumper().onTrue(new ClimberCommand(climberSubsystem,
+    // Constants.CLIMBING_SPEED));
 
     /* TODO: Assign buttons A, B, X, and Y on the Xbox Controller */
   }
