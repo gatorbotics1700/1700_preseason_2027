@@ -17,6 +17,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.TunerConstants;
+import frc.robot.util.Calculations;
 import frc.robot.util.logging.TalonFXLogger;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
@@ -196,8 +197,10 @@ public class IntakeSubsystem extends SubsystemBase {
     // position control
     boolean atPositionDeadband =
         useDeployPositionControl
-            && Math.abs(getDesiredAngle().getDegrees() - getCurrentAngle().getDegrees())
-                <= IntakeConstants.POSITION_DEADBAND_DEGREES;
+            && Calculations.withinDeadband(
+                getDesiredAngle().getDegrees(),
+                getCurrentAngle().getDegrees(),
+                IntakeConstants.POSITION_DEADBAND_DEGREES, true);
     boolean currentLimitReached =
         leftDeployMotor.getStatorCurrent().getValueAsDouble() >= 40
             || rightDeployMotor.getStatorCurrent().getValueAsDouble() >= 40;

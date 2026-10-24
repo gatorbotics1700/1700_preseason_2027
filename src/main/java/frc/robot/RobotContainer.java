@@ -751,11 +751,12 @@ public class RobotContainer {
           .onTrue(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
       // X vomit/outtake
-    //   controller_two
-    //       .x()
-    //       .onTrue(
-    //           new InstantCommand(
-    //               () -> intakeSubsystem.setIntakeSpeed(Constants.IntakeConstants.OUTTAKING_SPEED)));
+      //   controller_two
+      //       .x()
+      //       .onTrue(
+      //           new InstantCommand(
+      //               () ->
+      // intakeSubsystem.setIntakeSpeed(Constants.IntakeConstants.OUTTAKING_SPEED)));
 
       // TODO may need to check if we're still in bounds
       // manual hood adjustment - plus 5 degree

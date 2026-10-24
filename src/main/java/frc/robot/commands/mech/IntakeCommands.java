@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants.IntakeConstants;
 import frc.robot.subsystems.mech.IntakeSubsystem;
+import frc.robot.util.Calculations;
 
 public class IntakeCommands {
 
@@ -157,10 +158,10 @@ public class IntakeCommands {
     @Override
     public boolean isFinished() {
       return intakeSubsystem.isDeployedLimitSwitchTriggered()
-          || Math.abs(
-                  IntakeConstants.EXTENDED_ANGLE_DEGREES
-                      - intakeSubsystem.getCurrentAngle().getDegrees())
-              <= IntakeConstants.POSITION_DEADBAND_DEGREES;
+          || Calculations.withinDeadband(
+              IntakeConstants.EXTENDED_ANGLE_DEGREES,
+              intakeSubsystem.getCurrentAngle().getDegrees(),
+              IntakeConstants.POSITION_DEADBAND_DEGREES, true);
     }
   }
 
@@ -181,10 +182,10 @@ public class IntakeCommands {
     @Override
     public boolean isFinished() {
       return intakeSubsystem.isRetractedLimitSwitchTriggered()
-          || (Math.abs(
-                  IntakeConstants.RETRACTED_ANGLE_DEGREES
-                      - intakeSubsystem.getCurrentAngle().getDegrees())
-              <= IntakeConstants.POSITION_DEADBAND_DEGREES);
+          || Calculations.withinDeadband(
+              IntakeConstants.RETRACTED_ANGLE_DEGREES,
+              intakeSubsystem.getCurrentAngle().getDegrees(),
+              IntakeConstants.POSITION_DEADBAND_DEGREES, true);
     }
   }
 }

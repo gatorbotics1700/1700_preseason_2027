@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.ShotCalculatorConditions;
 import frc.robot.Constants.TunerConstants;
+import frc.robot.util.Calculations;
 import frc.robot.util.logging.TalonFXLogger;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
@@ -294,12 +295,13 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   // Shoot as far as possible
+
   public void runFarthestShot() {
-    setDesiredRotorVelocity(90); // set velocity to our desired velocity
-    if (Math.abs(getFlywheelRotorVelocity() - 90)
-        < ShooterConstants
-            .FLYWHEEL_SPEED_DEADBAND) { // once flywheel is running close to our desired velocity
+    setDesiredRotorVelocity(90);
+    if (Calculations.withinDeadband(
+        getFlywheelRotorVelocity(), 90.0, ShooterConstants.FLYWHEEL_SPEED_DEADBAND, false)) {
       setDesiredTransitionSpeed(ShooterConstants.TRANSITION_SPEED);
     }
+    // set velocity to our desired velocit
   }
 }

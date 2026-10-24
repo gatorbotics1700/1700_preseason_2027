@@ -56,10 +56,10 @@ public class ShootingCommands {
           shotParameters.shotSpeed); // set velocity to our desired velocity
       hopperFloorSubsystem.setDesiredHopperFloorSpeed(HopperFloorConstants.HOPPER_FLOOR_SPEED);
       hoodSubsystem.setDesiredAngle(HoodSubsystem.launchAngleToHoodAngle(shotParameters.hoodAngle));
-      if (Math.abs(shooterSubsystem.getFlywheelRotorVelocity() - shotParameters.shotSpeed)
-          < ShooterConstants
-              .FLYWHEEL_SPEED_DEADBAND) { // once flywheel is running close to our desired velocity
-        // turretSubsystem.setDesiredAngle(shotParameters.turretAngle);
+      if (Calculations.withinDeadband(
+          shooterSubsystem.getFlywheelRotorVelocity(),
+          shotParameters.shotSpeed,
+          ShooterConstants.FLYWHEEL_SPEED_DEADBAND, false)) {
         shooterSubsystem.setDesiredTransitionSpeed(ShooterConstants.TRANSITION_SPEED);
       }
     }
