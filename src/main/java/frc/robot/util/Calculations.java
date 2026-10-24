@@ -10,6 +10,11 @@ public class Calculations {
     return new Rotation2d(Math.atan2(deltaY, deltaX));
   }
 
+  public static Boolean withinDeadband(double one, double two, double deadband, Boolean containsEquals) {
+    if(containsEquals){return (Math.abs(one - two) <= deadband);}
+    else{return (Math.abs(one - two) < deadband); }
+  }
+
   public static double distanceToPoseInMeters(Pose2d firstPose, Pose2d secondPose) {
     return Math.sqrt(
         Math.pow(firstPose.getX() - secondPose.getX(), 2)
