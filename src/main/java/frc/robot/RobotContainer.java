@@ -59,6 +59,7 @@ import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.CommandSimMacXboxController;
 import frc.robot.util.RobotConfigLoader;
+import frc.robot.util.auto.MultiStepAutoChooser;
 import frc.robot.util.shooting.ShotParameters;
 import java.util.Optional;
 import java.util.Set;
@@ -82,7 +83,7 @@ public class RobotContainer {
   private CommandXboxController controller_two = null; // port 1
 
   // Dashboard inputs
-  // private final MultiStepAutoChooser multiStepAutoChooser; // COMMENTED OUT - using PathPlanner
+  private final MultiStepAutoChooser multiStepAutoChooser; // COMMENTED OUT - using PathPlanner
   // pre-made autos
   private final LoggedDashboardChooser<Command> autoChooser;
   private Supplier<Pose2d> robotPose;
@@ -190,17 +191,16 @@ public class RobotContainer {
         new LoggedDashboardChooser<>("Auto/PathPlanner Auto", AutoBuilder.buildAutoChooser());
 
     // COMMENTED OUT - using PathPlanner pre-made autos instead of DynamicAutoBuilder
-    // multiStepAutoChooser =
-    //     new MultiStepAutoChooser(
-    //         intakeSubsystem,
-    //         drive,
-    //         climberSubsystem,
-    //         hoodSubsystem,
-    //         shooterSubsystem,
-    //         turretSubsystem,
-    //         hopperFloorSubsystem,
-    //         robotPose,
-    //         chassisSpeeds);
+    multiStepAutoChooser =
+        new MultiStepAutoChooser(
+            intakeSubsystem,
+            drive,
+            hoodSubsystem,
+            shooterSubsystem,
+            turretSubsystem,
+            hopperFloorSubsystem,
+            robotPose,
+            chassisSpeeds);
 
     // Set up SysId routines
     // autoChooser.addOption(
@@ -888,23 +888,23 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // Using PathPlanner pre-made autos
     Command selected = autoChooser.get();
-    return selected != null ? selected : Commands.none();
+    // return selected != null ? selected : Commands.none();
 
     // COMMENTED OUT - using PathPlanner pre-made autos instead of DynamicAutoBuilder
-    // try {
-    //   return multiStepAutoChooser.getAutonomousCommand();
-    // } catch (Exception ioe) {
-    //   System.out.println("bad io error");
-    // return Commands.none();
-    // }
+    try {
+      return multiStepAutoChooser.getAutonomousCommand();
+    } catch (Exception ioe) {
+      System.out.println("bad io error");
+      return Commands.none();
+    }
   }
 
   public Optional<Pose2d> getAutoStartPose() {
     // TODO: Implement start pose extraction from PathPlanner auto if needed
-    return Optional.empty();
+    // return Optional.empty();
 
     // COMMENTED OUT - using PathPlanner pre-made autos instead of DynamicAutoBuilder
-    // return multiStepAutoChooser.getAutoStartPose();
+    return multiStepAutoChooser.getAutoStartPose();
   }
 
   public Drive getDriveSubsystem() {
@@ -1071,7 +1071,7 @@ public class RobotContainer {
 
     robotContainerLogs();
 
-    // multiStepAutoChooser.updateChooserOptions();
+    multiStepAutoChooser.updateChooserOptions();
 
     // Print path name to console me thinks
     // String selectedPathName = multiStepAutoChooser.getSelectedPathName();
