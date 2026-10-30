@@ -42,7 +42,9 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotBase;
+import frc.robot.util.Calculations;
 import frc.robot.util.RobotConfigLoader;
+import frc.robot.util.shooting.ShotParameters;
 
 /**
  * This class defines the runtime mode used by AdvantageKit and loads robot-specific configuration
@@ -577,26 +579,34 @@ public final class Constants {
   }
 
   public static final class IntakeConstants {
-    public static final int INTAKE_MOTOR_CAN_ID = 9;
-    public static final int INTAKE_DEPLOY_MOTOR_CAN_ID = 10;
-    public static final int INTAKE_HALL_EFFECT_PORT = 0;
-    public static final int DEPLOYED_HALL_EFFECT_PORT = 7;
+    public static final int LEFT_INTAKE_MOTOR_CAN_ID = 8;
+    public static final int RIGHT_INTAKE_MOTOR_CAN_ID = 11;
+    public static final int INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID = 9;
+    public static final int INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID = 10;
+    public static final int RETRACTED_LIMIT_SWITCH_PORT = 3;
+    public static final int DEPLOYED_LIMIT_SWITCH_PORT = 4;
 
     public static final int DEPLOY_GEARBOX_RATIO = 5;
     public static final double DEPLOY_PULLEY_ONE_GEAR_RATIO = 42.0 / 18.0;
-    public static final double DEPLOY_PULLEY_TWO_GEAR_RATIO = 36.0 / 18.0;
+    public static final double DEPLOY_PULLEY_TWO_GEAR_RATIO = 42.0 / 18.0;
 
     public static final double EXTENDED_ANGLE_DEGREES = 95;
     public static final double RETRACTED_ANGLE_DEGREES = 0;
+    public static final double HALF_EXTENDED_ANGLE_DEGREES = 45;
 
     public static final Rotation2d EXTENDED_POSITION =
         new Rotation2d(Math.toRadians(EXTENDED_ANGLE_DEGREES));
+    public static final Rotation2d HALF_EXTENDED_POSITION =
+        new Rotation2d(Math.toRadians(HALF_EXTENDED_ANGLE_DEGREES));
     public static final Rotation2d RETRACTED_POSITION =
         new Rotation2d(Math.toRadians(RETRACTED_ANGLE_DEGREES));
 
     public static final double HOMING_SPEED = -0.4; // TODO tune
     public static final double RETRACTING_SPEED = -0.4; // TODO: tune
-    public static final double INTAKING_SPEED = -1; // TODO: tune
+    public static final double INTAKING_SPEED = -0.4; // TODO: tune
+    public static final double OUTTAKING_SPEED = 0.2; // TODO tune
+
+    public static final double POSITION_DEADBAND_DEGREES = 3;
 
     public static final double ROBOT_TO_INTAKE_YAW_DEGREES = 180;
     public static final double DEPLOYED_CURRENT_LIMIT = 10.0; // amps
@@ -609,7 +619,9 @@ public final class Constants {
     public static final int LEFT_TRANSITION_MOTOR_CAN_ID = 18;
     public static final int RIGHT_TRANSITION_MOTOR_CAN_ID = 19;
 
-    public static final double TRANSITION_SPEED = 0.4;
+    public static final double TRANSITION_SPEED = 0.2;
+
+    // 0.4
 
     /**
      * Stator current limit for transition rollers (A). Limits torque when a ball is jammed so the
@@ -627,6 +639,87 @@ public final class Constants {
     public static final double FLYWHEEL_RADIUS_METERS = 0.0508;
 
     public static final Translation3d BOT_TO_SHOOTER = new Translation3d(0.127, 0, 0.429);
+
+    // public static final ShotParameters RED_RIGHT =
+    //     new ShotParameters(
+    //         new Pose2d(14.17, 1.25, new Rotation2d(Math.toRadians(129))),
+    //         new Rotation2d(Math.toRadians(64.4)),
+    //         62.2);
+    // public static final ShotParameters BLUE_LEFT =
+    //     new ShotParameters(
+    //         Calculations.mirrorPoseAcrossAlliance(RED_RIGHT.pose),
+    //         new Rotation2d(Math.toRadians(64.4)),
+    //         62.2);
+    // public static final ShotParameters RED_LEFT =
+    //     new ShotParameters(
+    //         Calculations.mirrorPoseAcrossXAxis(RED_RIGHT.pose),
+    //         new Rotation2d(Math.toRadians(64.4)),
+    //         62.2);
+    // public static final ShotParameters BLUE_RIGHT =
+    //     new ShotParameters(
+    //         Calculations.mirrorPoseAcrossXAxis(BLUE_LEFT.pose),
+    //         new Rotation2d(Math.toRadians(64.4)),
+    //         62.2);
+    // // 1M means 1M away from being pressed up against hub
+    public static final ShotParameters BLUE_SHOOT_1M =
+        new ShotParameters(
+            new Pose2d(2.6, 4.034, new Rotation2d(0)), new Rotation2d(Math.toRadians(60)), 48);
+    public static final ShotParameters RED_SHOOT_1M =
+        new ShotParameters(
+            // 13.9 4.034
+            Calculations.mirrorPoseAcrossAlliance(BLUE_SHOOT_1M.pose),
+            new Rotation2d(Math.toRadians(60)),
+            48);
+    public static final ShotParameters BLUE_SHOOT_2M =
+        new ShotParameters(
+            new Pose2d(1.6, 4.034, new Rotation2d(0)), new Rotation2d(Math.toRadians(57)), 55);
+    public static final ShotParameters RED_SHOOT_2M =
+        new ShotParameters(
+            Calculations.mirrorPoseAcrossAlliance(BLUE_SHOOT_2M.pose),
+            new Rotation2d(Math.toRadians(57)),
+            55);
+    public static final ShotParameters BLUE_AGAINST_HUB =
+        new ShotParameters(
+            new Pose2d(3.6, 4.034, new Rotation2d(0)), new Rotation2d(Math.toRadians(72)), 50);
+    public static final ShotParameters RED_AGAINST_HUB =
+        new ShotParameters(
+            Calculations.mirrorPoseAcrossAlliance(BLUE_AGAINST_HUB.pose),
+            new Rotation2d(Math.toRadians(72)),
+            50);
+    public static final ShotParameters BLUE_SHOOT_LEFT =
+        new ShotParameters(
+            new Pose2d(2.504, 6.156, new Rotation2d(-45)), new Rotation2d(Math.toRadians(57)), 55);
+    public static final ShotParameters RED_SHOOT_RIGHT =
+        new ShotParameters(
+            Calculations.mirrorPoseAcrossAlliance(BLUE_SHOOT_LEFT.pose),
+            new Rotation2d(Math.toRadians(57)),
+            55);
+    public static final ShotParameters BLUE_SHOOT_RIGHT =
+        new ShotParameters(
+            Calculations.mirrorPoseAcrossXAxis(BLUE_SHOOT_LEFT.pose),
+            new Rotation2d(Math.toRadians(57)),
+            55);
+    public static final ShotParameters RED_SHOOT_LEFT =
+        new ShotParameters(
+            Calculations.mirrorPoseAcrossXAxis(RED_SHOOT_RIGHT.pose),
+            new Rotation2d(Math.toRadians(57)),
+            55);
+    public static final ShotParameters[] STATIONARY_SHOT_ARRAY = {
+      //   RED_LEFT,
+      //   RED_RIGHT,
+      //   BLUE_LEFT,
+      //   BLUE_RIGHT,
+      BLUE_SHOOT_1M,
+      RED_SHOOT_1M,
+      BLUE_SHOOT_2M,
+      RED_SHOOT_2M,
+      BLUE_AGAINST_HUB,
+      RED_AGAINST_HUB,
+      BLUE_SHOOT_LEFT,
+      RED_SHOOT_LEFT,
+      BLUE_SHOOT_RIGHT,
+      RED_SHOOT_RIGHT
+    };
   }
 
   /** REV PDH / CTRE PDP CAN ID and logging. */
@@ -636,8 +729,9 @@ public final class Constants {
   }
 
   public static final class TurretConstants {
-    public static final int TURRET_MOTOR_CAN_ID = 15;
-    public static final int TURRET_BORE_ENCODER_PORT = 1;
+    public static final int TURRET_MOTOR_CAN_ID =
+        100; // TODO was 15 making it a bad number so the turret does not move
+    public static final int TURRET_BORE_ENCODER_PORT = 12; // TODO was 1 before
 
     public static final double TURRET_DEADBAND = 0.75;
 

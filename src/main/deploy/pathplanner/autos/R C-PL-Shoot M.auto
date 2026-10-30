@@ -5,15 +5,28 @@
     "data": {
       "commands": [
         {
-          "type": "named",
+          "type": "deadline",
           "data": {
-            "name": "Auto Init"
+            "commands": [
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 5.0
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Auto Init"
+                }
+              }
+            ]
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "R C to to Shoot M"
+            "pathName": "R C to Shoot M"
           }
         },
         {
@@ -23,13 +36,13 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 8.0
+                  "waitTime": 3.0
                 }
               },
               {
                 "type": "named",
                 "data": {
-                  "name": "Shooter Command"
+                  "name": "Stationary Shot Command"
                 }
               }
             ]
@@ -45,6 +58,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Center Autos",
   "choreoAuto": false
 }

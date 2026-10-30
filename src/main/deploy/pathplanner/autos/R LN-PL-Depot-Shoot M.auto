@@ -5,15 +5,28 @@
     "data": {
       "commands": [
         {
-          "type": "named",
+          "type": "deadline",
           "data": {
-            "name": "Auto Init"
+            "commands": [
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.0
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Auto Init"
+                }
+              }
+            ]
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "R RN to Shoot M"
+            "pathName": "R LN to Shoot M"
           }
         },
         {
@@ -29,7 +42,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Shooter Command"
+                  "name": "Stationary Shot Command"
                 }
               }
             ]
@@ -85,7 +98,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Shooter Command"
+                  "name": "Stationary Shot Command"
                 }
               }
             ]

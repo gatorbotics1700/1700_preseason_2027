@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.ShotCalculatorConditions;
 import frc.robot.Constants.TunerConstants;
+import frc.robot.util.Calculations;
 import frc.robot.util.logging.TalonFXLogger;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
@@ -29,6 +30,12 @@ public class ShooterSubsystem extends SubsystemBase {
   private final TalonFX rightTransitionMotor;
 
   private double desiredTransitionSpeed;
+  private LoggedNetworkNumber desiredKickerVelocity =
+      new LoggedNetworkNumber("/Tuning/Mech/Shooter/Desired Kicker Velo", 0.4);
+  private LoggedNetworkNumber desiredLeftTransitionVelocity =
+      new LoggedNetworkNumber("/Tuning/Mech/Shooter/Desired Left Transition Velo", 0.3);
+  private LoggedNetworkNumber desiredRightTransitionVelocity =
+      new LoggedNetworkNumber("/Tuning/Mech/Shooter/Desired Right Transition Velo", 0.3);
 
   private static MotionMagicVelocityVoltage m_request;
 
@@ -94,7 +101,7 @@ public class ShooterSubsystem extends SubsystemBase {
         400; // Target acceleration of 400 rps/s (0.25 seconds to max)
     flywheelMotionMagicConfigs.MotionMagicJerk = 4000; // Target jerk of 4000 rps/s/s (0/1 seconds)
 
-    // flywheelTalonFXConfigs.CurrentLimits.StatorCurrentLimit = 80;
+    flywheelTalonFXConfigs.CurrentLimits.StatorCurrentLimit = 80;
 
     transitionMotorConfigs = new TalonFXConfiguration();
 
@@ -136,9 +143,12 @@ public class ShooterSubsystem extends SubsystemBase {
       }
     }
 
-    kickerMotor.set(desiredTransitionSpeed * 1.75);
-    leftTransitionMotor.set(desiredTransitionSpeed * 1.15);
-    rightTransitionMotor.set(desiredTransitionSpeed);
+    kickerMotor.set(desiredTransitionSpeed * 2.0);
+    leftTransitionMotor.set(desiredTransitionSpeed * 1.5); // TODO
+    rightTransitionMotor.set(desiredTransitionSpeed * 0.9);
+    // kickerMotor.set(desiredKickerVelocity.get());
+    // leftTransitionMotor.set(desiredLeftTransitionVelocity.get());
+    // rightTransitionMotor.set(desiredRightTransitionVelocity.get());
 
     shooterLogs();
   }
@@ -285,12 +295,13 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   // Shoot as far as possible
+
   public void runFarthestShot() {
-    setDesiredRotorVelocity(90); // set velocity to our desired velocity
-    if (Math.abs(getFlywheelRotorVelocity() - 90)
-        < ShooterConstants
-            .FLYWHEEL_SPEED_DEADBAND) { // once flywheel is running close to our desired velocity
+    setDesiredRotorVelocity(90);
+    if (Calculations.withinDeadband(
+        getFlywheelRotorVelocity(), 90.0, ShooterConstants.FLYWHEEL_SPEED_DEADBAND, false)) {
       setDesiredTransitionSpeed(ShooterConstants.TRANSITION_SPEED);
     }
+    // set velocity to our desired velocit
   }
 }

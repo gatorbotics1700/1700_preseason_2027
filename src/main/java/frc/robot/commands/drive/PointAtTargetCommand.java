@@ -19,6 +19,7 @@ public class PointAtTargetCommand extends Command {
   private int onTargetCycles;
 
   public PointAtTargetCommand(Drive drive, Supplier<Pose2d> drivetrainPose) {
+    setName("PointAtTarget");
     this.drive = drive;
     this.drivetrainPose = drivetrainPose;
     addRequirements(drive);
@@ -31,7 +32,7 @@ public class PointAtTargetCommand extends Command {
 
   @Override
   public void execute() {
-    Logger.recordOutput("PoinAtTargetCommand/isRunning", true);
+    Logger.recordOutput("PointAtTargetCommand/isRunning", true);
     Translation3d target;
 
     if (FieldCoordinates.BLUE_BUMP_AND_TRENCH_X <= drivetrainPose.get().getX()

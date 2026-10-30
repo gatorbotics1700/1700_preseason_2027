@@ -68,6 +68,7 @@ import org.ironmaple.simulation.drivesims.configs.DriveTrainSimulationConfig;
 import org.ironmaple.simulation.drivesims.configs.SwerveModuleSimulationConfig;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class Drive extends SubsystemBase implements Vision.VisionConsumer {
   // TunerConstants doesn't include these constants, so they are declared locally
@@ -148,10 +149,17 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
   private boolean slowDrive;
 
   private static final double TRANSLATION_kP = 2.5;
-  private static final double ROTATION_kP = 0.2;
+  private static final double ROTATION_kP = 0.1;
   private final double TRANSLATION_MIN_SPEED = 0.5;
   private final double ROTATION_MIN_SPEED = 0.3;
   private final double TRANSLATION_MAX_SPEED = 1.8;
+
+  private static final LoggedNetworkNumber pathKp =
+      new LoggedNetworkNumber("/Tuning/Drive/kP", 10.0);
+  private static final LoggedNetworkNumber pathKd =
+      new LoggedNetworkNumber("/Tuning/Drive/kD", 0.2);
+  private static final LoggedNetworkNumber pathRotationKp =
+      new LoggedNetworkNumber("/Tuning/Drive/RotationkP", 15);
 
   public Drive(
       GyroIO gyroIO,
@@ -179,7 +187,7 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
         this::setPose,
         this::getChassisSpeeds,
         this::runVelocity,
-        new PPHolonomicDriveController(new PIDConstants(9.0, 0, 1), new PIDConstants(15.0, 0, 0)),
+        new PPHolonomicDriveController(new PIDConstants(6, 0, 0.4), new PIDConstants(15, 0, 0)),
         PP_CONFIG,
         () ->
             false, // Disable alliance flipping - tag poses are already in correct coordinate system
@@ -283,6 +291,8 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
 
     // Update gyro alert
     gyroDisconnectedAlert.set(!gyroInputs.connected && Constants.currentMode != Mode.SIM);
+
+    //  updateAutoPid();
   }
 
   /**
@@ -605,4 +615,20 @@ public class Drive extends SubsystemBase implements Vision.VisionConsumer {
     }
     return error;
   }
+
+  //   public void updateAutoPid() {
+  //     AutoBuilder.configure(
+  //         this::getPose,
+  //         this::setPose,
+  //         this::getChassisSpeeds,
+  //         this::runVelocity,
+  //         new PPHolonomicDriveController(
+  //             new PIDConstants(pathKp.get(), 0, pathKd.get()),
+  //             new PIDConstants(pathRotationKp.get(), 0, 0)),
+  //         PP_CONFIG,
+  //         () ->
+  //             false, // Disable alliance flipping - tag poses are already in correct coordinate
+  // system
+  //         this);
+  //   }
 }

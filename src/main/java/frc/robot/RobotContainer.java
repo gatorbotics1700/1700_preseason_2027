@@ -15,13 +15,10 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
-import com.pathplanner.lib.path.PathConstraints;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,7 +29,6 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants.FieldCoordinates;
 import frc.robot.Constants.HoodConstants;
 import frc.robot.Constants.HopperFloorConstants;
 import frc.robot.Constants.IntakeConstants;
@@ -40,7 +36,6 @@ import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.TunerConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.commands.drive.DriveCommands;
-import frc.robot.commands.drive.DriveOverBumpCommand;
 import frc.robot.commands.drive.DriveSystemsCheckCommands;
 import frc.robot.commands.drive.DriveUnderTrenchCommand;
 import frc.robot.commands.drive.PointAtTargetCommand;
@@ -55,6 +50,7 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.mech.HoodSubsystem;
 import frc.robot.subsystems.mech.HopperFloorSubsystem;
+import frc.robot.subsystems.mech.HubTrackerSubsystem;
 import frc.robot.subsystems.mech.IntakeSubsystem;
 import frc.robot.subsystems.mech.ShooterSubsystem;
 import frc.robot.subsystems.mech.TurretSubsystem;
@@ -63,10 +59,9 @@ import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.CommandSimMacXboxController;
 import frc.robot.util.RobotConfigLoader;
-import frc.robot.util.shooting.GamePieceSimulation;
-import frc.robot.util.shooting.ShotCalculator;
 import frc.robot.util.shooting.ShotParameters;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
@@ -82,11 +77,9 @@ public class RobotContainer {
   private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   private final TurretSubsystem turretSubsystem = new TurretSubsystem();
 
-  private final GamePieceSimulation gamePieceSimulation = new GamePieceSimulation();
-
   // Controllers
   private CommandXboxController controller = null; // port 0
-  private CommandXboxController controller_two = null; // port 3
+  private CommandXboxController controller_two = null; // port 1
 
   // Dashboard inputs
   // private final MultiStepAutoChooser multiStepAutoChooser; // COMMENTED OUT - using PathPlanner
@@ -174,25 +167,23 @@ public class RobotContainer {
 
     NamedCommands.registerCommand(
         "Point At Hub Command", new PointAtTargetCommand(drive, robotPose));
-    NamedCommands.registerCommand(
-        "Shooter Command",
-        new ShootingCommands.ShootOnTheMoveCommand(
-            shooterSubsystem,
-            hoodSubsystem,
-            hopperFloorSubsystem,
-            turretSubsystem,
-            robotPose,
-            chassisSpeeds));
     NamedCommands.registerCommand("Intaking Command", IntakeCommands.RunIntake(intakeSubsystem));
+
     NamedCommands.registerCommand(
         "Stop Shooter Command",
         new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
     NamedCommands.registerCommand(
-        "Auto Init",
-        HomeMechanisms()
-            .andThen(IntakeCommands.DeployIntake(intakeSubsystem))
-            .andThen(IntakeCommands.RunIntake(intakeSubsystem)));
+        "Auto Init", HomeMechanisms().andThen(IntakeCommands.DeployIntake(intakeSubsystem)));
+
+    // Deferred so the closest shot is picked from the pose when the command runs, not at boot
+    NamedCommands.registerCommand(
+        "Stationary Shot Command",
+        Commands.defer(
+            () ->
+                ShootingCommands.StationaryShootingCommand(
+                    shooterSubsystem, hoodSubsystem, hopperFloorSubsystem, drive, robotPose),
+            Set.of(drive, shooterSubsystem, hoodSubsystem, hopperFloorSubsystem)));
 
     // Set up auto routines with PathPlanner's auto chooser (using pre-made .auto files)
     autoChooser =
@@ -263,21 +254,36 @@ public class RobotContainer {
             .onFalse(DriveCommands.stopDriveCommand(drive));
       }
 
-      // A -- Drive Under Trench
+      // A -- shoot testing
       controller
           .a()
           .onTrue(
               new InstantCommand(
-                  () -> {
-                    try {
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              DriveUnderTrenchCommand.driveUnderTrench(drive, shooterSubsystem)
-                                  .withName("DriveUnderTrench"));
-                    } catch (Exception e) {
-                      e.printStackTrace();
-                    }
-                  }));
+                      () -> {
+                        shooterSubsystem.setDesiredRotorVelocity(30);
+                        shooterSubsystem.setDesiredTransitionSpeed(
+                            ShooterConstants.TRANSITION_SPEED);
+                        hopperFloorSubsystem.setDesiredHopperFloorSpeed(
+                            HopperFloorConstants.HOPPER_FLOOR_SPEED);
+                        intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
+                      })
+                  .withName("Shooter Transition Testing"));
+
+      // POV Up - shoot testing
+      //   controller
+      //       .povUp()
+      //       .onTrue(
+      //           new InstantCommand(
+      //                   () -> {
+      //                     shooterSubsystem.setDesiredRotorVelocity(shotSpeed.get());
+      //                     shooterSubsystem.setDesiredTransitionSpeed(
+      //                         ShooterConstants.TRANSITION_SPEED);
+      //                     hopperFloorSubsystem.setDesiredHopperFloorSpeed(
+      //                         HopperFloorConstants.HOPPER_FLOOR_SPEED);
+      //                     // intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
+
+      //                   })
+      //               .withName("Shooter Testing with Tuneables"));
 
       // Start -- Reset Heading
       controller
@@ -301,86 +307,71 @@ public class RobotContainer {
                       drive)
                   .ignoringDisable(true));
 
-      // B -- reverse intake
-      controller
-          .b()
-          .whileTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.ReverseIntake(intakeSubsystem))))
-          .onFalse(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
-
-      // Y -- Drive Over Bump
+      // Y -- mech stop
       controller
           .y()
           .onTrue(
               new InstantCommand(
-                  () -> {
-                    try {
+                  () ->
                       CommandScheduler.getInstance()
                           .schedule(
-                              DriveOverBumpCommand.driveOverBump(drive, shooterSubsystem)
-                                  .withName("DriveOverBump"));
-                    } catch (Exception e) {
-                      e.printStackTrace();
-                    }
-                  }));
+                              MechStop(
+                                  turretSubsystem,
+                                  shooterSubsystem,
+                                  hopperFloorSubsystem,
+                                  hoodSubsystem,
+                                  intakeSubsystem))));
 
       // Back -- Slow Drive Toggle
-      controller
-          .back()
-          .onTrue(
-              Commands.runOnce(
-                  () -> {
-                    drive.toggleSlowDrive();
-                  },
-                  drive));
+      /*controller
+      .back()
+      .onTrue(
+          Commands.runOnce(
+              () -> {
+                drive.toggleSlowDrive();
+              },
+              drive));*/
 
       // Left Trigger -- Shoot with Turret (while true)
-      controller
-          .leftTrigger()
-          //   .whileTrue(new InstantCommand(() -> shooterSubsystem.runHardCodedShot()))
-          //   .onFalse(new InstantCommand(() -> shooterSubsystem.setDesiredTransitionSpeed(0)));
-          .whileTrue(
-              Commands.runOnce(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              new ShootingCommands.ShootOnTheMoveCommand(
-                                      shooterSubsystem,
-                                      hoodSubsystem,
-                                      hopperFloorSubsystem,
-                                      turretSubsystem,
-                                      robotPose,
-                                      chassisSpeeds)
-                                  .alongWith(new InstantCommand(() -> drive.setSlowDrive(true))))))
-          .onFalse(
-              new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem)
-                  .alongWith(new InstantCommand(() -> drive.setSlowDrive(false))));
+      /*controller
+      .leftTrigger()
+      //   .whileTrue(new InstantCommand(() -> shooterSubsystem.runHardCodedShot()))
+      //   .onFalse(new InstantCommand(() -> shooterSubsystem.setDesiredTransitionSpeed(0)));
+      .whileTrue(
+          Commands.runOnce(
+              () ->
+                  CommandScheduler.getInstance()
+                      .schedule(
+                          new ShootingCommands.ShootOnTheMoveCommand(
+                                  shooterSubsystem,
+                                  hoodSubsystem,
+                                  hopperFloorSubsystem,
+                                  turretSubsystem,
+                                  robotPose,
+                                  chassisSpeeds)
+                              .alongWith(new InstantCommand(() -> drive.setSlowDrive(true))))))
+      .onFalse(
+          new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem)
+              .alongWith(new InstantCommand(() -> drive.setSlowDrive(false))));*/
 
       // X - Point @ Hub & Shoot (without turret) (while true)
-      controller
-          .x()
-          .whileTrue(
-              Commands.runOnce(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              (new PointAtTargetCommand(drive, robotPose))
-                                  .andThen(
-                                      new ShootingCommands.ShootOnTheMoveCommand(
-                                          shooterSubsystem,
-                                          hoodSubsystem,
-                                          hopperFloorSubsystem,
-                                          turretSubsystem,
-                                          robotPose,
-                                          chassisSpeeds)))))
-          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+      //   controller
+      //       .x()
+      //       .whileTrue(
+      //           Commands.runOnce(
+      //               () ->
+      //                   CommandScheduler.getInstance()
+      //                       .schedule(
+      //                           (new PointAtTargetCommand(drive, robotPose))
+      //                               .andThen(
+      //                                   new ShootingCommands.ShootOnTheMoveCommand(
+      //                                       shooterSubsystem,
+      //                                       hoodSubsystem,
+      //                                       hopperFloorSubsystem,
+      //                                       turretSubsystem,
+      //                                       robotPose,
+      //                                       chassisSpeeds)))))
+      //       .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
       // Right Trigger -- Run Intake
       controller
@@ -390,6 +381,20 @@ public class RobotContainer {
                   () ->
                       CommandScheduler.getInstance()
                           .schedule(IntakeCommands.RunIntake(intakeSubsystem))))
+          .onFalse(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
+
+      // B -- reverse intake
+      controller
+          .b()
+          .whileTrue(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(IntakeCommands.ReverseIntake(intakeSubsystem))))
           .onFalse(
               new InstantCommand(
                   () ->
@@ -425,62 +430,7 @@ public class RobotContainer {
         controller_two = new CommandXboxController(1);
       }
 
-      if (Constants.currentMode == Constants.Mode.SIM) {
-        controller_two
-            .a()
-            .onTrue(
-                new InstantCommand(
-                    () -> {
-                      // Use current pose and chassis speeds at this instant so all values match.
-                      Pose2d pose = drive.getPose();
-
-                      ChassisSpeeds cs = drive.getChassisSpeeds();
-                      ShotParameters params =
-                          ShotCalculator.calculateShot(pose, cs, FieldCoordinates.BLUE_HUB);
-
-                      gamePieceSimulation.launchFuelBall(
-                          ShotCalculator.getFieldToShooter(pose, ShooterConstants.BOT_TO_SHOOTER),
-                          cs,
-                          drive.getRotation(),
-                          params.shotSpeed,
-                          params.turretAngle,
-                          params.hoodAngle);
-                    }));
-        controller_two
-            .b()
-            .onTrue(
-                AutoBuilder.pathfindToPose(
-                        new Pose2d(1, FieldCoordinates.BLUE_HUB.getY(), new Rotation2d()),
-                        new PathConstraints(4, 12, Math.toRadians(700), Math.toRadians(1000)))
-                    .andThen(
-                        Commands.parallel(
-                            AutoBuilder.pathfindToPose(
-                                new Pose2d(3, FieldCoordinates.BLUE_HUB.getY(), new Rotation2d()),
-                                new PathConstraints(
-                                    0.75, 12, Math.toRadians(700), Math.toRadians(1000))),
-                            Commands.waitSeconds(0.2)
-                                .andThen(
-                                    Commands.runOnce(
-                                        () -> {
-                                          // Use current pose and chassis speeds at this instant so
-                                          // all values match.
-                                          Pose2d pose = drive.getPose();
-
-                                          ChassisSpeeds cs = drive.getChassisSpeeds();
-                                          ShotParameters params =
-                                              ShotCalculator.calculateShot(
-                                                  pose, cs, FieldCoordinates.BLUE_HUB);
-
-                                          gamePieceSimulation.launchFuelBall(
-                                              ShotCalculator.getFieldToShooter(
-                                                  pose, ShooterConstants.BOT_TO_SHOOTER),
-                                              cs,
-                                              pose.getRotation(),
-                                              params.shotSpeed,
-                                              params.turretAngle,
-                                              params.hoodAngle);
-                                        })))));
-      } else {
+      if (Constants.currentMode == Constants.Mode.REAL) {
         // A -- Retract Intake
         controller_two
             .a()
@@ -531,21 +481,21 @@ public class RobotContainer {
                             .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
 
         // Left Trigger -- Shoot with Turret (while true)
-        controller_two
-            .leftTrigger()
-            .whileTrue(
-                Commands.runOnce(
-                    () ->
-                        CommandScheduler.getInstance()
-                            .schedule(
-                                new ShootingCommands.ShootOnTheMoveCommand(
-                                    shooterSubsystem,
-                                    hoodSubsystem,
-                                    hopperFloorSubsystem,
-                                    turretSubsystem,
-                                    robotPose,
-                                    chassisSpeeds))))
-            .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+        // controller_two
+        //     .leftTrigger()
+        //     .whileTrue(
+        //         Commands.runOnce(
+        //             () ->
+        //                 CommandScheduler.getInstance()
+        //                     .schedule(
+        //                         new ShootingCommands.ShootOnTheMoveCommand(
+        //                             shooterSubsystem,
+        //                             hoodSubsystem,
+        //                             hopperFloorSubsystem,
+        //                             turretSubsystem,
+        //                             robotPose,
+        //                             chassisSpeeds))))
+        //     .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
 
         // Right Bumper -- Home Hood
         controller_two
@@ -596,9 +546,9 @@ public class RobotContainer {
             .onFalse(DriveCommands.stopDriveCommand(drive));
       }
 
-      // A -- Drive Under Trench
+      //  pov down -- Drive Under Trench
       controller
-          .a()
+          .povDown()
           .onTrue(
               new InstantCommand(
                   () -> {
@@ -611,10 +561,21 @@ public class RobotContainer {
                       e.printStackTrace();
                     }
                   }));
-
-      // B -- Reset Heading
       controller
-          .b()
+          .y()
+          .whileTrue(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(runAgitateTransition(shooterSubsystem, intakeSubsystem))))
+          .onFalse(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(stopAgitateTransition(shooterSubsystem, intakeSubsystem))));
+      // START-- Reset Heading
+      controller
+          .start()
           .onTrue(
               Commands.runOnce(
                       () -> {
@@ -634,71 +595,61 @@ public class RobotContainer {
                       drive)
                   .ignoringDisable(true));
 
-      // X -- Drive Over Bump
       controller
           .x()
-          .onTrue(
-              new InstantCommand(
-                  () -> {
-                    try {
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              DriveOverBumpCommand.driveOverBump(drive, shooterSubsystem)
-                                  .withName("DriveOverBump"));
-                    } catch (Exception e) {
-                      e.printStackTrace();
-                    }
-                  }));
-
-      // Y -- Slow Drive Toggle
-      controller
-          .y()
-          .onTrue(
-              Commands.runOnce(
-                  () -> {
-                    drive.toggleSlowDrive();
-                  },
-                  drive));
-
-      // Left Trigger -- Shoot with Turret (while true)
-      controller
-          .leftTrigger()
           .whileTrue(
-              Commands.runOnce(
+              new InstantCommand(
                   () ->
                       CommandScheduler.getInstance()
-                          .schedule(
-                              new ShootingCommands.ShootOnTheMoveCommand(
-                                  shooterSubsystem,
-                                  hoodSubsystem,
-                                  hopperFloorSubsystem,
-                                  turretSubsystem,
-                                  robotPose,
-                                  chassisSpeeds))))
-          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+                          .schedule(IntakeCommands.ReverseIntake(intakeSubsystem))))
+          .onFalse(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
 
-      // Left Bumper -- Point @ Hub & Shoot (without turret) (while true)
+      /*    controller
+      .x()
+      .onTrue(
+          new InstantCommand(
+              () ->
+                  CommandScheduler.getInstance()
+                      .schedule(
+                          MechStop(
+                              turretSubsystem,
+                              shooterSubsystem,
+                              hopperFloorSubsystem,
+                              hoodSubsystem,
+                              intakeSubsystem)))); */
+
+      // X -- Slow Drive Toggle
+      /*   controller
+      .x()
+      .onTrue(
+          Commands.runOnce(
+              () -> {
+                drive.toggleSlowDrive();
+              },
+              drive));
+              */
+
+      // B -- Run Intake Hold
+      controller
+          .b()
+          .whileTrue(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(IntakeCommands.RunIntake(intakeSubsystem))))
+          .onFalse(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
+
+      // Left bumper -- also Run Intake Hold
       controller
           .leftBumper()
-          .whileTrue(
-              Commands.runOnce(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              (new PointAtTargetCommand(drive, robotPose))
-                                  .andThen(
-                                      new ShootingCommands.ShootOnTheMoveCommand(
-                                          shooterSubsystem,
-                                          hoodSubsystem,
-                                          hopperFloorSubsystem,
-                                          turretSubsystem,
-                                          robotPose,
-                                          chassisSpeeds)))))
-          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
-
-      // Right Trigger -- Run Intake
-      controller
-          .rightTrigger()
           .whileTrue(
               new InstantCommand(
                   () ->
@@ -733,18 +684,27 @@ public class RobotContainer {
         controller_two = new CommandXboxController(1);
       }
 
-      // B -- Retract Intake
-      controller_two
-          .b()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.RetractIntake(intakeSubsystem))));
+      // We want right button to be line up for a shot not shoot on the moe do we have a command for
+      // that??
+      // TODO Write commands for the following taks and bind em to the indicated buttons
+      // Right button - Shot line up have like 3 spots that we go to to shoot
+      // X - Vomit outtake TODO: write the vomit command
+      //   controller_two
+      //   .a()
+      //   .onTrue(
 
-      // X -- Mech Stop
+      //   )
+      /*  controller_two //not in the dahlia edition
+      .b()
+      .onTrue(
+          new InstantCommand(
+              () ->
+                  CommandScheduler.getInstance()
+                      .schedule(IntakeCommands.RetractIntake(intakeSubsystem))));*/
+
+      // Start -- Mech Stop
       controller_two
-          .x()
+          .start()
           .onTrue(
               new InstantCommand(
                   () ->
@@ -757,21 +717,98 @@ public class RobotContainer {
                                   hoodSubsystem,
                                   intakeSubsystem))));
 
-      // Y -- Turret Angle 0˚
+      // B - stationary shoot
+      controller_two
+          .b()
+          .whileTrue(
+              Commands.runOnce(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(
+                              ShootingCommands.StationaryShootingCommand(
+                                  shooterSubsystem,
+                                  hoodSubsystem,
+                                  hopperFloorSubsystem,
+                                  drive,
+                                  robotPose))))
+          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+
+      // Right trigger - manual shooting
+      //   ShootingCommand(
+      //     ShooterSubsystem shooterSubsystem,
+      //     HoodSubsystem hoodSubsystem,
+      //     HopperFloorSubsystem hopperFloorSubsystem,
+      //     // TurretSubsystem turretSubsystem,
+      //     Supplier<Pose2d> drivetrainPose,
+      //     ShotParameters shotParameters)
+      controller_two
+          .rightTrigger()
+          .whileTrue(
+              Commands.runOnce(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(
+                              new PointAtTargetCommand(drive, robotPose)
+                                  .andThen(
+                                      new ShootingCommands.ShootingCommand(
+                                              shooterSubsystem,
+                                              hoodSubsystem,
+                                              hopperFloorSubsystem,
+                                              robotPose,
+                                              new ShotParameters(
+                                                  robotPose.get(), HoodConstants.MIN_ANGLE, 50))
+                                          .withName("Manual Shooting")))))
+          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+
+      // Y - stop shooting
       controller_two
           .y()
+          .onTrue(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
+
+      // X vomit/outtake
+      //   controller_two
+      //       .x()
+      //       .onTrue(
+      //           new InstantCommand(
+      //               () ->
+      // intakeSubsystem.setIntakeSpeed(Constants.IntakeConstants.OUTTAKING_SPEED)));
+
+      // TODO may need to check if we're still in bounds
+      // manual hood adjustment - plus 5 degree
+      controller_two
+          .povUp()
           .onTrue(
               new InstantCommand(
-                  () -> turretSubsystem.setDesiredAngle(new Rotation2d(Math.toRadians(0)))));
+                  () ->
+                      hoodSubsystem.setDesiredAngle(
+                          new Rotation2d(hoodSubsystem.getCurrentAngle().getDegrees() + 5))));
 
-      // Left Trigger -- Home Turret
+      // manual hood adjustment - minus 5 degree
       controller_two
-          .leftTrigger()
-          .onTrue(new InstantCommand(() -> turretSubsystem.homeTurret()).ignoringDisable(true));
+          .povDown()
+          .onTrue(
+              new InstantCommand(
+                  () ->
+                      hoodSubsystem.setDesiredAngle(
+                          new Rotation2d(hoodSubsystem.getCurrentAngle().getDegrees() - 5))));
 
-      // Left Bumper -- Home Hood
+      /*   // Y -- Turret Angle 0˚
+            controller_two
+                .y()
+                .onTrue(
+                    new InstantCommand(
+                        () -> turretSubsystem.setDesiredAngle(new Rotation2d(Math.toRadians(0)))));
+
+            // Left Trigger -- Home Turret
+            controller_two
+                .leftTrigger()
+                .onTrue(new InstantCommand(() -> turretSubsystem.homeTurret()).ignoringDisable(true));
+      */
+      // no turret in the dahlia edition
+
+      // A -- Home Hood
       controller_two
-          .leftBumper()
+          .a()
           .onTrue(
               new InstantCommand(
                   () ->
@@ -832,7 +869,7 @@ public class RobotContainer {
       //     .b()
       //     .whileTrue(shooterSubsystem.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
 
-      // TODO: turret sysid buttons -- uncomment for use
+      // TODO: turret sysid buttons -- uncomment or use
       // controller_two.x().whileTrue(turretSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
       // controller_two.y().whileTrue(turretSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
       // controller_two
@@ -908,10 +945,10 @@ public class RobotContainer {
 
   public void configureButtonBindings() {
     CommandScheduler.getInstance().getActiveButtonLoop().clear();
-    // configureCompDriverButtonBindings();
-    // configureCompCodriverButtonBindings(); // TODO: IMPORTANT SWITCH THIS BEFORE MATCHES
-    configureDriverButtonBindings();
-    configureCodriverButtonBindings();
+    configureCompDriverButtonBindings();
+    configureCompCodriverButtonBindings();
+    // configureDriverButtonBindings();
+    // configureCodriverButtonBindings();
   }
 
   public void configureSystemCheckButtons() {
@@ -1030,9 +1067,7 @@ public class RobotContainer {
   }
 
   public void periodic() {
-    if (Constants.currentMode == Constants.simMode) {
-      gamePieceSimulation.updateBalls();
-    }
+    HubTrackerSubsystem hubTracker = new HubTrackerSubsystem();
 
     robotContainerLogs();
 
@@ -1059,44 +1094,32 @@ public class RobotContainer {
         "Commands/DriveToFuelActive",
         driveCmd != null ? driveCmd.getName().equals("DriveToFuel") : false);
 
+    Command shooterCmd = shooterSubsystem.getCurrentCommand();
+    Logger.recordOutput(
+        "Commands/ShooterCommand", shooterCmd != null ? shooterCmd.getName() : "None");
+
+    // Logger.recordOutput("Commands/ResetHeading", TODO: make named command an then call it here
+
     Logger.recordOutput("DriveToFuel/Fuel", vision.getFuelPose(drive.getPose()));
     Logger.recordOutput("Drive/Odometry/Fuel", vision.getFuelPose(drive.getPose()));
-
-    Logger.recordOutput("Mech/Valid Shot", getValidShot());
   }
 
-  public boolean getValidShot() {
-    Translation3d target;
+  public Command runAgitateTransition(
+      ShooterSubsystem shooterSubsystem, IntakeSubsystem intakeSubsystem) {
+    return (new InstantCommand(
+        () -> {
+          shooterSubsystem.setDesiredTransitionSpeed(-0.1);
+        },
+        shooterSubsystem));
+  }
 
-    if (FieldCoordinates.BLUE_BUMP_AND_TRENCH_X <= drive.getPose().getX()
-        && drive.getPose().getX() < FieldCoordinates.RED_BUMP_AND_TRENCH_X) {
-      if (FieldCoordinates.FIELD_CENTER.getY() < drive.getPose().getY()) {
-        target =
-            DriverStation.getAlliance().get() == Alliance.Blue
-                ? FieldCoordinates.BLUE_RIGHT_FUNNELING
-                : FieldCoordinates.RED_LEFT_FUNNELING;
-
-      } else {
-        target =
-            DriverStation.getAlliance().get() == Alliance.Blue
-                ? FieldCoordinates.BLUE_LEFT_FUNNELING
-                : FieldCoordinates.RED_RIGHT_FUNNELING;
-      }
-
-    } else {
-      target =
-          DriverStation.getAlliance().get() == Alliance.Blue
-              ? FieldCoordinates.BLUE_HUB
-              : FieldCoordinates.RED_HUB;
-    }
-
-    ShotParameters params =
-        ShotCalculator.calculateShot(drive.getPose(), chassisSpeeds.get(), target);
-
-    if (params.shotSpeed == 0) {
-      return false;
-    }
-    return true;
+  public Command stopAgitateTransition(
+      ShooterSubsystem shooterSubsystem, IntakeSubsystem intakeSubsystem) {
+    return (new InstantCommand(
+        () -> {
+          shooterSubsystem.setDesiredTransitionSpeed(0);
+        },
+        shooterSubsystem));
   }
 
   public Command MechStop(

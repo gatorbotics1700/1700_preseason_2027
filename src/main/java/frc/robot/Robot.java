@@ -30,7 +30,6 @@ import frc.robot.commands.mech.HoodCommands;
 import frc.robot.util.Elastic;
 import frc.robot.util.RobotConfigLoader;
 import frc.robot.util.logging.PDHLogger;
-import frc.robot.util.shooting.ShotCalculator;
 import java.util.Optional;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
@@ -48,8 +47,6 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private RobotContainer robotContainer;
-  private ShotCalculator
-      shotCalculator; // not actually used anywhere, but we need the constructor to run asap to
   private final PowerDistribution pdh;
 
   // generate the lookup table
@@ -119,7 +116,6 @@ public class Robot extends LoggedRobot {
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our autonomous chooser on the dashboard.
     robotContainer = new RobotContainer();
-    shotCalculator = new ShotCalculator();
 
     if (Constants.currentMode == Constants.Mode.REPLAY) {
       pdh = null;
@@ -255,6 +251,7 @@ public class Robot extends LoggedRobot {
                 robotContainer.getHoodSubsystem(),
                 robotContainer.getIntakeSubsystem()));
     // robotContainer.configureSysIdButtons();
+    System.out.println("VIVIEN WANTS TO SEE IF WE GOT HERE");
     robotContainer.configureSystemCheckButtons();
   }
 

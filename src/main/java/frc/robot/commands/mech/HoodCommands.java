@@ -3,6 +3,7 @@ package frc.robot.commands.mech;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.HoodConstants;
 import frc.robot.subsystems.mech.HoodSubsystem;
+import frc.robot.util.Calculations;
 
 public class HoodCommands {
 
@@ -35,10 +36,10 @@ public class HoodCommands {
     // is reached
     @Override
     public boolean isFinished() {
-      if (Math.abs(
-              hoodSubsystem.getCurrentAngle().getDegrees()
-                  - hoodSubsystem.getDesiredAngle().getDegrees())
-          <= HoodConstants.HOOD_POSITION_DEADBAND_DEGREES) {
+      if (Calculations.withinDeadband(
+          hoodSubsystem.getCurrentAngle().getDegrees(),
+          hoodSubsystem.getDesiredAngle().getDegrees(),
+          HoodConstants.HOOD_POSITION_DEADBAND_DEGREES, true)) {
         return true;
       } else if (hoodSubsystem.isCurrentLimitReached()) {
         hoodSubsystem.setDesiredAngle(hoodSubsystem.getCurrentAngle());

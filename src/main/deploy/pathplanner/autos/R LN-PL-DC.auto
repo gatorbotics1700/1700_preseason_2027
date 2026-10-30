@@ -5,9 +5,22 @@
     "data": {
       "commands": [
         {
-          "type": "named",
+          "type": "deadline",
           "data": {
-            "name": "Auto Init"
+            "commands": [
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.0
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Auto Init"
+                }
+              }
+            ]
           }
         },
         {
@@ -29,7 +42,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Shooter Command"
+                  "name": "Stationary Shot Command"
                 }
               }
             ]
@@ -79,7 +92,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Shooter Command"
+                  "name": "Stationery Shot Command"
                 }
               }
             ]
@@ -95,6 +108,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Left Autos",
   "choreoAuto": false
 }

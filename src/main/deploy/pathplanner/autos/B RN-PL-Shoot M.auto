@@ -5,9 +5,22 @@
     "data": {
       "commands": [
         {
-          "type": "named",
+          "type": "deadline",
           "data": {
-            "name": "Home Mechanisms"
+            "commands": [
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 3.0
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Auto Init"
+                }
+              }
+            ]
           }
         },
         {
@@ -29,7 +42,7 @@
               {
                 "type": "named",
                 "data": {
-                  "name": "Shooter Command"
+                  "name": "Stationary Shot Command"
                 }
               }
             ]
@@ -45,6 +58,6 @@
     }
   },
   "resetOdom": true,
-  "folder": null,
+  "folder": "Right Autos",
   "choreoAuto": false
 }
