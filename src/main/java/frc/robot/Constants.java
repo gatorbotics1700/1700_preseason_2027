@@ -19,7 +19,7 @@ public final class Constants {
     // we need a value for the L4 shooting voltage, the trough shooting voltage, and the intake voltage
       // shooting voltages should be negative, and the L4 value should be larger
   /* TODO: put your shooting voltages here */
-    public static final double l4ShootingVoltage = -5; //note to moiii: ask prog leads weather absolute value grater or jsut value grater
+    public static final double l4ShootingVoltage = -5; 
     public static final double troughShootingVoltage = -10;
     public static final double intakeVoltage = -1;
 

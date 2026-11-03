@@ -31,7 +31,7 @@ public class CoralShooterCommand extends Command {
   public void initialize() {
     /* TODO: initialize the start time variable with the current time */
       // HINT: System.currentTimeMillis() gets you the current time
-      startTime = System.currentTimeMillis()
+      startTime = System.currentTimeMillis();
   }
 
   // Called every time the scheduler runs while the command is scheduled.
@@ -41,19 +41,19 @@ public class CoralShooterCommand extends Command {
     // It's also helpful to have print statements to indicate what the shooter is doing
       // if our voltage is positive, we're intaking
       if (voltage > 0) {
-        System.out.println("intaking")
+        System.out.println("intaking");
       }
       // if our voltage is equal to the L4 shooting voltage, we're shooting l4
-      else if (voltage = l4ShootingVoltage) {
-        System.out.println("Shooting l4")
+      else if (voltage == Constants.l4ShootingVoltage) {
+        System.out.println("Shooting l4");
       }
       // if our voltage is equal to the trough shooting voltage, we're shooting trough
-      else (voltage = trough shooting voltage) {
-        System.out.println("Shooting Trough")
+      else if (voltage == Constants.troughShootingVoltage) {
+        System.out.println("Shooting Trough");
       }
 
     /* TODO: set motor voltage */
-    motorVoltage = voltage;
+    coralShooterSubsystem.setMotorVoltage(voltage);
     
 
     /* TODO: add print statements depending on the voltage to indicate the state the shooter is currently in */
@@ -62,6 +62,29 @@ public class CoralShooterCommand extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
+    private long elapsedTime = System.currentTimeMillis() - startTime;
+    if (elapsedTime > 5000 && voltage > 0) {
+      System.out.println("finished intaking because 5 seconds have passed");
+      coralShooterSubsystem.setMotorVoltage(0);
+      return true; 
+    }
+    if (limitSwitch.get() && voltage > 0) {
+      System.out.println("limit switch triggered");
+      coralShooterSubsystem.setMotorVoltage(0);
+      return true; 
+    }
+    if (elapsedTime > 1500 && voltage < 0) {
+      System.out.println("finished outtaking because 1.5 seconds have passed");
+      coralShooterSubsystem.setMotorVoltage(0);
+      return true;
+    }
+      
+    return false;
+    }
+
+
+    
+      
     // if we're intaking, we want to end either if it's been 5 seconds or the limit switch is triggered
       // the limit switch is triggered if the value it's getting is true
     // if our voltage is zero, we can just end, but to be safe also set speed to zero
@@ -75,13 +98,9 @@ public class CoralShooterCommand extends Command {
       // this value is stored in milliseconds
 
     /* TODO: write the logic for when to end the command */
-    if (voltage == 0) {
-      speed = 0;
-      return false
-      
-    }
+    
+    
       // refer to the descriptions above to write this part
     
-    return true;
-  }
+  
 }
