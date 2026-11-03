@@ -34,16 +34,12 @@ public class CoralShooterSubsystem extends SubsystemBase {
     // This part of the code is making it so if we give the motors the same voltage, they'll go in opposite directions
       // Since the wheels have to spin the same direction but the motors are mounted on opposite sides
     /* TODO: put your right motor name here and uncomment the next few lines */
-         rightMotor.getConfigurator()
-         rightMotor.apply()
-         rightMotor =  new TalonFXConfiguration()
-         rightMotor.withMotorOutput(
-         rightMotor = new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive)));
+         rightMotor.getConfigurator().apply()new TalonFXConfiguration().withMotorOutput()new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive);
 
     // You must also instantiate your limit switch by creating a new DigitalInput object
       // Make sure to use the limit switch constant in Constants.java
     /* TODO: instantiate your limit switch here */
-        limitSwitch = new DigitalInput(Constants.SHOOTER_LIMIT_SWITCH, Constants.Mech_CANBUS_NAME);
+        limitSwitch = new DigitalInput(Constants.SHOOTER_LIMIT_SWITCH);
   }
 
   /* GETTER AND SETTER METHODS */
@@ -63,6 +59,6 @@ public class CoralShooterSubsystem extends SubsystemBase {
   
    */
 }public void getLimitSwitchValue() {
-   limitSwitch.get();
+   return limitSwitch.get();
 
 }
