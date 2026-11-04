@@ -161,7 +161,8 @@ public class IntakeCommands {
           || Calculations.withinDeadband(
               IntakeConstants.EXTENDED_ANGLE_DEGREES,
               intakeSubsystem.getCurrentAngle().getDegrees(),
-              IntakeConstants.POSITION_DEADBAND_DEGREES, true);
+              IntakeConstants.POSITION_DEADBAND_DEGREES,
+              true);
     }
   }
 
@@ -185,7 +186,8 @@ public class IntakeCommands {
           || Calculations.withinDeadband(
               IntakeConstants.RETRACTED_ANGLE_DEGREES,
               intakeSubsystem.getCurrentAngle().getDegrees(),
-              IntakeConstants.POSITION_DEADBAND_DEGREES, true);
+              IntakeConstants.POSITION_DEADBAND_DEGREES,
+              true);
     }
   }
 }

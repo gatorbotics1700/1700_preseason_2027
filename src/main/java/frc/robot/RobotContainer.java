@@ -16,7 +16,6 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
@@ -25,23 +24,20 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.Constants.HoodConstants;
-import frc.robot.Constants.HopperFloorConstants;
-import frc.robot.Constants.IntakeConstants;
 import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.TunerConstants;
 import frc.robot.Constants.VisionConstants;
-import frc.robot.commands.drive.DriveCommands;
-import frc.robot.commands.drive.DriveSystemsCheckCommands;
-import frc.robot.commands.drive.DriveUnderTrenchCommand;
 import frc.robot.commands.drive.PointAtTargetCommand;
 import frc.robot.commands.mech.HoodCommands;
 import frc.robot.commands.mech.IntakeCommands;
 import frc.robot.commands.mech.ShootingCommands;
+import frc.robot.controls.CodriverBindings;
+import frc.robot.controls.CompCodriverBindings;
+import frc.robot.controls.CompDriverBindings;
+import frc.robot.controls.DriverBindings;
+import frc.robot.controls.SysIdBindings;
+import frc.robot.controls.SystemCheckBindings;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -50,16 +46,12 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.mech.HoodSubsystem;
 import frc.robot.subsystems.mech.HopperFloorSubsystem;
-import frc.robot.subsystems.mech.HubTrackerSubsystem;
 import frc.robot.subsystems.mech.IntakeSubsystem;
 import frc.robot.subsystems.mech.ShooterSubsystem;
 import frc.robot.subsystems.mech.TurretSubsystem;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
-import frc.robot.util.CommandSimMacXboxController;
-import frc.robot.util.RobotConfigLoader;
-import frc.robot.util.shooting.ShotParameters;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -217,674 +209,6 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
-  public void configureDriverButtonBindings() {
-    if (DriverStation.isJoystickConnected(0)) {
-      if (Constants.currentMode == Constants.Mode.SIM
-          && System.getProperty("os.name").contains("Mac")) {
-        controller = new CommandSimMacXboxController(0);
-      } else {
-        controller = new CommandXboxController(0);
-      }
-
-      // Default command, normal field-relative drive
-      Trigger driverControl =
-          new Trigger(
-              () ->
-                  Math.abs(controller.getLeftY()) > 0.1
-                      || Math.abs(controller.getLeftX()) > 0.1
-                      || Math.abs(controller.getRightX()) > 0.1);
-
-      if (DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
-        driverControl
-            .whileTrue(
-                DriveCommands.joystickDrive(
-                    drive,
-                    () -> modifyJoystickAxis(controller.getLeftY()), // Changed to raw values
-                    () -> modifyJoystickAxis(controller.getLeftX()), // Changed to raw values
-                    () -> modifyJoystickAxis(-controller.getRightX()))) // Changed to raw values
-            .onFalse(DriveCommands.stopDriveCommand(drive));
-      } else {
-        driverControl
-            .whileTrue(
-                DriveCommands.joystickDrive(
-                    drive,
-                    () -> modifyJoystickAxis(-controller.getLeftY()), // Changed to raw values
-                    () -> modifyJoystickAxis(-controller.getLeftX()), // Changed to raw values
-                    () -> modifyJoystickAxis(-controller.getRightX()))) // Changed to raw values
-            .onFalse(DriveCommands.stopDriveCommand(drive));
-      }
-
-      // A -- shoot testing
-      controller
-          .a()
-          .onTrue(
-              new InstantCommand(
-                      () -> {
-                        shooterSubsystem.setDesiredRotorVelocity(30);
-                        shooterSubsystem.setDesiredTransitionSpeed(
-                            ShooterConstants.TRANSITION_SPEED);
-                        hopperFloorSubsystem.setDesiredHopperFloorSpeed(
-                            HopperFloorConstants.HOPPER_FLOOR_SPEED);
-                        intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
-                      })
-                  .withName("Shooter Transition Testing"));
-
-      // POV Up - shoot testing
-      //   controller
-      //       .povUp()
-      //       .onTrue(
-      //           new InstantCommand(
-      //                   () -> {
-      //                     shooterSubsystem.setDesiredRotorVelocity(shotSpeed.get());
-      //                     shooterSubsystem.setDesiredTransitionSpeed(
-      //                         ShooterConstants.TRANSITION_SPEED);
-      //                     hopperFloorSubsystem.setDesiredHopperFloorSpeed(
-      //                         HopperFloorConstants.HOPPER_FLOOR_SPEED);
-      //                     // intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
-
-      //                   })
-      //               .withName("Shooter Testing with Tuneables"));
-
-      // Start -- Reset Heading
-      controller
-          .start()
-          .onTrue(
-              Commands.runOnce(
-                      () -> {
-                        if (DriverStation.getAlliance().isPresent()
-                            && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
-                          drive.setPose(
-                              new Pose2d(
-                                  drive.getPose().getTranslation(),
-                                  new Rotation2d(Math.toRadians(180))));
-                        } else {
-                          drive.setPose(
-                              new Pose2d(
-                                  drive.getPose().getTranslation(),
-                                  new Rotation2d(Math.toRadians(0))));
-                        }
-                      },
-                      drive)
-                  .ignoringDisable(true));
-
-      // Y -- mech stop
-      controller
-          .y()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              MechStop(
-                                  turretSubsystem,
-                                  shooterSubsystem,
-                                  hopperFloorSubsystem,
-                                  hoodSubsystem,
-                                  intakeSubsystem))));
-
-      // Back -- Slow Drive Toggle
-      /*controller
-      .back()
-      .onTrue(
-          Commands.runOnce(
-              () -> {
-                drive.toggleSlowDrive();
-              },
-              drive));*/
-
-      // Left Trigger -- Shoot with Turret (while true)
-      /*controller
-      .leftTrigger()
-      //   .whileTrue(new InstantCommand(() -> shooterSubsystem.runHardCodedShot()))
-      //   .onFalse(new InstantCommand(() -> shooterSubsystem.setDesiredTransitionSpeed(0)));
-      .whileTrue(
-          Commands.runOnce(
-              () ->
-                  CommandScheduler.getInstance()
-                      .schedule(
-                          new ShootingCommands.ShootOnTheMoveCommand(
-                                  shooterSubsystem,
-                                  hoodSubsystem,
-                                  hopperFloorSubsystem,
-                                  turretSubsystem,
-                                  robotPose,
-                                  chassisSpeeds)
-                              .alongWith(new InstantCommand(() -> drive.setSlowDrive(true))))))
-      .onFalse(
-          new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem)
-              .alongWith(new InstantCommand(() -> drive.setSlowDrive(false))));*/
-
-      // X - Point @ Hub & Shoot (without turret) (while true)
-      //   controller
-      //       .x()
-      //       .whileTrue(
-      //           Commands.runOnce(
-      //               () ->
-      //                   CommandScheduler.getInstance()
-      //                       .schedule(
-      //                           (new PointAtTargetCommand(drive, robotPose))
-      //                               .andThen(
-      //                                   new ShootingCommands.ShootOnTheMoveCommand(
-      //                                       shooterSubsystem,
-      //                                       hoodSubsystem,
-      //                                       hopperFloorSubsystem,
-      //                                       turretSubsystem,
-      //                                       robotPose,
-      //                                       chassisSpeeds)))))
-      //       .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
-
-      // Right Trigger -- Run Intake
-      controller
-          .rightTrigger()
-          .whileTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.RunIntake(intakeSubsystem))))
-          .onFalse(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
-
-      // B -- reverse intake
-      controller
-          .b()
-          .whileTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.ReverseIntake(intakeSubsystem))))
-          .onFalse(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
-
-      // Right Bumper -- Deploy Intake
-      controller
-          .rightBumper()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.DeployIntake(intakeSubsystem))));
-
-      // Left Bumper -- Retract Intake
-      controller
-          .leftBumper()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.RetractIntake(intakeSubsystem))));
-    }
-  }
-
-  public void configureCodriverButtonBindings() {
-    if (DriverStation.isJoystickConnected(1)) {
-      if (Constants.currentMode == Constants.Mode.SIM
-          && System.getProperty("os.name").contains("Mac")) {
-        controller_two = new CommandSimMacXboxController(1);
-      } else {
-        controller_two = new CommandXboxController(1);
-      }
-
-      if (Constants.currentMode == Constants.Mode.REAL) {
-        // A -- Retract Intake
-        controller_two
-            .a()
-            .onTrue(
-                new InstantCommand(
-                    () ->
-                        CommandScheduler.getInstance()
-                            .schedule(IntakeCommands.RetractIntake(intakeSubsystem))));
-
-        // B -- Deploy Intake
-        controller_two
-            .b()
-            .onTrue(
-                new InstantCommand(
-                    () ->
-                        CommandScheduler.getInstance()
-                            .schedule(IntakeCommands.DeployIntake(intakeSubsystem))));
-
-        // X -- Mech Stop
-        controller_two
-            .x()
-            .onTrue(
-                new InstantCommand(
-                    () ->
-                        CommandScheduler.getInstance()
-                            .schedule(
-                                MechStop(
-                                    turretSubsystem,
-                                    shooterSubsystem,
-                                    hopperFloorSubsystem,
-                                    hoodSubsystem,
-                                    intakeSubsystem))));
-
-        // Y -- Hood Home
-        controller_two.y().onTrue(new HoodCommands.HoodHomingCommand(hoodSubsystem));
-
-        controller_two
-            .leftBumper()
-            .whileTrue(
-                new InstantCommand(
-                    () ->
-                        CommandScheduler.getInstance()
-                            .schedule(IntakeCommands.ReverseIntake(intakeSubsystem))))
-            .onFalse(
-                new InstantCommand(
-                    () ->
-                        CommandScheduler.getInstance()
-                            .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
-
-        // Left Trigger -- Shoot with Turret (while true)
-        // controller_two
-        //     .leftTrigger()
-        //     .whileTrue(
-        //         Commands.runOnce(
-        //             () ->
-        //                 CommandScheduler.getInstance()
-        //                     .schedule(
-        //                         new ShootingCommands.ShootOnTheMoveCommand(
-        //                             shooterSubsystem,
-        //                             hoodSubsystem,
-        //                             hopperFloorSubsystem,
-        //                             turretSubsystem,
-        //                             robotPose,
-        //                             chassisSpeeds))))
-        //     .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
-
-        // Right Bumper -- Home Hood
-        controller_two
-            .rightBumper()
-            .onTrue(
-                new InstantCommand(
-                    () ->
-                        CommandScheduler.getInstance()
-                            .schedule(new HoodCommands.HoodHomingCommand(hoodSubsystem))));
-      }
-    }
-  }
-
-  public void configureCompDriverButtonBindings() {
-    if (DriverStation.isJoystickConnected(0)) {
-      if (Constants.currentMode == Constants.Mode.SIM
-          && System.getProperty("os.name").contains("Mac")) {
-        controller = new CommandSimMacXboxController(0);
-      } else {
-        controller = new CommandXboxController(0);
-      }
-
-      // Default command, normal field-relative drive
-      Trigger driverControl =
-          new Trigger(
-              () ->
-                  Math.abs(controller.getLeftY()) > 0.1
-                      || Math.abs(controller.getLeftX()) > 0.1
-                      || Math.abs(controller.getRightX()) > 0.1);
-
-      if (DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
-        driverControl
-            .whileTrue(
-                DriveCommands.joystickDrive(
-                    drive,
-                    () -> modifyJoystickAxis(controller.getLeftY()), // Changed to raw values
-                    () -> modifyJoystickAxis(controller.getLeftX()), // Changed to raw values
-                    () -> modifyJoystickAxis(-controller.getRightX()))) // Changed to raw values
-            .onFalse(DriveCommands.stopDriveCommand(drive));
-      } else {
-        driverControl
-            .whileTrue(
-                DriveCommands.joystickDrive(
-                    drive,
-                    () -> modifyJoystickAxis(-controller.getLeftY()), // Changed to raw values
-                    () -> modifyJoystickAxis(-controller.getLeftX()), // Changed to raw values
-                    () -> modifyJoystickAxis(-controller.getRightX()))) // Changed to raw values
-            .onFalse(DriveCommands.stopDriveCommand(drive));
-      }
-
-      //  pov down -- Drive Under Trench
-      controller
-          .povDown()
-          .onTrue(
-              new InstantCommand(
-                  () -> {
-                    try {
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              DriveUnderTrenchCommand.driveUnderTrench(drive, shooterSubsystem)
-                                  .withName("DriveUnderTrench"));
-                    } catch (Exception e) {
-                      e.printStackTrace();
-                    }
-                  }));
-      controller
-          .y()
-          .whileTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(runAgitateTransition(shooterSubsystem, intakeSubsystem))))
-          .onFalse(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(stopAgitateTransition(shooterSubsystem, intakeSubsystem))));
-      // START-- Reset Heading
-      controller
-          .start()
-          .onTrue(
-              Commands.runOnce(
-                      () -> {
-                        if (DriverStation.getAlliance().isPresent()
-                            && DriverStation.getAlliance().get() == DriverStation.Alliance.Red) {
-                          drive.setPose(
-                              new Pose2d(
-                                  drive.getPose().getTranslation(),
-                                  new Rotation2d(Math.toRadians(180))));
-                        } else {
-                          drive.setPose(
-                              new Pose2d(
-                                  drive.getPose().getTranslation(),
-                                  new Rotation2d(Math.toRadians(0))));
-                        }
-                      },
-                      drive)
-                  .ignoringDisable(true));
-
-      controller
-          .x()
-          .whileTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.ReverseIntake(intakeSubsystem))))
-          .onFalse(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
-
-      /*    controller
-      .x()
-      .onTrue(
-          new InstantCommand(
-              () ->
-                  CommandScheduler.getInstance()
-                      .schedule(
-                          MechStop(
-                              turretSubsystem,
-                              shooterSubsystem,
-                              hopperFloorSubsystem,
-                              hoodSubsystem,
-                              intakeSubsystem)))); */
-
-      // X -- Slow Drive Toggle
-      /*   controller
-      .x()
-      .onTrue(
-          Commands.runOnce(
-              () -> {
-                drive.toggleSlowDrive();
-              },
-              drive));
-              */
-
-      // B -- Run Intake Hold
-      controller
-          .b()
-          .whileTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.RunIntake(intakeSubsystem))))
-          .onFalse(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
-
-      // Left bumper -- also Run Intake Hold
-      controller
-          .leftBumper()
-          .whileTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.RunIntake(intakeSubsystem))))
-          .onFalse(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.StopIntake(intakeSubsystem))));
-
-      // Right Bumper -- Deploy / Retract Intake Toggle
-      controller
-          .rightBumper()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.ToggleIntake(intakeSubsystem))));
-    }
-  }
-
-  public void configureCompCodriverButtonBindings() {
-    // TODO actually call this method
-    if (DriverStation.isJoystickConnected(1)) {
-      if (Constants.currentMode == Constants.Mode.SIM
-          && System.getProperty("os.name").contains("Mac")) {
-        controller_two = new CommandSimMacXboxController(1);
-        // putting this here because it should only run when we're in sim!
-
-      } else {
-        controller_two = new CommandXboxController(1);
-      }
-
-      // We want right button to be line up for a shot not shoot on the moe do we have a command for
-      // that??
-      // TODO Write commands for the following taks and bind em to the indicated buttons
-      // Right button - Shot line up have like 3 spots that we go to to shoot
-      // X - Vomit outtake TODO: write the vomit command
-      //   controller_two
-      //   .a()
-      //   .onTrue(
-
-      //   )
-      /*  controller_two //not in the dahlia edition
-      .b()
-      .onTrue(
-          new InstantCommand(
-              () ->
-                  CommandScheduler.getInstance()
-                      .schedule(IntakeCommands.RetractIntake(intakeSubsystem))));*/
-
-      // Start -- Mech Stop
-      controller_two
-          .start()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              MechStop(
-                                  turretSubsystem,
-                                  shooterSubsystem,
-                                  hopperFloorSubsystem,
-                                  hoodSubsystem,
-                                  intakeSubsystem))));
-
-      // B - stationary shoot
-      controller_two
-          .b()
-          .whileTrue(
-              Commands.runOnce(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              ShootingCommands.StationaryShootingCommand(
-                                  shooterSubsystem,
-                                  hoodSubsystem,
-                                  hopperFloorSubsystem,
-                                  drive,
-                                  robotPose))))
-          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
-
-      // Right trigger - manual shooting
-      //   ShootingCommand(
-      //     ShooterSubsystem shooterSubsystem,
-      //     HoodSubsystem hoodSubsystem,
-      //     HopperFloorSubsystem hopperFloorSubsystem,
-      //     // TurretSubsystem turretSubsystem,
-      //     Supplier<Pose2d> drivetrainPose,
-      //     ShotParameters shotParameters)
-      controller_two
-          .rightTrigger()
-          .whileTrue(
-              Commands.runOnce(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              new PointAtTargetCommand(drive, robotPose)
-                                  .andThen(
-                                      new ShootingCommands.ShootingCommand(
-                                              shooterSubsystem,
-                                              hoodSubsystem,
-                                              hopperFloorSubsystem,
-                                              robotPose,
-                                              new ShotParameters(
-                                                  robotPose.get(), HoodConstants.MIN_ANGLE, 50))
-                                          .withName("Manual Shooting")))))
-          .onFalse(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
-
-      // Y - stop shooting
-      controller_two
-          .y()
-          .onTrue(new ShootingCommands.StopShooting(shooterSubsystem, hopperFloorSubsystem));
-
-      // X vomit/outtake
-      //   controller_two
-      //       .x()
-      //       .onTrue(
-      //           new InstantCommand(
-      //               () ->
-      // intakeSubsystem.setIntakeSpeed(Constants.IntakeConstants.OUTTAKING_SPEED)));
-
-      // TODO may need to check if we're still in bounds
-      // manual hood adjustment - plus 5 degree
-      controller_two
-          .povUp()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      hoodSubsystem.setDesiredAngle(
-                          new Rotation2d(hoodSubsystem.getCurrentAngle().getDegrees() + 5))));
-
-      // manual hood adjustment - minus 5 degree
-      controller_two
-          .povDown()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      hoodSubsystem.setDesiredAngle(
-                          new Rotation2d(hoodSubsystem.getCurrentAngle().getDegrees() - 5))));
-
-      /*   // Y -- Turret Angle 0˚
-            controller_two
-                .y()
-                .onTrue(
-                    new InstantCommand(
-                        () -> turretSubsystem.setDesiredAngle(new Rotation2d(Math.toRadians(0)))));
-
-            // Left Trigger -- Home Turret
-            controller_two
-                .leftTrigger()
-                .onTrue(new InstantCommand(() -> turretSubsystem.homeTurret()).ignoringDisable(true));
-      */
-      // no turret in the dahlia edition
-
-      // A -- Home Hood
-      controller_two
-          .a()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(new HoodCommands.HoodHomingCommand(hoodSubsystem))));
-    }
-  }
-
-  public void configureSysIdButtons() {
-    CommandScheduler.getInstance().getActiveButtonLoop().clear();
-    if (DriverStation.isJoystickConnected(1)) {
-      if (Constants.currentMode == Constants.Mode.SIM
-          && System.getProperty("os.name").contains("Mac")) {
-        controller_two = new CommandSimMacXboxController(1);
-        // putting this here because it should only run when we're in sim!
-
-      } else {
-        controller_two = new CommandXboxController(1);
-      }
-
-      // TODO: drivetrain sysid buttons -- uncomment for use
-      controller_two.a().whileTrue(drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-      controller_two.b().whileTrue(drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-      controller_two.x().whileTrue(drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-      controller_two.y().whileTrue(drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-
-      // TODO: hood sysid buttons -- uncomment for use
-      // controller_two.x().whileTrue(hoodSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-      // controller_two.y().whileTrue(hoodSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
-      // controller_two.a().whileTrue(hoodSubsystem.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-      // controller_two.b().whileTrue(hoodSubsystem.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-
-      // controller_two.rightTrigger().onTrue(new InstantCommand(() -> hoodSubsystem.zeroHood()));
-
-      // TODO: intake sysid buttons -- uncomment for use
-      // controller_two.x().whileTrue(intakeSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-      // controller_two.y().whileTrue(intakeSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
-      // controller_two
-      //     .a()
-      //     .whileTrue(intakeSubsystem.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-      // controller_two
-      //     .b()
-      //     .whileTrue(intakeSubsystem.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-
-      // controller_two
-      //     .rightBumper()
-      //     .onTrue(
-      //         new InstantCommand(() ->
-      // intakeSubsystem.zeroIntakeDeploy()).ignoringDisable(true));
-
-      // TODO: shooter sysid buttons -- uncomment for use
-      // controller_two.x().whileTrue(shooterSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-      // controller_two.y().whileTrue(shooterSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
-      // controller_two
-      //     .a()
-      //     .whileTrue(shooterSubsystem.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-      // controller_two
-      //     .b()
-      //     .whileTrue(shooterSubsystem.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-
-      // TODO: turret sysid buttons -- uncomment or use
-      // controller_two.x().whileTrue(turretSubsystem.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-      // controller_two.y().whileTrue(turretSubsystem.sysIdDynamic(SysIdRoutine.Direction.kForward));
-      // controller_two
-      //     .a()
-      //     .whileTrue(turretSubsystem.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-      // controller_two
-      //     .b()
-      //     .whileTrue(turretSubsystem.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-
-      // controller_two
-      //     .rightBumper()
-      //     .onTrue(new InstantCommand(() -> turretSubsystem.homeTurret()).ignoringDisable(true));
-    }
-  }
-
   public Command getAutonomousCommand() {
     // Using PathPlanner pre-made autos
     Command selected = autoChooser.get();
@@ -926,21 +250,84 @@ public class RobotContainer {
     }
   }
 
-  private double modifyJoystickAxis(double value) {
-    // Deadband
-    value = deadband(value, 0.025);
+  public void configureDriverButtonBindings() {
+    new DriverBindings(
+            drive,
+            hoodSubsystem,
+            hopperFloorSubsystem,
+            intakeSubsystem,
+            shooterSubsystem,
+            turretSubsystem,
+            robotPose,
+            chassisSpeeds)
+        .configure();
+  }
 
-    // Square the axis
-    value =
-        Math.copySign(
-            RobotConfigLoader.getDouble("container.joystick_scale_factor") * Math.pow(value, 2),
-            value);
+  public void configureCodriverButtonBindings() {
+    new CodriverBindings(
+            drive,
+            hoodSubsystem,
+            hopperFloorSubsystem,
+            intakeSubsystem,
+            shooterSubsystem,
+            turretSubsystem,
+            robotPose,
+            chassisSpeeds)
+        .configure();
+  }
 
-    if (drive.getSlowDrive()) {
-      return 0.5 * value;
-    }
+  public void configureCompDriverButtonBindings() {
+    new CompDriverBindings(
+            drive,
+            hoodSubsystem,
+            hopperFloorSubsystem,
+            intakeSubsystem,
+            shooterSubsystem,
+            turretSubsystem,
+            robotPose,
+            chassisSpeeds)
+        .configure();
+  }
 
-    return value;
+  public void configureCompCodriverButtonBindings() {
+    new CompCodriverBindings(
+            drive,
+            hoodSubsystem,
+            hopperFloorSubsystem,
+            intakeSubsystem,
+            shooterSubsystem,
+            turretSubsystem,
+            robotPose,
+            chassisSpeeds)
+        .configure();
+  }
+
+  public void configureSysIdButtons() {
+    CommandScheduler.getInstance().getActiveButtonLoop().clear();
+    new SysIdBindings(
+            drive,
+            hoodSubsystem,
+            hopperFloorSubsystem,
+            intakeSubsystem,
+            shooterSubsystem,
+            turretSubsystem,
+            robotPose,
+            chassisSpeeds)
+        .configure();
+  }
+
+  public void configureSystemCheckButtons() {
+    CommandScheduler.getInstance().getActiveButtonLoop().clear();
+    new SystemCheckBindings(
+            drive,
+            hoodSubsystem,
+            hopperFloorSubsystem,
+            intakeSubsystem,
+            shooterSubsystem,
+            turretSubsystem,
+            robotPose,
+            chassisSpeeds)
+        .configure();
   }
 
   public void configureButtonBindings() {
@@ -951,123 +338,11 @@ public class RobotContainer {
     // configureCodriverButtonBindings();
   }
 
-  public void configureSystemCheckButtons() {
-    CommandScheduler.getInstance().getActiveButtonLoop().clear();
-    if (DriverStation.isJoystickConnected(1)) {
-      if (Constants.currentMode == Constants.Mode.SIM
-          && System.getProperty("os.name").contains("Mac")) {
-        controller_two = new CommandSimMacXboxController(1);
-        // putting this here because it should only run when we're in sim!
-
-      } else {
-        controller_two = new CommandXboxController(1);
-      }
-
-      // Right Bumper -- Deploy Intake
-      controller_two
-          .rightBumper()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.DeployIntake(intakeSubsystem))));
-
-      // Left Bumper -- Retract Intake
-      controller_two
-          .leftBumper()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(IntakeCommands.RetractIntake(intakeSubsystem))));
-
-      controller_two
-          .a()
-          .onTrue(
-              new InstantCommand(
-                  () -> {
-                    shooterSubsystem.setDesiredRotorVelocity(30);
-                    shooterSubsystem.setDesiredTransitionSpeed(ShooterConstants.TRANSITION_SPEED);
-                    hopperFloorSubsystem.setDesiredHopperFloorSpeed(
-                        HopperFloorConstants.HOPPER_FLOOR_SPEED);
-                    intakeSubsystem.setIntakeSpeed(IntakeConstants.INTAKING_SPEED);
-                  }));
-
-      controller_two
-          .b()
-          .onTrue(
-              new HoodCommands.HoodHomingCommand(hoodSubsystem)
-                  .andThen(new WaitCommand(1))
-                  .andThen(
-                      new InstantCommand(
-                          () -> hoodSubsystem.setDesiredAngle(HoodConstants.MIN_ANGLE)))
-                  .andThen(new WaitCommand(1))
-                  .andThen(
-                      new InstantCommand(
-                          () -> hoodSubsystem.setDesiredAngle(HoodConstants.RETRACTED_POSITION))));
-
-      controller_two
-          .x()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              MechStop(
-                                  turretSubsystem,
-                                  shooterSubsystem,
-                                  hopperFloorSubsystem,
-                                  hoodSubsystem,
-                                  intakeSubsystem))));
-
-      controller_two
-          .y()
-          .onTrue(
-              IntakeCommands.HomeIntake(intakeSubsystem)
-                  .andThen(new WaitCommand(1))
-                  .andThen(IntakeCommands.DeployIntake(intakeSubsystem))
-                  .andThen(new WaitCommand(1))
-                  .andThen(IntakeCommands.RetractIntake(intakeSubsystem)));
-
-      controller_two
-          .leftTrigger()
-          .onTrue(
-              new InstantCommand(() -> turretSubsystem.homeTurret())
-                  .andThen(
-                      new InstantCommand(
-                          () ->
-                              turretSubsystem.setDesiredAngle(new Rotation2d(Math.toRadians(36)))))
-                  .andThen(new WaitCommand(1.5))
-                  .andThen(
-                      new InstantCommand(
-                          () ->
-                              turretSubsystem.setDesiredAngle(new Rotation2d(Math.toRadians(0))))));
-      controller_two
-          .rightTrigger()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(DriveSystemsCheckCommands.DriveSystemCheckCommand(drive))));
-      controller_two
-          .start()
-          .onTrue(
-              new InstantCommand(
-                  () -> {
-                    shooterSubsystem.runFarthestShot();
-                    hoodSubsystem.setDesiredAngle(HoodConstants.MIN_ANGLE);
-                    hopperFloorSubsystem.setDesiredHopperFloorSpeed(
-                        HopperFloorConstants.HOPPER_FLOOR_SPEED);
-                  }));
-    }
-  }
-
   public void teleopInit() {
     configureButtonBindings();
   }
 
   public void periodic() {
-    HubTrackerSubsystem hubTracker = new HubTrackerSubsystem();
 
     robotContainerLogs();
 
