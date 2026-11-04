@@ -59,6 +59,7 @@ import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.CommandSimMacXboxController;
 import frc.robot.util.RobotConfigLoader;
+import frc.robot.util.auto.DynamicAutoBuilder;
 import frc.robot.util.auto.MultiStepAutoChooser;
 import frc.robot.util.shooting.ShotParameters;
 import java.util.Optional;
@@ -1082,7 +1083,8 @@ public class RobotContainer {
     // Log command scheduler status
     Logger.recordOutput("Commands/SchedulerActive", true);
     Logger.recordOutput("Commands/LogTime", System.currentTimeMillis());
-
+    Logger.recordOutput(
+        "Mech/Intake/DeployAndIntakeRunning", DynamicAutoBuilder.deployAndIntakeRunning);
     // Log command information with names
     Command driveCmd = drive.getCurrentCommand();
 

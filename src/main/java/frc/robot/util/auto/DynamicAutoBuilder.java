@@ -31,6 +31,7 @@ public class DynamicAutoBuilder {
   private final HopperFloorSubsystem hopperFloorSubsystem;
   private final Supplier<Pose2d> robotPose;
   private final Supplier<ChassisSpeeds> chassisSpeeds;
+  public static boolean deployAndIntakeRunning;
 
   public DynamicAutoBuilder(
       IntakeSubsystem intakeSubsystem,
@@ -49,6 +50,7 @@ public class DynamicAutoBuilder {
     this.hopperFloorSubsystem = hopperFloorSubsystem;
     this.robotPose = robotPose;
     this.chassisSpeeds = chassisSpeeds;
+    deployAndIntakeRunning = false;
   }
 
   private String convertFromLocation(String location) {
@@ -98,6 +100,7 @@ public class DynamicAutoBuilder {
       return new HoodCommands.HoodRetractCommand(hoodSubsystem)
           .onlyWhile(() -> !isInAllianceZone());
     }
+    // TODO: add if destination is hub then shoot
 
     return Commands.none();
   }
@@ -178,7 +181,10 @@ public class DynamicAutoBuilder {
     if (dest1 != null && !dest1.equals("None")) {
       Command firstPath = loadPathCommand(alliance, currentLocation, dest1);
       Command firstAction = getActionForDestination(dest1);
-      pathSequence.add(firstPath.deadlineFor(firstAction));
+      pathSequence.add(
+          firstPath.deadlineFor(
+              firstAction)); // deadline says that the commands run in parallel until the command
+      // its is called upon ends
       currentLocation = dest1;
 
       if (dest2 != null && !dest2.equals("None")) {
@@ -206,6 +212,7 @@ public class DynamicAutoBuilder {
         Command deployAndIntake =
             IntakeCommands.DeployIntake(intakeSubsystem)
                 .alongWith(IntakeCommands.RunIntake(intakeSubsystem));
+        deployAndIntakeRunning = true;
         /*.alongWith(createShootingWithZoneCheck());*/
         // Paths are the deadline - when paths finish, intake/shooting stop (until climb or end)
         commandSequence.add(allPaths.deadlineFor(deployAndIntake));
