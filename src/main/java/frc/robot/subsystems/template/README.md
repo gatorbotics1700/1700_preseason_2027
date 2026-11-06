@@ -5,8 +5,9 @@ name. Every file here is part of one subsystem: the subsystem itself plus
 its hardware layer (IO).
 
 This is the simplest shape: one TalonFX motor run at a speed, like a roller.
-It builds and its tests run, but it is not added to RobotContainer, so it
-never runs on the robot.
+It builds, but it is not added to RobotContainer, so it never runs on the
+robot. Its tests run on branches where tests are turned on (see "Tests" in
+CLAUDE.md; they are not turned on in main yet).
 
 ## The files
 
@@ -60,7 +61,8 @@ already exist, and copying over them would replace the real code.
    - the CAN ID goes in the config file, read by Constants.java
    - the current limits go in Constants.java
    Use the snippets below.
-7. Run WPILib: Test Robot Code. Your copied tests should pass.
+7. Run WPILib: Build Robot Code. If tests are turned on in your branch, also
+   run WPILib: Test Robot Code; your copied tests should pass.
 8. Then follow the steps in CLAUDE.md, and fill in the other TODOs.
 
 ## Snippet: Constants.java

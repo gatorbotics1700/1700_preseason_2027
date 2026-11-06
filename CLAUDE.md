@@ -86,13 +86,14 @@ The code must be easy for students to read. **Keep it simple.** Students have li
   - `subsystems/mech/`: intake, shooter, hood, turret, hopper.
   - `commands/mech/`: the actions, such as `IntakeCommands.java`.
   - `util/RobotConfigLoader.java`: reads the per-robot config file.
+  - `subsystems/template/`: starter files for a **new** mechanism (one motor at a set speed). Not used by the robot. See its `README.md`.
 - **Config files:** `src/main/deploy/configFiles/`. **Only `config_alecto.properties` is in use.** The others (`hulk`, `sting`, `experimental`) are for retired robots. New keys go in `config_alecto.properties` only.
 - **Build and run (in VS Code):** press Cmd+Shift+P, then:
   - `WPILib: Build Robot Code` to build
   - `WPILib: Test Robot Code` to run the tests
   - `WPILib: Simulate Robot Code`, then pick the Sim GUI, to run the simulator
-- **Build from the terminal (Mac):** `JAVA_HOME=~/wpilib/2026/jdk ./gradlew build --offline`. This builds and runs every test.
-- **Tests** live in `src/test/java/frc/robot/`. `build.gradle` runs each test class in its own fresh Java process (`forkEvery = 1`).
+- **Build from the terminal (Mac):** `JAVA_HOME=~/wpilib/2026/jdk ./gradlew build --offline`. This builds, and runs the tests where they are turned on.
+- **Tests** live in `src/test/java/frc/robot/`. **On `main`, tests are compiled but not run yet:** the `test { ... }` block in `build.gradle` is commented out. The `intake-nidhi` branch turns them on (and runs each test class in its own fresh Java process, `forkEvery = 1`). Don't turn them on in another branch without asking a mentor; the team will decide when to turn them on for everyone.
 - **Don't touch** other mechanisms, the `RobotContainer` layout, or anything outside the person's mechanism unless they ask.
 - **Delete superseded in-between code** (old tests, temporary helpers). Don't keep it around. For large pieces of **working robot code** that is being replaced, ask first. The team may want an archive tag.
 
@@ -124,7 +125,7 @@ Every step ends with: the project builds, the tests pass, the simulator runs, an
 - **Step 0: Set up.** Confirm the branch. Look at any files that already show as changed, and help discard spacing-only changes.
 - **Step 1: Read, no changes.** Explain the mechanism's subsystem file in plain language, one section at a time, and answer questions. Start a **findings list** of anything that looks wrong. Don't fix findings yet. Add `TODO (date), CHECK WITH TEAM` comments.
 - **Step 2: Safety-net tests.** Before refactoring, add a smoke test (the robot starts) and a few tests of current behavior, so the refactor can't silently change it.
-- **Step 3: IO layer, part 1.** Add an `XIO` interface with `@AutoLog` inputs for the simplest part, for example the rollers. Add three versions: the real one (`XIOTalonFX`, with the motor code moved over **unchanged**), a sim one (`XIOSim`, which just remembers what it was told and has test setters), and a do-nothing one (`new XIO() {}`). The subsystem keeps only decisions and reads hardware only through `inputs`.
+- **Step 3: IO layer, part 1.** For a brand-new mechanism, start by copying `subsystems/template/` (see its `README.md`). For an existing one, add an `XIO` interface with `@AutoLog` inputs for the simplest part, for example the rollers. Add three versions: the real one (`XIOTalonFX`, with the motor code moved over **unchanged**), a sim one (`XIOSim`, which just remembers what it was told and has test setters), and a do-nothing one (`new XIO() {}`). The subsystem keeps only decisions and reads hardware only through `inputs`.
 - **Step 4: IO layer, the rest.** Do the same for the remaining hardware (arm, sensors). Rewrite the tests to use `XIOSim`, so they run instantly with no waiting.
 - **Step 5: Config.** CAN IDs and ports go into `config_alecto.properties`, read through the constants class. Design numbers are typed once in the constants class.
 - **Step 6: Alerts.** A Driver Station `Alert` for each motor that disconnects. An alert if the mechanism was told to move but hasn't arrived after N seconds (counted in loops). One test per alert.
