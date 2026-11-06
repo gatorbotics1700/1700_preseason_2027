@@ -15,7 +15,7 @@ Use it for every new mechanism, and for the mentors' "final good" versions that 
 
 ## 1. Use AdvantageKit and the IO pattern
 - [ ] An IO interface with @AutoLog inputs. Everything the mechanism reads from hardware comes through updateInputs.
-- [ ] Three implementations: real (TalonFX), simulated, and disabled (does nothing).
+- [ ] Three implementations: real (TalonFX), simulated, and disabled (does nothing). Starting from scratch? Copy subsystems/template/ (see its README.md).
 - [ ] The subsystem takes the IO in its constructor and holds decisions only, with no motor classes in it.
 - [ ] RobotContainer, or a subsystem factory, picks real, simulated or disabled by mode, the way Drive is built.
 - [ ] Inputs go through Logger.processInputs so the mechanism can be replayed. Use the FPGA timestamp or loop counts, never System.currentTimeMillis or random numbers.
@@ -29,7 +29,7 @@ Use it for every new mechanism, and for the mentors' "final good" versions that 
 - [ ] Conversions are tested: units, gear ratios, encoder to angle, speed to flywheel speed (round trip). [test]
 - [ ] Each alert is tested by feeding in a fake bad input. [test]
 - [ ] For position mechanisms, a test that nothing is commanded before homing. [test]
-- [ ] The tests run in CI. (The repo has no CI yet, so run WPILib: Test Robot Code before every review.) Aim for the checks that would hurt if wrong, not a coverage number.
+- [ ] The tests run in CI. (The repo has no CI yet, so run WPILib: Test Robot Code before every review. Tests are not turned on in main's build.gradle yet; see "Tests" in CLAUDE.md.) Aim for the checks that would hurt if wrong, not a coverage number.
 - [ ] Tests use the sim IO: a fresh IO and subsystem per test, call periodic() directly, count loops, and never sleep. The intake's 19 tests run in about 0.06 s. [test]
 - [ ] Expected numbers are typed in the test, not read from constants, so an accidental change fails a test. [test]
 - [ ] Each new test was proven by breaking the code on purpose once and watching it fail. [checklist]
