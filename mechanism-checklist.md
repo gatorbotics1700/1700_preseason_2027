@@ -44,7 +44,7 @@ Use it for every new mechanism, and for the mentors' "final good" versions that 
 ## 4. Checks and alerts
 
 **a. Is it connected and healthy?**
-- [ ] A debounced Driver Station alert for every motor and sensor that drops off the bus. [alert, test]
+- [ ] A Driver Station alert for every motor and sensor that drops off the bus. Not debounced for now, to keep it simple (the intake and the template match); add a short debounce if it flickers on the real robot. [alert, test]
 - [ ] Temperature and fault warnings: undervoltage, hardware faults, over-temperature. [alert]
 - [ ] Stator and supply current limits are set on every motor. No supply limits exist in the code today. [checklist]
 - [ ] Robot-level, built once: a low battery warning in the pit, and CAN bus error counts. [alert]
