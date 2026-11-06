@@ -200,7 +200,8 @@ public class IntakeSubsystem extends SubsystemBase {
             && Calculations.withinDeadband(
                 getDesiredAngle().getDegrees(),
                 getCurrentAngle().getDegrees(),
-                IntakeConstants.POSITION_DEADBAND_DEGREES, true);
+                IntakeConstants.POSITION_DEADBAND_DEGREES,
+                true);
     boolean currentLimitReached =
         leftDeployMotor.getStatorCurrent().getValueAsDouble() >= 40
             || rightDeployMotor.getStatorCurrent().getValueAsDouble() >= 40;
