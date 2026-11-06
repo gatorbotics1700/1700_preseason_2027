@@ -30,3 +30,4 @@ Every attempt per unit, including rejected ones. Format: `UNIT | attempt | chang
 | U13 turret CAN | 0 | Repro: check_can_errors.py on E2E console | repeated (device, signal) errors | REPRO | talon fx 100: 11 signals repeating (CAN IDs are 0-62; ID 100 was a hack to keep the turret still) |
 | U13 turret CAN | 1 | TurretConstants.ENABLED=false gates config/control/reads; ID restored to 15 | check.sh C9 | PASS | 41 CAN errors (11 repeating) -> 1 one-time boot error |
 | tooling | 1 | run_e2e_sim.sh kills watchdog's sleep child (held stdout open 240 s) | check.sh wall time | PASS | 4+ min -> 11.4 s |
+| U9 layout | 2 | Robot/ghost logKey /RealOutputs/Odometry/Robot -> /RealOutputs/Drive/Odometry/Robot (old key never logged: nothing rendered); C6 now verifies every layout key exists in the E2E log | C6 with stale key restored must fail | PASS | found by the user: model selectable but nothing in 3D view |

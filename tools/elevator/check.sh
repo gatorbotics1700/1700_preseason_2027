@@ -82,9 +82,9 @@ tabs = [t for h in d["hubs"] for t in h["state"]["tabs"]["tabs"] if t["type"] ==
 if not tabs:
     sys.exit("no 3D field tab")
 src = tabs[0]["controller"]["sources"]
-want = [("robot", "/RealOutputs/Odometry/Robot"),
+want = [("robot", "/RealOutputs/Drive/Odometry/Robot"),
         ("component", "/RealOutputs/Mech/Elevator/ComponentPoses"),
-        ("ghost", "/RealOutputs/Odometry/Robot"),
+        ("ghost", "/RealOutputs/Drive/Odometry/Robot"),
         ("component", "/RealOutputs/Mech/Elevator/ComponentPosesGoal")]
 got = [(s["type"], s["logKey"]) for s in src]
 if got != want:
@@ -92,6 +92,17 @@ if got != want:
 for s in src:
     if s["type"] in ("robot", "ghost") and s["options"].get("model") != cfg["name"]:
         sys.exit(f"{s['type']} model {s['options'].get('model')} != {cfg['name']}")
+# every key the 3D view reads must really be logged, or AdvantageScope silently draws nothing
+import glob
+sys.path.insert(0, "tools/elevator")
+import wpilog
+logs = sorted(glob.glob("logs/elevator_e2e/*.wpilog"))
+if not logs:
+    sys.exit("no E2E log to verify layout keys against (run without SKIP_E2E)")
+logged = wpilog.read(logs[-1])
+missing = sorted({s["logKey"] for s in src} - set(logged))
+if missing:
+    sys.exit(f"layout reads keys the robot never logs: {missing}")
 EOF
 pass C6
 
