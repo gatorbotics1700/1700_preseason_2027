@@ -2,35 +2,40 @@ package frc.robot.subsystems.mech;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.IntakeConstants;
-import frc.robot.Constants.TunerConstants;
 import frc.robot.util.Calculations;
-import frc.robot.util.logging.TalonFXLogger;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
+// TODO: the LoggedNetworkNumbers (dashboard tuning numbers) below are still static, which breaks
+// the "no static" rule in the mechanism checklist. (The static motor settings moved into
+// IntakeIOTalonFX as normal fields in Step 4.)
 public class IntakeSubsystem extends SubsystemBase {
 
-  private final TalonFX leftIntakeMotor; // spins the rollers
-  private final TalonFX rightIntakeMotor; // spins the rollers
-  private final TalonFX leftDeployMotor; // deploys the entire intake
-  private final TalonFX rightDeployMotor; // deploys the entire intake
+  // The hardware layer: rollers, deploy arm and limit switches all go through it.
+  private final IntakeIO io;
+  private final IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
 
-  private final DigitalInput retractedLimitSwitch;
-  private final DigitalInput deployedLimitSwitch;
+  // Dashboard warnings. Not private, so the tests in this folder can check them.
+  final Alert leftRollerDisconnectedAlert;
+  final Alert rightRollerDisconnectedAlert;
+  final Alert leftDeployDisconnectedAlert;
+  final Alert rightDeployDisconnectedAlert;
+  final Alert armNotArrivingAlert =
+      new Alert("Intake: arm was told to move but has not arrived.", AlertType.kWarning);
+
+  // The arm should finish a move well within this time. TUNED, NOT DERIVED (2026-11-06)
+  private static final double MAX_MOVE_TIME_SECONDS = 2.0;
+  private static final double LOOP_TIME_SECONDS = 0.02; // periodic() runs every 20 ms
+  // We count loops instead of reading a clock, so a replayed log gives the same answer.
+  private static final int MAX_MOVE_LOOPS = (int) (MAX_MOVE_TIME_SECONDS / LOOP_TIME_SECONDS);
+  private int loopsSpentMoving = 0;
 
   private static final double SYSID_LIMIT_MARGIN_DEGREES = 3;
 
@@ -44,18 +49,10 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private IntakeDeployState intakeState;
 
-  private final TalonFXConfiguration deployTalonFXConfigs;
-  private final TalonFXConfiguration leftIntakeTalonFXConfigs;
-  private final TalonFXConfiguration rightIntakeTalonFXConfigs;
-
-  private static Slot0Configs slot0Configs;
-  private static MotionMagicConfigs motionMagicConfigs;
-  private static CurrentLimitsConfigs deployCurrentLimitConfigs;
-  private static CurrentLimitsConfigs leftIntakeCurrentLimitConfigs;
-  private static CurrentLimitsConfigs rightIntakeCurrentLimitConfigs;
-
-  private static MotionMagicExpoVoltage m_request;
-
+  // TODO (2026-11-02), CHECK WITH TEAM AT CODE REVIEW: these defaults disagree with the
+  // "vaguely works" notes in the constructor (kG 0.2128 vs 0, kS 0.25 vs 0, kP 1 vs 6). Which
+  // numbers did the robot actually run with? The robot goes back to these defaults on every
+  // restart, so the tested values belong here, marked TUNED, NOT DERIVED (date).
   // Tunable PID gains for intake deploy
   public static final LoggedNetworkNumber intakeKp =
       new LoggedNetworkNumber("/Tuning/Intake/kP", 6);
@@ -79,8 +76,11 @@ public class IntakeSubsystem extends SubsystemBase {
   public static final LoggedNetworkNumber intakeExpoKv =
       new LoggedNetworkNumber("/Tuning/Intake/Expo kV", 0.1);
 
+  // See the 70 A vs 90 A note in IntakeConstants.
   public static final LoggedNetworkNumber intakeCurrentLimit =
-      new LoggedNetworkNumber("/Tuning/Intake/Intake Current Limit", 90);
+      new LoggedNetworkNumber(
+          "/Tuning/Intake/Intake Current Limit",
+          IntakeConstants.ROLLER_DASHBOARD_CURRENT_LIMIT_AMPS);
 
   private boolean useDeployPositionControl = false;
   private double desiredIntakeSpeed;
@@ -88,81 +88,32 @@ public class IntakeSubsystem extends SubsystemBase {
 
   // private BooleanSupplier isDeployed;
 
+  /** Builds the intake with the real hardware. RobotContainer uses this one. */
   public IntakeSubsystem() {
-    leftIntakeMotor =
-        new TalonFX(IntakeConstants.LEFT_INTAKE_MOTOR_CAN_ID, TunerConstants.mechCANBus);
-    rightIntakeMotor =
-        new TalonFX(IntakeConstants.RIGHT_INTAKE_MOTOR_CAN_ID, TunerConstants.mechCANBus);
-    leftDeployMotor =
-        new TalonFX(IntakeConstants.INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID, TunerConstants.mechCANBus);
-    rightDeployMotor =
-        new TalonFX(IntakeConstants.INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID, TunerConstants.mechCANBus);
+    this(new IntakeIOTalonFX());
+  }
 
+  /** Builds the intake with any hardware layer: real, simulated, or one that does nothing. */
+  public IntakeSubsystem(IntakeIO io) {
+    this.io = io;
     desiredIntakeSpeed = 0;
-    retractedLimitSwitch = new DigitalInput(IntakeConstants.RETRACTED_LIMIT_SWITCH_PORT);
-    deployedLimitSwitch = new DigitalInput(IntakeConstants.DEPLOYED_LIMIT_SWITCH_PORT);
-
     intakeState = IntakeDeployState.RETRACTED_STOPPED;
 
-    leftIntakeTalonFXConfigs =
-        new TalonFXConfiguration()
-            .withMotorOutput(
-                new MotorOutputConfigs().withInverted(InvertedValue.CounterClockwise_Positive));
+    leftRollerDisconnectedAlert =
+        makeDisconnectedAlert("left roller", IntakeConstants.LEFT_INTAKE_MOTOR_CAN_ID);
+    rightRollerDisconnectedAlert =
+        makeDisconnectedAlert("right roller", IntakeConstants.RIGHT_INTAKE_MOTOR_CAN_ID);
+    leftDeployDisconnectedAlert =
+        makeDisconnectedAlert("left deploy", IntakeConstants.INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID);
+    rightDeployDisconnectedAlert =
+        makeDisconnectedAlert("right deploy", IntakeConstants.INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID);
 
-    rightIntakeTalonFXConfigs =
-        new TalonFXConfiguration()
-            .withMotorOutput(
-                new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
-
-    deployTalonFXConfigs = new TalonFXConfiguration();
-
-    deployTalonFXConfigs.withMotorOutput(
-        new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
-
-    slot0Configs = deployTalonFXConfigs.Slot0;
-
-    slot0Configs.kG = intakeKg.get(); // 0.2128 vaguely works
-    slot0Configs.kS = intakeKs.get(); // 0.25 vaguely works
-    slot0Configs.kV = intakeKv.get(); // 0.16 vaguely works
-    slot0Configs.kA = intakeKa.get(); // 0.01 vaguely works
-
-    // Initial PID gains come from tunable LoggedNetworkNumbers
-    slot0Configs.kP = intakeKp.get(); // 1 vaguely works
-    slot0Configs.kI = intakeKi.get(); // no output for integrated error
-    slot0Configs.kD = intakeKd.get(); // 0.1 vaguely works
-
-    // MOTION MAGIC EXPO
-    motionMagicConfigs = deployTalonFXConfigs.MotionMagic;
-
-    motionMagicConfigs.MotionMagicCruiseVelocity = 0; // 0 gives us unlimited cruise velocity
-    motionMagicConfigs.MotionMagicExpo_kV =
-        intakeExpoKv.get(); // was 0.16 kV is around 0.12 V/rps, might be 0.12-0.2
-    motionMagicConfigs.MotionMagicExpo_kA =
-        intakeExpoKa
-            .get(); // was 0.1 Use a slower kA of 0.1 V/(rps/s) - the larger the kA, the smoother
-    // and slower
-
-    leftIntakeCurrentLimitConfigs = leftIntakeTalonFXConfigs.CurrentLimits;
-    leftIntakeCurrentLimitConfigs.StatorCurrentLimit = 70;
-    leftIntakeCurrentLimitConfigs.StatorCurrentLimitEnable = true;
-
-    rightIntakeCurrentLimitConfigs = rightIntakeTalonFXConfigs.CurrentLimits;
-    rightIntakeCurrentLimitConfigs.StatorCurrentLimit = 70;
-    rightIntakeCurrentLimitConfigs.StatorCurrentLimitEnable = true;
-
-    deployCurrentLimitConfigs = deployTalonFXConfigs.CurrentLimits;
-    deployCurrentLimitConfigs.StatorCurrentLimit = 40;
-    deployCurrentLimitConfigs.StatorCurrentLimitEnable = true;
-
-    leftDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
-    rightDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
-    leftIntakeMotor.getConfigurator().apply(leftIntakeTalonFXConfigs);
-    rightIntakeMotor.getConfigurator().apply(rightIntakeTalonFXConfigs);
-
-    m_request = new MotionMagicExpoVoltage(0);
-
-    leftIntakeMotor.set(0);
-    rightIntakeMotor.set(0);
+    // Send the starting gains from the dashboard numbers. Older notes on values that "vaguely
+    // work": kG 0.2128, kS 0.25, kV 0.16, kA 0.01, kP 1, kI 0 (no output for integrated error),
+    // kD 0.1; Expo kV was 0.16 (around 0.12 V/rps, might be 0.12-0.2), Expo kA was 0.1 (the
+    // larger the kA, the smoother and slower).
+    updateSlot0Configs();
+    updateMotionMagicConfigs();
 
     // isDeployed =
     //     () -> {
@@ -172,12 +123,18 @@ public class IntakeSubsystem extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Read the hardware first, so every decision below uses this loop's values.
+    io.updateInputs(inputs);
+    Logger.processInputs("Mech/Intake/IO", inputs);
+    updateAlerts();
+
     // Update PID gains from NetworkTables if they've changed, and reapply configs
     updateSlot0Configs();
     updateMotionMagicConfigs();
     updateCurrentLimitConfigs();
 
     shouldStop();
+    updateArmNotArrivingAlert();
     if (intakeState.equals(IntakeDeployState.RETRACTED_STOPPED)
         || intakeState.equals(IntakeDeployState.DEPLOYED_STOPPED)) {
       setDeploySpeed(0);
@@ -188,8 +145,39 @@ public class IntakeSubsystem extends SubsystemBase {
         setDeploySpeed(desiredDeploySpeed);
       }
     }
+    // TODO - Is home as defined computationally expensive?
     home();
     intakeLogs();
+  }
+
+  /** Makes a dashboard error saying which motor is disconnected, and its CAN ID. */
+  private Alert makeDisconnectedAlert(String motorName, int canId) {
+    return new Alert(
+        "Intake: " + motorName + " motor disconnected (CAN " + canId + ").", AlertType.kError);
+  }
+
+  /** Turns each motor's alert on while that motor is disconnected, and off when it is back. */
+  private void updateAlerts() {
+    leftRollerDisconnectedAlert.set(!inputs.leftRollerConnected);
+    rightRollerDisconnectedAlert.set(!inputs.rightRollerConnected);
+    leftDeployDisconnectedAlert.set(!inputs.leftDeployConnected);
+    rightDeployDisconnectedAlert.set(!inputs.rightDeployConnected);
+  }
+
+  /**
+   * Counts how many loops the arm has been moving, and warns if a move takes too long. A stuck,
+   * unpowered or jammed arm never reaches its target or a switch, so it stays "moving".
+   */
+  private void updateArmNotArrivingAlert() {
+    boolean isMoving =
+        intakeState.equals(IntakeDeployState.DEPLOYING)
+            || intakeState.equals(IntakeDeployState.RETRACTING);
+    if (isMoving) {
+      loopsSpentMoving = loopsSpentMoving + 1;
+    } else {
+      loopsSpentMoving = 0;
+    }
+    armNotArrivingAlert.set(loopsSpentMoving > MAX_MOVE_LOOPS);
   }
 
   private void shouldStop() {
@@ -200,10 +188,11 @@ public class IntakeSubsystem extends SubsystemBase {
             && Calculations.withinDeadband(
                 getDesiredAngle().getDegrees(),
                 getCurrentAngle().getDegrees(),
-                IntakeConstants.POSITION_DEADBAND_DEGREES, true);
+                IntakeConstants.POSITION_DEADBAND_DEGREES,
+                true);
     boolean currentLimitReached =
-        leftDeployMotor.getStatorCurrent().getValueAsDouble() >= 40
-            || rightDeployMotor.getStatorCurrent().getValueAsDouble() >= 40;
+        inputs.leftDeployCurrentAmps >= IntakeConstants.DEPLOY_JAM_CURRENT_AMPS
+            || inputs.rightDeployCurrentAmps >= IntakeConstants.DEPLOY_JAM_CURRENT_AMPS;
     if (intakeState.equals(IntakeDeployState.DEPLOYING)) {
       if (isDeployedLimitSwitchTriggered() || atPositionDeadband || currentLimitReached) {
         intakeState = IntakeDeployState.DEPLOYED_STOPPED;
@@ -216,10 +205,9 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   private void applyDeployPositionControl() {
-    leftDeployMotor.setControl(
-        m_request.withPosition(degreesToRevs(getDesiredAngle().getDegrees())));
-    rightDeployMotor.setControl(
-        m_request.withPosition(degreesToRevs(getDesiredAngle().getDegrees())));
+    io.setDeployTargetRotations(degreesToRevs(getDesiredAngle().getDegrees()));
+    // Old experiment, turned off. leftDeployMotor and deployTalonFXConfigs now live in
+    // IntakeIOTalonFX, so this would need an IntakeIO method to work again.
     // if (isDeployed.getAsBoolean()
     //     && deployCurrentLimitConfigs.StatorCurrentLimit != 25
     //     && getCurrentAngle().getDegrees() > 30) {
@@ -276,18 +264,16 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     desiredDeploySpeed = speed;
-    leftDeployMotor.set(speed); // TODO redundant but we can keep it for safety
-    rightDeployMotor.set(speed);
+    io.setDeploySpeed(speed); // TODO redundant but we can keep it for safety
   }
 
   public void setIntakeSpeed(double speed) {
     desiredIntakeSpeed = speed;
-    leftIntakeMotor.set(desiredIntakeSpeed);
-    rightIntakeMotor.set(desiredIntakeSpeed);
+    io.setRollerSpeed(desiredIntakeSpeed);
   }
 
   public Rotation2d getCurrentAngle() {
-    double motorPositionRevs = leftDeployMotor.getPosition().getValueAsDouble();
+    double motorPositionRevs = inputs.leftDeployPositionRotations;
     double deployAngleDegrees =
         motorPositionRevs
             / IntakeConstants.DEPLOY_GEARBOX_RATIO
@@ -308,21 +294,20 @@ public class IntakeSubsystem extends SubsystemBase {
 
   public void zeroIntakeDeploy(boolean isRetracted) {
     if (isRetracted) {
-      leftDeployMotor.setPosition(degreesToRevs(IntakeConstants.RETRACTED_POSITION.getDegrees()));
-      rightDeployMotor.setPosition(degreesToRevs(IntakeConstants.RETRACTED_POSITION.getDegrees()));
-
+      io.resetDeployPositionRotations(
+          degreesToRevs(IntakeConstants.RETRACTED_POSITION.getDegrees()));
     } else {
-      leftDeployMotor.setPosition(degreesToRevs(IntakeConstants.EXTENDED_POSITION.getDegrees()));
-      rightDeployMotor.setPosition(degreesToRevs(IntakeConstants.EXTENDED_POSITION.getDegrees()));
+      io.resetDeployPositionRotations(
+          degreesToRevs(IntakeConstants.EXTENDED_POSITION.getDegrees()));
     }
   }
 
   public boolean isRetractedLimitSwitchTriggered() {
-    return retractedLimitSwitch.get();
+    return inputs.retractedSwitchPressed;
   }
 
   public boolean isDeployedLimitSwitchTriggered() {
-    return deployedLimitSwitch.get();
+    return inputs.deployedSwitchPressed;
   }
 
   public boolean isDeployed() {
@@ -331,7 +316,7 @@ public class IntakeSubsystem extends SubsystemBase {
   }
 
   private double getVelocityRadPerSec() {
-    double motorRPS = leftDeployMotor.getVelocity().getValueAsDouble();
+    double motorRPS = inputs.leftDeployVelocityRps;
     return motorRPS
         / IntakeConstants.DEPLOY_PULLEY_ONE_GEAR_RATIO
         / IntakeConstants.DEPLOY_PULLEY_TWO_GEAR_RATIO
@@ -371,10 +356,7 @@ public class IntakeSubsystem extends SubsystemBase {
     // periodic()
     SysIdRoutine.Mechanism mechanism =
         new SysIdRoutine.Mechanism(
-            (voltage) -> {
-              leftDeployMotor.setVoltage(voltage.in(Volts));
-              rightDeployMotor.setVoltage(voltage.in(Volts));
-            },
+            (voltage) -> io.setDeployVoltage(voltage.in(Volts)),
             null, // Log via AdvantageKit in periodic() so data goes to the same log file
             this,
             "intake");
@@ -413,83 +395,38 @@ public class IntakeSubsystem extends SubsystemBase {
         .withName("Intake SysId Dynamic " + direction);
   }
 
+  /** Sends the dashboard's deploy gains to the hardware. The hardware ignores unchanged ones. */
   public void updateSlot0Configs() {
-    double newKp = intakeKp.get();
-    double newKi = intakeKi.get();
-    double newKd = intakeKd.get();
-    double newKg = intakeKg.get();
-    double newKs = intakeKs.get();
-    double newKa = intakeKa.get();
-    double newKv = intakeKv.get();
-
-    if (newKp != slot0Configs.kP
-        || newKi != slot0Configs.kI
-        || newKd != slot0Configs.kD
-        || newKa != slot0Configs.kA
-        || newKv != slot0Configs.kV
-        || newKg != slot0Configs.kG
-        || newKs != slot0Configs.kS) {
-
-      slot0Configs.kP = newKp;
-      slot0Configs.kI = newKi;
-      slot0Configs.kD = newKd;
-      slot0Configs.kG = newKg;
-      slot0Configs.kS = newKs;
-      slot0Configs.kA = newKa;
-      slot0Configs.kV = newKv;
-      leftDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
-      rightDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
-    }
+    io.setDeployPidGains(intakeKp.get(), intakeKi.get(), intakeKd.get());
+    io.setDeployFeedforwardGains(intakeKg.get(), intakeKs.get(), intakeKv.get(), intakeKa.get());
   }
 
+  /** Sends the dashboard's Motion Magic Expo gains to the hardware. */
   public void updateMotionMagicConfigs() {
-    double newExpoKa = intakeExpoKa.get();
-    double newExpoKv = intakeExpoKv.get();
-
-    if (newExpoKa != motionMagicConfigs.MotionMagicExpo_kA
-        || newExpoKv != motionMagicConfigs.MotionMagicExpo_kV) {
-
-      motionMagicConfigs.MotionMagicExpo_kA = newExpoKa;
-      motionMagicConfigs.MotionMagicExpo_kV = newExpoKv;
-      leftDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
-      rightDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
-    }
+    io.setDeployMotionMagicExpoGains(intakeExpoKv.get(), intakeExpoKa.get());
   }
 
   public void updateCurrentLimitConfigs() {
-    double newIntakeCurrentLimit = intakeCurrentLimit.get();
-
-    if (newIntakeCurrentLimit != rightIntakeCurrentLimitConfigs.StatorCurrentLimit) {
-      rightIntakeCurrentLimitConfigs.StatorCurrentLimit = newIntakeCurrentLimit;
-      rightIntakeMotor.getConfigurator().apply(rightIntakeTalonFXConfigs);
-    }
+    io.setRollerCurrentLimitAmps(intakeCurrentLimit.get());
   }
 
   public void intakeLogs() {
-    TalonFXLogger.log(leftDeployMotor, "Mech", "Intake", "Left Deploy");
-    TalonFXLogger.log(rightDeployMotor, "Mech", "Intake", "Right Deploy");
-    TalonFXLogger.log(leftIntakeMotor, "Mech", "Intake", "Left Intake");
-    TalonFXLogger.log(rightIntakeMotor, "Mech", "Intake", "Right Intake");
-
     Logger.recordOutput("Mech/Intake/Deploy/Current Angle", getCurrentAngle().getDegrees());
     Logger.recordOutput("Mech/Intake/Deploy/Desired Angle", getDesiredAngle().getDegrees());
     Logger.recordOutput("Mech/Intake/Deploy/Desired Speed", desiredDeploySpeed);
-    Logger.recordOutput(
-        "Mech/Intake/Deploy/Current Limit", deployCurrentLimitConfigs.StatorCurrentLimit);
+    Logger.recordOutput("Mech/Intake/Deploy/Current Limit", inputs.deployCurrentLimitAmps);
 
     Logger.recordOutput("Mech/Intake/Retracted Limit Switch", isRetractedLimitSwitchTriggered());
     Logger.recordOutput("Mech/Intake/Deployed Limit Switch", isDeployedLimitSwitchTriggered());
     Logger.recordOutput("Mech/Intake/IsDeployed", isDeployed());
     Logger.recordOutput("Mech/Intake/Intake/Desired Intake Speed", desiredIntakeSpeed);
-    Logger.recordOutput(
-        "Mech/Intake/Intake/Current Limit", leftIntakeCurrentLimitConfigs.StatorCurrentLimit);
+    Logger.recordOutput("Mech/Intake/Intake/Current Limit", inputs.leftRollerCurrentLimitAmps);
     Logger.recordOutput("Mech/Intake/intake deploy state", intakeState.toString());
     // SysID
     Logger.recordOutput(
         "Mech/Intake/SysID/intakeSysIDRunning", intakeState.equals(IntakeDeployState.SYSID));
     if (intakeState.equals(IntakeDeployState.SYSID)) {
-      Logger.recordOutput(
-          "Mech/Intake/SysID/intakeVoltage", leftDeployMotor.getMotorVoltage().getValueAsDouble());
+      Logger.recordOutput("Mech/Intake/SysID/intakeVoltage", inputs.leftDeployVoltageVolts);
       Logger.recordOutput(
           "Mech/Intake/SysID/intakePosition",
           getCurrentAngle().getRadians() / (2.0 * Math.PI)); // rotations
