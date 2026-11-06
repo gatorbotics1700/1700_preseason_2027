@@ -1,5 +1,6 @@
 package frc.robot.util;
 
+import edu.wpi.first.hal.AllianceStationID;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.simulation.DriverStationSim;
@@ -21,6 +22,10 @@ import org.littletonrobotics.junction.Logger;
  */
 public final class SimE2E {
   public static final String LOG_DIR_ENV = "ELEVATOR_E2E_LOG_DIR";
+
+  /** Optional: stay enabled this long after the demo (for catching slow per-loop leaks). */
+  public static final String HOLD_SECONDS_ENV = "ELEVATOR_E2E_HOLD_SECONDS";
+
   private static final double BOOT_SECONDS = 1.0;
   private static final double TIMEOUT_SECONDS = 30.0;
 
@@ -28,6 +33,7 @@ public final class SimE2E {
     BOOT,
     ENABLING,
     RUNNING,
+    HOLDING,
     DONE
   }
 
@@ -55,6 +61,8 @@ public final class SimE2E {
     switch (phase) {
       case BOOT -> {
         if (now - phaseStart > BOOT_SECONDS) {
+          // like an FMS-attached match: alliance assigned
+          DriverStationSim.setAllianceStationId(AllianceStationID.Red1);
           DriverStationSim.setAutonomous(false);
           DriverStationSim.setTest(false);
           DriverStationSim.setEnabled(true);
@@ -74,13 +82,23 @@ public final class SimE2E {
       }
       case RUNNING -> {
         if (!demo.isScheduled()) {
-          finish(0, "demo finished");
+          setPhase(Phase.HOLDING, now);
         } else if (now - phaseStart > TIMEOUT_SECONDS) {
           finish(1, "demo timed out");
         }
       }
+      case HOLDING -> {
+        if (now - phaseStart >= holdSeconds()) {
+          finish(0, "demo finished");
+        }
+      }
       case DONE -> {}
     }
+  }
+
+  private static double holdSeconds() {
+    String hold = System.getenv(HOLD_SECONDS_ENV);
+    return hold == null ? 0.0 : Double.parseDouble(hold);
   }
 
   private static void setPhase(Phase next, double now) {

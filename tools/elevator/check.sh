@@ -10,6 +10,7 @@
 #       stays inside travel limits, and logged 3D component poses match the kinematics
 #   C6  AdvantageScope layout JSON parses and references the elevator component poses
 #   C7  Every changed file (vs main) is inside the plan allowlist
+#   C8  No per-loop leaks in the E2E run (loop time flat, HubTracker logs only on changes)
 #
 # Usage: tools/elevator/check.sh            (all checks)
 #        SKIP_E2E=1 tools/elevator/check.sh (C1-C3, C6, C7 only; for fast unit loops)
@@ -44,12 +45,27 @@ pass C3
 if [[ "${SKIP_E2E:-0}" != "1" ]]; then
   logdir="logs/elevator_e2e"
   rm -rf "$logdir"
+  marker="$(mktemp)"
   tools/elevator/run_e2e_sim.sh "$logdir" || fail C4 "headless sim run failed"
   log="$(ls -t "$logdir"/*.wpilog 2>/dev/null | head -1 || true)"
   [[ -n "$log" ]] || fail C4 "no wpilog written to $logdir"
   pass C4
   python3 -I tools/elevator/check_sim_log.py "$log" || fail C5 "sim log assertions"
   pass C5
+  # C8: no per-loop leaks. Loop time must not grow, and the hub tracker (a single subsystem)
+  # must log its state a handful of times, not once per loop.
+  python3 -I tools/elevator/check_loop_time.py "$log" || fail C8 "loop time grows"
+  dl="$(ls -t logs/FRC_*.wpilog 2>/dev/null | head -1 || true)"
+  [[ -n "$dl" && "$dl" -nt "$marker" ]] || fail C8 "no DataLogManager log from this run"
+  python3 -I - "$dl" <<'EOF' || fail C8 "hub tracker logs every loop"
+import sys
+sys.path.insert(0, "tools/elevator")
+import wpilog
+n = len(wpilog.read(sys.argv[1]).get("/subsystems/HubTracker/isHubActive", ("", []))[1])
+print(f"hub tracker state appends: {n}")
+sys.exit(0 if n <= 3 else 1)
+EOF
+  pass C8
 else
   echo "SKIP C4 C5 (SKIP_E2E=1)"
 fi

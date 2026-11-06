@@ -25,3 +25,5 @@ Every attempt per unit, including rejected ones. Format: `UNIT | attempt | chang
 | U11 tuning | 0 | Log Motion Magic ClosedLoopReference as input (diagnostic, no behavior change) | trace | INFO | tracking fine until decel; stator pinned at 60 A limit while decelerating downward -> not a gain problem |
 | U11 tuning | 1 | Stator limit 60->80 A + test: worst-case down-decel current <= 60% of limit | check.sh C1-C5 | PASS | 1.15->0.80 settles 0.42 s, peak 70.7 A |
 | U9 layout | 1 | 3D Field: robot + component(ComponentPoses), ghost + component(ComponentPosesGoal), model = generated robot; C6 checks order and model name | check.sh C6 | PASS | schema confirmed from AdvantageScope v26 bundle (component childOf robot; ghost parentKey robot) |
+| U12 hub tracker | 0 | Repro: E2E with alliance Red1 (FMS-like) + 10 s hold | DataLog /subsystems/HubTracker/isHubActive appends | REPRO | 722 appends + reportWarning per loop in 14.4 s; loop time flat even at 64 s, so CPU is not the symptom |
+| U12 hub tracker | 1 | RobotContainer builds HubTrackerSubsystem once as a field (was new instance every periodic) | check.sh C8 (appends <= 3, loop time flat) | PASS | 722 -> 1 |
