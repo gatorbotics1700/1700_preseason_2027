@@ -119,16 +119,21 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     switch (mode) {
       case POSITION -> {
-        // Resting on the bottom hard stop: go neutral instead of burning holding current.
-        boolean restingAtBottom =
-            inputs.bottomLimitPressed
-                && goalMeters
-                    <= ElevatorConstants.MIN_HEIGHT_METERS
-                        + ElevatorConstants.POSITION_TOLERANCE_METERS;
-        if (homed && !restingAtBottom) {
-          io.setPositionSetpoint(goalMeters);
-        } else {
+        boolean goalIsBottom =
+            goalMeters
+                <= ElevatorConstants.MIN_HEIGHT_METERS
+                    + ElevatorConstants.POSITION_TOLERANCE_METERS;
+        if (!homed || (goalIsBottom && inputs.bottomLimitPressed)) {
+          // Not homed: refuse to move. Resting on the stop: neutral, no holding current.
           io.stop();
+        } else if (goalIsBottom
+            && inputs.positionMeters <= ElevatorConstants.LANDING_HEIGHT_METERS + 0.005) {
+          // Last few cm: set it down gently instead of driving the profile into the stop.
+          io.setVoltage(ElevatorConstants.LANDING_VOLTS);
+        } else if (goalIsBottom) {
+          io.setPositionSetpoint(ElevatorConstants.LANDING_HEIGHT_METERS);
+        } else {
+          io.setPositionSetpoint(goalMeters);
         }
       }
       case VOLTAGE -> {

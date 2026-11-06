@@ -65,6 +65,22 @@ class ElevatorPhysicsTest {
   }
 
   @Test
+  void statorLimitLeavesHeadroomForWorstCaseDeceleration() {
+    // Worst case is slowing down while moving down: the motor fights gravity plus deceleration.
+    // Phoenix's motor model reports ~30% more stator current than WPILib's for the same torque,
+    // so require 40% headroom or Motion Magic gets current limited and overshoots (seen in sim).
+    double torque = ElevatorIOSim.EFFECTIVE_MASS_KG * (G + ACCELERATION_MPS2) * R_EFF / GEAR_RATIO;
+    double amps = torque / M.KtNMPerAmp;
+    assertTrue(
+        amps <= 0.6 * STATOR_CURRENT_LIMIT_AMPS,
+        "worst-case decel needs "
+            + amps
+            + " A against a "
+            + STATOR_CURRENT_LIMIT_AMPS
+            + " A limit");
+  }
+
+  @Test
   void profileIsAchievable() {
     // the cruise velocity must be under ~85% of free speed at 12 V so Motion Magic can track it
     double freeSpeedMps = 12.0 / KV;

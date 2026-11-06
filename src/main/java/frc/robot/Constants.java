@@ -816,7 +816,7 @@ public final class Constants {
     /** Wired normally-open with the roboRIO pull-up, so the DIO reads false when pressed. */
     public static final boolean LIMIT_SWITCH_PRESSED_VALUE = false;
 
-    public static final double STATOR_CURRENT_LIMIT_AMPS = 60.0;
+    public static final double STATOR_CURRENT_LIMIT_AMPS = 80.0;
     public static final double SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
 
     // ---- Drivetrain of the mechanism ----
@@ -845,6 +845,12 @@ public final class Constants {
     // ---- Homing ----
     public static final double HOMING_VOLTS = -1.5; // negative is down
     public static final double HOMING_TIMEOUT_SECONDS = 4.0;
+
+    // ---- Landing on the bottom hard stop ----
+    // Motion Magic stops this far up; the last bit is a gentle open loop push onto the stop, so
+    // the carriage never slams into it at profile speed.
+    public static final double LANDING_HEIGHT_METERS = 0.03;
+    public static final double LANDING_VOLTS = -0.5;
 
     // ---- Closed loop (Phoenix Slot0, mechanism units = meters) ----
     // kG, kV, kA are derived from the Kraken X60 model and masses above; ElevatorPhysicsTest

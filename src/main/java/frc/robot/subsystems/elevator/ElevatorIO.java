@@ -18,6 +18,9 @@ public interface ElevatorIO {
     public double supplyCurrentAmps = 0.0;
     public double temperatureCelsius = 0.0;
     public boolean bottomLimitPressed = false;
+
+    /** Motion Magic's current profile point (what the controller is tracking right now). */
+    public double profileReferenceMeters = 0.0;
   }
 
   /** Updates the set of loggable inputs. */

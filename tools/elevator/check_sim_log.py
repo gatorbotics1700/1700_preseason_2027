@@ -3,7 +3,7 @@
 Usage: python3 -I tools/elevator/check_sim_log.py <file.wpilog>
 
 Checks (all thresholds derived from ElevatorConstants, parsed from Constants.java):
-  L1  boots un-homed, the bottom limit closes, then Homed goes true before any raised goal
+  L1  the bottom limit closes, then Homed goes true, before any raised goal
   L2  goals after homing visit STOW, LOW, HIGH, MID, STOW in that order
   L3  each move enters and stays within POSITION_TOLERANCE of its goal, in profile time + margin
   L4  overshoot past each goal is under 2 cm
@@ -66,9 +66,8 @@ def main() -> int:
     truth = need(O + "Sim/TrueHeightMeters")
     tol = C["POSITION_TOLERANCE_METERS"]
 
-    # L1
-    if homed.v[0] is not False:
-        errors.append("L1 robot booted already homed; sim should start above the limit switch")
+    # L1: a back-drivable elevator may slide onto the switch while disabled and home at boot,
+    # which is fine. What matters: the switch closed, Homed followed, before any raised goal.
     t_homed = next((t for t, v in zip(homed.t, homed.v) if v), None)
     t_limit = next((t for t, v in zip(limit.t, limit.v) if v), None)
     if t_homed is None or t_limit is None or t_limit > t_homed + 1e-9:

@@ -214,6 +214,25 @@ class ElevatorKinematicsTest {
   }
 
   @Test
+  void landsGentlyWhenGoingToTheBottom() {
+    FakeIO io = new FakeIO();
+    ElevatorSubsystem elevator = new ElevatorSubsystem(io);
+    io.limit = true;
+    elevator.periodic();
+    io.limit = false;
+    io.position = 0.8;
+    elevator.setGoal(STOW_HEIGHT_METERS);
+    elevator.periodic();
+    assertEquals("position " + LANDING_HEIGHT_METERS, io.last(), "profile only to landing height");
+    io.position = LANDING_HEIGHT_METERS;
+    elevator.periodic();
+    assertEquals("voltage " + LANDING_VOLTS, io.last(), "then a gentle push");
+    io.limit = true;
+    elevator.periodic();
+    assertEquals("stop", io.last(), "then neutral on the stop");
+  }
+
+  @Test
   void disablingDropsTheGoal() {
     FakeIO io = new FakeIO();
     ElevatorSubsystem elevator = new ElevatorSubsystem(io);

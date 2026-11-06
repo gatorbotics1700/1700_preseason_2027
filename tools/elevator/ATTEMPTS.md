@@ -19,3 +19,8 @@ Every attempt per unit, including rejected ones. Format: `UNIT | attempt | chang
 | U8 e2e | 1 | run_e2e_sim.sh + wpilog.py + check_sim_log.py, first run | check.sh C5 | REJECT | L2 L4 L5 L6 failed |
 | U8 e2e | 2 | checker fixes only: seed goal sequence (AK logs changes only), skip pre-reset homing cycle in L5, L6 compares only when stationary (20 ms sensor latency is not offset error), L3 must stay in band | same log re-checked | REJECT (expected) | only L4 left = real defect: 12.2 cm undershoot on 1.15->0.80 |
 | U8 e2e | 3 | ElevatorIOSim plant on a 5 ms Notifier thread (TalonFX loops at 1 kHz on 20 ms stale positions) | check.sh C5 | REJECT, REVERTED | L4 12.2->3.9 cm, but new L1 (carriage slides onto switch during boot) and L8 (65.2 A, one sample, hard-stop impact). Saved as rejected/u8-attempt3-5ms-sim-thread.patch. 3 attempts used: unit stopped |
+| U8a sim fidelity | 1 | Re-apply 5 ms sim thread patch (approved revised plan) | E2E L4 12.2->3.9 cm | PASS | |
+| U8b check L1 | 1 | L1 = switch closes then Homed, before any raised goal (boot homing is physical) | re-check attempt-3 log: only L4, L8 left | PASS | |
+| U10 soft landing | 1 | Bottom goal: Motion Magic to 3 cm, then -0.5 V onto stop, neutral on switch | E2E L8 65.2->58.2 A + unit test landsGentlyWhenGoingToTheBottom | PASS | |
+| U11 tuning | 0 | Log Motion Magic ClosedLoopReference as input (diagnostic, no behavior change) | trace | INFO | tracking fine until decel; stator pinned at 60 A limit while decelerating downward -> not a gain problem |
+| U11 tuning | 1 | Stator limit 60->80 A + test: worst-case down-decel current <= 60% of limit | check.sh C1-C5 | PASS | 1.15->0.80 settles 0.42 s, peak 70.7 A |

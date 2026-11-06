@@ -45,6 +45,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   private final StatusSignal<Current> statorCurrent = motor.getStatorCurrent();
   private final StatusSignal<Current> supplyCurrent = motor.getSupplyCurrent();
   private final StatusSignal<Temperature> temperature = motor.getDeviceTemp();
+  private final StatusSignal<Double> profileReference = motor.getClosedLoopReference();
 
   private final Debouncer connectedDebounce = new Debouncer(0.5);
 
@@ -82,7 +83,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     tryUntilOk(5, () -> motor.setPosition(0.0, 0.25));
 
     BaseStatusSignal.setUpdateFrequencyForAll(
-        100.0, position, velocity, appliedVolts, statorCurrent, supplyCurrent);
+        100.0, position, velocity, appliedVolts, statorCurrent, supplyCurrent, profileReference);
     BaseStatusSignal.setUpdateFrequencyForAll(4.0, temperature);
     motor.optimizeBusUtilization();
   }
@@ -91,7 +92,13 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   public void updateInputs(ElevatorIOInputs inputs) {
     var status =
         BaseStatusSignal.refreshAll(
-            position, velocity, appliedVolts, statorCurrent, supplyCurrent, temperature);
+            position,
+            velocity,
+            appliedVolts,
+            statorCurrent,
+            supplyCurrent,
+            temperature,
+            profileReference);
     inputs.motorConnected = connectedDebounce.calculate(status.isOK());
     inputs.positionMeters = position.getValueAsDouble();
     inputs.velocityMetersPerSec = velocity.getValueAsDouble();
@@ -99,6 +106,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     inputs.statorCurrentAmps = statorCurrent.getValueAsDouble();
     inputs.supplyCurrentAmps = supplyCurrent.getValueAsDouble();
     inputs.temperatureCelsius = temperature.getValueAsDouble();
+    inputs.profileReferenceMeters = profileReference.getValueAsDouble();
     inputs.bottomLimitPressed = bottomLimit.get() == ElevatorConstants.LIMIT_SWITCH_PRESSED_VALUE;
   }
 
