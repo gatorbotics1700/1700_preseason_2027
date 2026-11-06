@@ -27,3 +27,6 @@ Every attempt per unit, including rejected ones. Format: `UNIT | attempt | chang
 | U9 layout | 1 | 3D Field: robot + component(ComponentPoses), ghost + component(ComponentPosesGoal), model = generated robot; C6 checks order and model name | check.sh C6 | PASS | schema confirmed from AdvantageScope v26 bundle (component childOf robot; ghost parentKey robot) |
 | U12 hub tracker | 0 | Repro: E2E with alliance Red1 (FMS-like) + 10 s hold | DataLog /subsystems/HubTracker/isHubActive appends | REPRO | 722 appends + reportWarning per loop in 14.4 s; loop time flat even at 64 s, so CPU is not the symptom |
 | U12 hub tracker | 1 | RobotContainer builds HubTrackerSubsystem once as a field (was new instance every periodic) | check.sh C8 (appends <= 3, loop time flat) | PASS | 722 -> 1 |
+| U13 turret CAN | 0 | Repro: check_can_errors.py on E2E console | repeated (device, signal) errors | REPRO | talon fx 100: 11 signals repeating (CAN IDs are 0-62; ID 100 was a hack to keep the turret still) |
+| U13 turret CAN | 1 | TurretConstants.ENABLED=false gates config/control/reads; ID restored to 15 | check.sh C9 | PASS | 41 CAN errors (11 repeating) -> 1 one-time boot error |
+| tooling | 1 | run_e2e_sim.sh kills watchdog's sleep child (held stdout open 240 s) | check.sh wall time | PASS | 4+ min -> 11.4 s |

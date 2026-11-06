@@ -102,12 +102,13 @@ public class TurretSubsystem extends SubsystemBase {
     motionMagicConfigs.MotionMagicExpo_kV = 0.16; // kV is around 0.12 V/rps
     motionMagicConfigs.MotionMagicExpo_kA = 0.1; // Use a slower kA of 0.1 V/(rps/s)
 
-    turretMotor.getConfigurator().apply(talonFXConfigs);
-
     m_request = new MotionMagicExpoVoltage(0);
     // homeTurret();
 
-    TalonFXLogger.configureTelemetryUpdateHz(turretMotor);
+    if (TurretConstants.ENABLED) {
+      turretMotor.getConfigurator().apply(talonFXConfigs);
+      TalonFXLogger.configureTelemetryUpdateHz(turretMotor);
+    }
   }
 
   @Override
@@ -116,6 +117,10 @@ public class TurretSubsystem extends SubsystemBase {
     // TODO: for any tuning of the turret, make sure to use this. once homing works without this,
     // bring it back and confirm it still works
     // updateSlot0Configs();
+
+    if (!TurretConstants.ENABLED) {
+      return;
+    }
 
     if (!sysIdRunning) {
       turretMotor.setControl(m_request.withPosition(degreesToRevs(desiredAngle.getDegrees())));
@@ -146,6 +151,9 @@ public class TurretSubsystem extends SubsystemBase {
   }
 
   public Rotation2d getCurrentAngle() {
+    if (!TurretConstants.ENABLED) {
+      return new Rotation2d(); // disabled turret stays facing forward
+    }
     double motorPositionRevs = turretMotor.getPosition().getValueAsDouble();
     double turretAngleDegrees =
         motorPositionRevs / TURRET_GEARBOX_RATIO / GEAR_REVS_PER_TURRET_REV * 360;
@@ -157,6 +165,9 @@ public class TurretSubsystem extends SubsystemBase {
   }
 
   public void setMotorVoltage(double voltage) {
+    if (!TurretConstants.ENABLED) {
+      return;
+    }
     turretMotor.setVoltage(voltage);
   }
 
@@ -166,6 +177,9 @@ public class TurretSubsystem extends SubsystemBase {
 
   // sets both the current angle and the desired angle to 0
   public void homeTurret() {
+    if (!TurretConstants.ENABLED) {
+      return;
+    }
     // TODO: try calling the other version of homeTurret in robotInit, my theory is
     // the bore encoder isn't connected by the time we call this
     // turretMotor.setPosition(0);
@@ -203,7 +217,7 @@ public class TurretSubsystem extends SubsystemBase {
     // periodic()
     SysIdRoutine.Mechanism mechanism =
         new SysIdRoutine.Mechanism(
-            (voltage) -> turretMotor.setVoltage(voltage.in(Volts)),
+            (voltage) -> setMotorVoltage(voltage.in(Volts)),
             null, // Log via AdvantageKit in periodic() so data goes to the same log file
             this,
             "turret");
@@ -242,6 +256,9 @@ public class TurretSubsystem extends SubsystemBase {
   }
 
   public void updateSlot0Configs() {
+    if (!TurretConstants.ENABLED) {
+      return;
+    }
     double newKp = turretKp.get();
     double newKi = turretKi.get();
     double newKd = turretKd.get();

@@ -729,8 +729,14 @@ public final class Constants {
   }
 
   public static final class TurretConstants {
-    public static final int TURRET_MOTOR_CAN_ID =
-        100; // TODO was 15 making it a bad number so the turret does not move
+    /**
+     * False keeps the turret still: TurretSubsystem never configures, commands, or reads the motor,
+     * and reports it facing forward. (This used to be done with CAN ID 100, which does not exist,
+     * so every loop logged CAN errors.)
+     */
+    public static final boolean ENABLED = false;
+
+    public static final int TURRET_MOTOR_CAN_ID = 15;
     public static final int TURRET_BORE_ENCODER_PORT = 12; // TODO was 1 before
 
     public static final double TURRET_DEADBAND = 0.75;

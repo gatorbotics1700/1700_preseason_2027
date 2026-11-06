@@ -16,6 +16,7 @@ set +e
 wait $pid
 code=$?
 set -e
+pkill -P $watchdog 2>/dev/null || true  # its sleep child would hold our stdout open
 kill $watchdog 2>/dev/null || true
 wait $watchdog 2>/dev/null || true
 grep -E '\[SimE2E\]|Exception|Error|overrun' "$out" | head -20 || true

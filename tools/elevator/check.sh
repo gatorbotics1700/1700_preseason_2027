@@ -11,6 +11,7 @@
 #   C6  AdvantageScope layout JSON parses and references the elevator component poses
 #   C7  Every changed file (vs main) is inside the plan allowlist
 #   C8  No per-loop leaks in the E2E run (loop time flat, HubTracker logs only on changes)
+#   C9  No CTRE device reports the same CAN error twice (dead or nonexistent devices)
 #
 # Usage: tools/elevator/check.sh            (all checks)
 #        SKIP_E2E=1 tools/elevator/check.sh (C1-C3, C6, C7 only; for fast unit loops)
@@ -66,6 +67,8 @@ print(f"hub tracker state appends: {n}")
 sys.exit(0 if n <= 3 else 1)
 EOF
   pass C8
+  python3 -I tools/elevator/check_can_errors.py "$logdir/sim_console.txt" || fail C9 "CAN device keeps failing"
+  pass C9
 else
   echo "SKIP C4 C5 (SKIP_E2E=1)"
 fi
@@ -93,7 +96,7 @@ EOF
 pass C6
 
 # ---- C7 -------------------------------------------------------------------------------
-allow='^(RULES\.md|build\.gradle|tools/elevator/.*|ascope_assets/Robot_GatorboticsElevator/.*|src/main/deploy/AdvantageScope-Layout\.json|src/main/java/frc/robot/(Constants|Robot|RobotContainer)\.java|src/main/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/commands/mech/ElevatorCommands\.java|src/main/java/frc/robot/util/SimE2E\.java|src/test/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/(commands/mech/(Hood|Intake|Shooting)Commands|subsystems/mech/IntakeSubsystem|util/Calculations)\.java)$'
+allow='^(RULES\.md|build\.gradle|tools/elevator/.*|ascope_assets/Robot_GatorboticsElevator/.*|src/main/deploy/AdvantageScope-Layout\.json|src/main/java/frc/robot/(Constants|Robot|RobotContainer)\.java|src/main/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/commands/mech/ElevatorCommands\.java|src/main/java/frc/robot/util/SimE2E\.java|src/test/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/(commands/mech/(Hood|Intake|Shooting)Commands|subsystems/mech/(IntakeSubsystem|TurretSubsystem)|util/Calculations)\.java)$'
 changed="$( { git diff --name-only main...HEAD; git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)"
 bad="$(echo "$changed" | grep -v -E "$allow" | grep -v '^$' || true)"
 [[ -z "$bad" ]] || fail C7 "files outside plan: $bad"
