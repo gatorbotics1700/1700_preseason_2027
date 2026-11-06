@@ -16,8 +16,9 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 public class ShooterSubsystem extends SubsystemBase {
 
   private final ShooterIO io;
-  private final ShooterIO.ShooterIOInputs inputs = new ShooterIO.ShooterIOInputs();
+  private final ShooterIOInputsAutoLogged inputs = new ShooterIOInputsAutoLogged();
 
+  // helpful alerts if motors aren't connected !
   private final Alert flywheelDisconnectedAlert =
       new Alert("Shooter flywheel motor disconnected.", AlertType.kError);
   private final Alert kickerDisconnectedAlert =
@@ -49,6 +50,7 @@ public class ShooterSubsystem extends SubsystemBase {
   }
 
   public ShooterSubsystem(ShooterIO io) {
+    // wow very clean
     this.io = io;
   }
 
@@ -137,7 +139,7 @@ public class ShooterSubsystem extends SubsystemBase {
         .finallyDo(() -> sysIdRunning = false)
         .withName("Flywheel SysId Quasistatic " + direction);
   }
-  
+
   public Command sysIdDynamic(SysIdRoutine.Direction direction) {
     if (sysIdRoutine == null) {
       initSysIdRoutine();

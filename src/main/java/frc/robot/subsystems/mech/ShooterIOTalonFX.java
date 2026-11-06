@@ -20,6 +20,7 @@ import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.TunerConstants;
 import frc.robot.util.logging.TalonFXLogger;
 
+/** The real hardware: four TalonFXs. All motor configuration lives here. */
 public class ShooterIOTalonFX implements ShooterIO {
   private final TalonFX flywheelMotor;
   private final TalonFX kickerMotor;
@@ -30,9 +31,10 @@ public class ShooterIOTalonFX implements ShooterIO {
   private final Slot0Configs flywheelSlot0Configs = flywheelTalonFXConfigs.Slot0;
 
   private final MotionMagicVelocityVoltage velocityRequest = new MotionMagicVelocityVoltage(0);
-  private final NeutralOut neutralOut = new NeutralOut();
-  private final VoltageOut voltageRequest = new VoltageOut(0);
+  private final NeutralOut flywheelNeutralOut = new NeutralOut();
+  private final VoltageOut sysIdVoltageRequest = new VoltageOut(0);
 
+  // TODO figure out what these are - claude suggested
   private final StatusSignal<AngularVelocity> flywheelRotorVelocity;
   private final StatusSignal<Angle> flywheelPosition;
   private final StatusSignal<Voltage> flywheelVoltage;
@@ -40,6 +42,7 @@ public class ShooterIOTalonFX implements ShooterIO {
   private final StatusSignal<Voltage> kickerVoltage;
 
   public ShooterIOTalonFX() {
+    // directly from subsystem
     flywheelMotor =
         new TalonFX(ShooterConstants.LEFT_FLYWHEEL_MOTOR_CAN_ID, TunerConstants.mechCANBus);
     kickerMotor =
@@ -49,6 +52,7 @@ public class ShooterIOTalonFX implements ShooterIO {
     rightTransitionMotor =
         new TalonFX(ShooterConstants.RIGHT_TRANSITION_MOTOR_CAN_ID, TunerConstants.mechCANBus);
 
+    // TALONFX & MOTIONMAGIC CONFIGS    
     flywheelTalonFXConfigs.withMotorOutput(
         new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
@@ -70,6 +74,7 @@ public class ShooterIOTalonFX implements ShooterIO {
 
     flywheelTalonFXConfigs.CurrentLimits.StatorCurrentLimit = 80;
 
+    // Kicker (same as the old code: limit value set, enable flag left at its default)
     TalonFXConfiguration transitionMotorConfigs = new TalonFXConfiguration();
     transitionMotorConfigs.withMotorOutput(
         new MotorOutputConfigs().withInverted(InvertedValue.CounterClockwise_Positive));
@@ -125,12 +130,12 @@ public class ShooterIOTalonFX implements ShooterIO {
 
   @Override
   public void stopFlywheel() {
-    flywheelMotor.setControl(neutralOut);
+    flywheelMotor.setControl(flywheelNeutralOut);
   }
 
   @Override
   public void setFlywheelVolts(double volts) {
-    flywheelMotor.setControl(voltageRequest.withOutput(volts));
+    flywheelMotor.setControl(sysIdVoltageRequest.withOutput(volts));
   }
 
   @Override
