@@ -736,4 +736,11 @@ public final class Constants {
     // kraken x60 max velocity is ~100 rps
 
   }
+public static final class ElevatorSubsystemConstants {
+    public static final int ELEVATOR_MOTOR_CAN_ID = 2;
 }
+
+
+
+}
+
