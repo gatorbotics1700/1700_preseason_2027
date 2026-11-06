@@ -796,4 +796,87 @@ public final class Constants {
     // kraken x60 max velocity is ~100 rps
 
   }
+
+  /**
+   * Two-stage cascade elevator. All positions are carriage height above the hard-stop bottom, in
+   * meters. The geometry block is also the source of truth for the generated 3D model in
+   * ascope_assets/ (tools/elevator/generate_model.py parses it), so keep every value on one line as
+   * a plain number literal.
+   */
+  public static final class ElevatorConstants {
+    // ---- Hardware ----
+    /**
+     * No current robot has an elevator; flip to true on the robot that does. Sim always has one.
+     */
+    public static final boolean ENABLED_ON_REAL_ROBOT = false;
+
+    public static final int MOTOR_CAN_ID = 40; // TODO set to the real CAN ID
+    public static final int BOTTOM_LIMIT_SWITCH_DIO = 5; // TODO set to the real DIO port
+
+    /** Wired normally-open with the roboRIO pull-up, so the DIO reads false when pressed. */
+    public static final boolean LIMIT_SWITCH_PRESSED_VALUE = false;
+
+    public static final double STATOR_CURRENT_LIMIT_AMPS = 60.0;
+    public static final double SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
+
+    // ---- Drivetrain of the mechanism ----
+    public static final double GEAR_RATIO = 6.0; // motor rotations per drum rotation
+    public static final double DRUM_PITCH_DIAMETER_METERS = 0.04463; // 22T #25 sprocket
+
+    /** Cascade rigging: the carriage moves this many times as far as the first stage. */
+    public static final double RIGGING_RATIO = 2.0;
+
+    /** Motor rotor rotations per meter of carriage travel. */
+    public static final double ROTOR_ROTATIONS_PER_METER =
+        GEAR_RATIO / (Math.PI * DRUM_PITCH_DIAMETER_METERS * RIGGING_RATIO);
+
+    public static final double CARRIAGE_MASS_KG = 5.0;
+    public static final double STAGE_1_MASS_KG = 3.0;
+
+    // ---- Travel and setpoints (carriage height, meters) ----
+    public static final double MIN_HEIGHT_METERS = 0.0;
+    public static final double MAX_HEIGHT_METERS = 1.20;
+    public static final double STOW_HEIGHT_METERS = 0.0;
+    public static final double LOW_HEIGHT_METERS = 0.40;
+    public static final double MID_HEIGHT_METERS = 0.80;
+    public static final double HIGH_HEIGHT_METERS = 1.15;
+    public static final double POSITION_TOLERANCE_METERS = 0.01;
+
+    // ---- Homing ----
+    public static final double HOMING_VOLTS = -1.5; // negative is down
+    public static final double HOMING_TIMEOUT_SECONDS = 4.0;
+
+    // ---- Closed loop (Phoenix Slot0, mechanism units = meters) ----
+    // kG, kV, kA are derived from the Kraken X60 model and masses above; ElevatorPhysicsTest
+    // fails if they drift more than 10% from physics. Re-tune kP/kD on the real robot.
+    public static final double KP = 60.0; // V per meter of error
+    public static final double KI = 0.0;
+    public static final double KD = 1.0; // V per m/s of error
+    public static final double KS = 0.05; // V
+    public static final double KG = 0.80; // V to hold against gravity
+    public static final double KV = 2.55; // V per m/s
+    public static final double KA = 0.07; // V per m/s^2
+
+    public static final double CRUISE_VELOCITY_MPS = 2.5;
+    public static final double ACCELERATION_MPS2 = 8.0;
+    public static final double JERK_MPS3 = 80.0;
+
+    // ---- Geometry (robot frame: +x forward, +y left, +z up, origin on the floor) ----
+    public static final double ELEVATOR_X_METERS = 0.10;
+    public static final double BASE_BOTTOM_Z_METERS = 0.08;
+    public static final double BASE_HEIGHT_METERS = 0.90;
+    public static final double BASE_RAIL_SPACING_METERS = 0.50; // outer rail centers, along y
+    public static final double STAGE_1_BOTTOM_Z_METERS = 0.10;
+    public static final double STAGE_1_HEIGHT_METERS = 0.88;
+    public static final double STAGE_1_RAIL_SPACING_METERS = 0.44;
+    public static final double CARRIAGE_BOTTOM_Z_METERS = 0.12;
+    public static final double CARRIAGE_HEIGHT_METERS = 0.25;
+    public static final double CARRIAGE_WIDTH_METERS = 0.38;
+    public static final double RAIL_TUBE_X_METERS = 0.0508; // 2x1 tube, 2in along x
+    public static final double RAIL_TUBE_Y_METERS = 0.0254; // 1in along y
+    public static final double CHASSIS_LENGTH_METERS = 0.70;
+    public static final double CHASSIS_WIDTH_METERS = 0.70;
+    public static final double CHASSIS_HEIGHT_METERS = 0.10;
+    public static final double CHASSIS_BOTTOM_Z_METERS = 0.03;
+  }
 }

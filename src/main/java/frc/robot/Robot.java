@@ -29,6 +29,7 @@ import frc.robot.Constants.TunerConstants;
 import frc.robot.commands.mech.HoodCommands;
 import frc.robot.util.Elastic;
 import frc.robot.util.RobotConfigLoader;
+import frc.robot.util.SimE2E;
 import frc.robot.util.logging.PDHLogger;
 import java.util.Optional;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -83,6 +84,10 @@ public class Robot extends LoggedRobot {
       case SIM:
         // Running a physics simulator, log to NT
         Logger.addDataReceiver(new NT4Publisher());
+        if (SimE2E.enabled()) {
+          // headless end-to-end run (tools/elevator/run_e2e_sim.sh) also writes a log file
+          Logger.addDataReceiver(new WPILOGWriter(SimE2E.logDir()));
+        }
         break;
 
       case REPLAY:
@@ -265,5 +270,7 @@ public class Robot extends LoggedRobot {
 
   /** This function is called periodically whilst in simulation. */
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    SimE2E.periodic(robotContainer);
+  }
 }

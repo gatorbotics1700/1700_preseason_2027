@@ -29,6 +29,7 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.HoodConstants;
 import frc.robot.Constants.HopperFloorConstants;
 import frc.robot.Constants.IntakeConstants;
@@ -39,6 +40,7 @@ import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.drive.DriveSystemsCheckCommands;
 import frc.robot.commands.drive.DriveUnderTrenchCommand;
 import frc.robot.commands.drive.PointAtTargetCommand;
+import frc.robot.commands.mech.ElevatorCommands;
 import frc.robot.commands.mech.HoodCommands;
 import frc.robot.commands.mech.IntakeCommands;
 import frc.robot.commands.mech.ShootingCommands;
@@ -48,6 +50,10 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.elevator.ElevatorIO;
+import frc.robot.subsystems.elevator.ElevatorIOSim;
+import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
+import frc.robot.subsystems.elevator.ElevatorSubsystem;
 import frc.robot.subsystems.mech.HoodSubsystem;
 import frc.robot.subsystems.mech.HopperFloorSubsystem;
 import frc.robot.subsystems.mech.HubTrackerSubsystem;
@@ -70,6 +76,7 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Vision vision;
+  private final ElevatorSubsystem elevatorSubsystem;
 
   private final HoodSubsystem hoodSubsystem = new HoodSubsystem();
   private final HopperFloorSubsystem hopperFloorSubsystem = new HopperFloorSubsystem();
@@ -112,6 +119,11 @@ public class RobotContainer {
                     VisionConstants.CAMERA_0_NAME, VisionConstants.ROBOT_TO_CAMERA_0),
                 new VisionIOPhotonVision(
                     VisionConstants.CAMERA_1_NAME, VisionConstants.ROBOT_TO_CAMERA_1));
+        elevatorSubsystem =
+            new ElevatorSubsystem(
+                ElevatorConstants.ENABLED_ON_REAL_ROBOT
+                    ? new ElevatorIOTalonFX()
+                    : new ElevatorIO() {});
         break;
 
       case SIM:
@@ -135,6 +147,8 @@ public class RobotContainer {
                     VisionConstants.CAMERA_1_NAME,
                     VisionConstants.ROBOT_TO_CAMERA_1,
                     drive::getPose));
+        // Boot the sim carriage 5 cm up, so it starts un-homed like a real robot would.
+        elevatorSubsystem = new ElevatorSubsystem(new ElevatorIOSim(0.05));
         DriverStation.silenceJoystickConnectionWarning(true);
         break;
 
@@ -149,6 +163,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 (pose) -> {});
         vision = new Vision(drive);
+        elevatorSubsystem = new ElevatorSubsystem(new ElevatorIO() {});
 
         break;
     }
@@ -188,6 +203,7 @@ public class RobotContainer {
     // Set up auto routines with PathPlanner's auto chooser (using pre-made .auto files)
     autoChooser =
         new LoggedDashboardChooser<>("Auto/PathPlanner Auto", AutoBuilder.buildAutoChooser());
+    autoChooser.addOption("Elevator Demo", ElevatorCommands.demoCycle(elevatorSubsystem));
 
     // COMMENTED OUT - using PathPlanner pre-made autos instead of DynamicAutoBuilder
     // multiStepAutoChooser =
@@ -885,6 +901,26 @@ public class RobotContainer {
     }
   }
 
+  /** Codriver D-pad picks an elevator height, Back homes it. Nothing else uses these buttons. */
+  public void configureElevatorBindings() {
+    if (controller_two == null) {
+      return;
+    }
+    controller_two.back().onTrue(ElevatorCommands.home(elevatorSubsystem));
+    controller_two
+        .povDown()
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.STOW_HEIGHT_METERS));
+    controller_two
+        .povLeft()
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.LOW_HEIGHT_METERS));
+    controller_two
+        .povRight()
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.MID_HEIGHT_METERS));
+    controller_two
+        .povUp()
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.HIGH_HEIGHT_METERS));
+  }
+
   public Command getAutonomousCommand() {
     // Using PathPlanner pre-made autos
     Command selected = autoChooser.get();
@@ -947,6 +983,7 @@ public class RobotContainer {
     CommandScheduler.getInstance().getActiveButtonLoop().clear();
     configureCompDriverButtonBindings();
     configureCompCodriverButtonBindings();
+    configureElevatorBindings();
     // configureDriverButtonBindings();
     // configureCodriverButtonBindings();
   }
@@ -1161,6 +1198,10 @@ public class RobotContainer {
             },
             shooterSubsystem)
         .withName("TestShot"));
+  }
+
+  public ElevatorSubsystem getElevatorSubsystem() {
+    return elevatorSubsystem;
   }
 
   public TurretSubsystem getTurretSubsystem() {

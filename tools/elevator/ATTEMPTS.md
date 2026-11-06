@@ -1,0 +1,21 @@
+# Elevator task - attempt log
+
+Every attempt per unit, including rejected ones. Format: `UNIT | attempt | change | check | verdict | note`.
+
+| Unit | # | Change | Check | Verdict | Note |
+|---|---|---|---|---|---|
+| U1 constants | 1 | Add ElevatorConstants | compileJava exit 0 | PASS | hand geometry check found carriage overran stage 1 by 2cm at max; STAGE_1_HEIGHT 0.85->0.88, invariant to be enforced by ElevatorKinematicsTest |
+| U0 tests-enable | 1 | Uncomment test{} + configureTestTasks in build.gradle | gradlew test exit 0 | PASS (weak) | existing test files are fully commented out, so 0 tests ran; real gate is C2 |
+| U2 model | 1 | generate_model.py, shelf forward | --check exit 0, winding vs normals, bbox vs constants | REJECT | shelf at x up to 0.238 sweeps through fixed/stage-1 top crossbars (x 0.024..0.126) during travel |
+| U2 model | 2 | shelf moved to carriage back face | same + swept-volume clearance (shelf x < rails min x) | PASS | |
+| U1 constants | 2 | kG/kV/kA replaced with values derived from the Kraken X60 model (0.60->0.80, 2.65->2.55, 0.05->0.07) | first-principles calc | PASS | guessed kG was 25% low |
+| U3 IO layer | 1 | ElevatorIO + ElevatorIOTalonFX | compileJava exit 0 | PASS | |
+| U4 sim IO | 1 | ElevatorIOSim (Phoenix TalonFX sim + WPILib ElevatorSim + DIOSim) | compileJava exit 0 | PASS | |
+| U5 subsystem | 1 | ElevatorSubsystem + ElevatorCommands | compileJava exit 0 | PASS | |
+| U7 unit tests | 1 | Kinematics/Physics/Model tests (23) | check_junit.py exit 0 | PASS | |
+| U7 unit tests | 1b | mutation: STAGE_1 0.85 + KG 0.60 | tests must fail | PASS | 4 failures caught as expected; constants restored |
+| U5 subsystem | 2 | Go neutral on the bottom hard stop when goal is stow (was holding ~31 A forever) | new unit test restsOnHardStopInsteadOfHoldingAtBottom + final current in E2E log 0.0 A | PASS | |
+| U6 wiring | 1 | RobotContainer per-mode IO, auto option, codriver D-pad/Back, SimE2E hook in Robot | compileJava exit 0 | PASS | |
+| U8 e2e | 1 | run_e2e_sim.sh + wpilog.py + check_sim_log.py, first run | check.sh C5 | REJECT | L2 L4 L5 L6 failed |
+| U8 e2e | 2 | checker fixes only: seed goal sequence (AK logs changes only), skip pre-reset homing cycle in L5, L6 compares only when stationary (20 ms sensor latency is not offset error), L3 must stay in band | same log re-checked | REJECT (expected) | only L4 left = real defect: 12.2 cm undershoot on 1.15->0.80 |
+| U8 e2e | 3 | ElevatorIOSim plant on a 5 ms Notifier thread (TalonFX loops at 1 kHz on 20 ms stale positions) | check.sh C5 | REJECT, REVERTED | L4 12.2->3.9 cm, but new L1 (carriage slides onto switch during boot) and L8 (65.2 A, one sample, hard-stop impact). Saved as rejected/u8-attempt3-5ms-sim-thread.patch. 3 attempts used: unit stopped |
