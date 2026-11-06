@@ -20,7 +20,6 @@ import frc.robot.Constants.ShooterConstants;
 import frc.robot.Constants.TunerConstants;
 import frc.robot.util.logging.TalonFXLogger;
 
-/** The real hardware: four TalonFXs. All motor configuration lives here. */
 public class ShooterIOTalonFX implements ShooterIO {
   private final TalonFX flywheelMotor;
   private final TalonFX kickerMotor;
@@ -28,7 +27,6 @@ public class ShooterIOTalonFX implements ShooterIO {
   private final TalonFX rightTransitionMotor;
 
   private final TalonFXConfiguration flywheelTalonFXConfigs = new TalonFXConfiguration();
-  // Kept so a gain change re-applies kS/kV/kA instead of resetting them to zero.
   private final Slot0Configs flywheelSlot0Configs = flywheelTalonFXConfigs.Slot0;
 
   private final MotionMagicVelocityVoltage velocityRequest = new MotionMagicVelocityVoltage(0);
@@ -51,7 +49,6 @@ public class ShooterIOTalonFX implements ShooterIO {
     rightTransitionMotor =
         new TalonFX(ShooterConstants.RIGHT_TRANSITION_MOTOR_CAN_ID, TunerConstants.mechCANBus);
 
-    // TALONFX & MOTIONMAGIC CONFIGS
     flywheelTalonFXConfigs.withMotorOutput(
         new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
@@ -73,7 +70,6 @@ public class ShooterIOTalonFX implements ShooterIO {
 
     flywheelTalonFXConfigs.CurrentLimits.StatorCurrentLimit = 80;
 
-    // Kicker (same as the old code: limit value set, enable flag left at its default)
     TalonFXConfiguration transitionMotorConfigs = new TalonFXConfiguration();
     transitionMotorConfigs.withMotorOutput(
         new MotorOutputConfigs().withInverted(InvertedValue.CounterClockwise_Positive));

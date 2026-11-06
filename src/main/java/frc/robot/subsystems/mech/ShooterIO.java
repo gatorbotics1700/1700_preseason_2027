@@ -3,14 +3,13 @@ package frc.robot.subsystems.mech;
 import org.littletonrobotics.junction.LogTable;
 import org.littletonrobotics.junction.inputs.LoggableInputs;
 
-/** What the shooter hardware can be told to do, and what it reports. */
 public interface ShooterIO {
-  /** Snapshot of everything the hardware reports. Logged/replayed by AdvantageKit. */
+
   public static class ShooterIOInputs implements LoggableInputs {
     public boolean flywheelConnected = false;
     public boolean kickerConnected = false;
     public double flywheelRotorRps = 0.0;
-    public double flywheelPositionRot = 0.0; // used by SysId
+    public double flywheelPositionRot = 0.0; 
     public double flywheelVolts = 0.0;
     public double flywheelAmps = 0.0;
     public double kickerVolts = 0.0;
@@ -40,15 +39,12 @@ public interface ShooterIO {
 
   default void updateInputs(ShooterIOInputs inputs) {}
 
-  /** Closed-loop flywheel velocity, in rotor rotations per second. */
   default void setFlywheelVelocity(double rotorRps) {}
 
   default void stopFlywheel() {}
 
-  /** Open-loop flywheel voltage (SysId). */
   default void setFlywheelVolts(double volts) {}
 
-  /** Duty-cycle outputs (-1..1) for the kicker and the left/right transition motors. */
   default void setFeederSpeeds(double kicker, double left, double right) {}
 
   default void setFlywheelGains(double kP, double kI, double kD) {}
