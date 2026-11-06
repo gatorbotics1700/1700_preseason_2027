@@ -58,10 +58,21 @@ fi
 python3 -I - <<'EOF' || fail C6 "AdvantageScope layout"
 import json, sys
 d = json.load(open("src/main/deploy/AdvantageScope-Layout.json"))
-s = json.dumps(d)
-for need in ["/RealOutputs/Mech/Elevator/ComponentPoses", "Gatorbotics Elevator Bot"]:
-    if need not in s:
-        sys.exit(f"layout missing {need}")
+cfg = json.load(open("ascope_assets/Robot_GatorboticsElevator/config.json"))
+tabs = [t for h in d["hubs"] for t in h["state"]["tabs"]["tabs"] if t["type"] == 3]
+if not tabs:
+    sys.exit("no 3D field tab")
+src = tabs[0]["controller"]["sources"]
+want = [("robot", "/RealOutputs/Odometry/Robot"),
+        ("component", "/RealOutputs/Mech/Elevator/ComponentPoses"),
+        ("ghost", "/RealOutputs/Odometry/Robot"),
+        ("component", "/RealOutputs/Mech/Elevator/ComponentPosesGoal")]
+got = [(s["type"], s["logKey"]) for s in src]
+if got != want:
+    sys.exit(f"3D sources {got} != {want} (a component attaches to the source before it)")
+for s in src:
+    if s["type"] in ("robot", "ghost") and s["options"].get("model") != cfg["name"]:
+        sys.exit(f"{s['type']} model {s['options'].get('model')} != {cfg['name']}")
 EOF
 pass C6
 
