@@ -32,9 +32,9 @@ public class ShooterIOTalonFX implements ShooterIO {
 
   private final MotionMagicVelocityVoltage velocityRequest = new MotionMagicVelocityVoltage(0);
   private final NeutralOut flywheelNeutralOut = new NeutralOut();
-  private final VoltageOut sysIdVoltageRequest = new VoltageOut(0);
+  private final VoltageOut flywheelVoltageRequest = new VoltageOut(0);
 
-  // TODO figure out what these are - claude suggested
+  // motor values that are refreshed in updateinputs
   private final StatusSignal<AngularVelocity> flywheelRotorVelocity;
   private final StatusSignal<Angle> flywheelPosition;
   private final StatusSignal<Voltage> flywheelVoltage;
@@ -135,7 +135,7 @@ public class ShooterIOTalonFX implements ShooterIO {
 
   @Override
   public void setFlywheelVolts(double volts) {
-    flywheelMotor.setControl(sysIdVoltageRequest.withOutput(volts));
+    flywheelMotor.setControl(flywheelVoltageRequest.withOutput(volts));
   }
 
   @Override
