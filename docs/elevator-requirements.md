@@ -62,8 +62,8 @@ Commands (`ElevatorCommands`): `home`, `goTo(height)`, `demoCycle`.
 
 | # | Requirement | Test |
 |---|---|---|
-| R14 | Hardware readings are logged under `Mech/Elevator/IO`. Goal, mode, homed and at-goal are logged under `Mech/Elevator/...`. | `tools/elevator/check.sh` C5 |
-| R15 | `Mech/Elevator/ComponentPoses` holds one pose per moving part of the 3D model: stage 1 at half the carriage height, the carriage at its height. `ComponentPosesGoal` is the same for the goal. | `ElevatorKinematicsTest.componentPosesFollowCascadeRigging` |
+| R14 | Hardware readings are logged under `Mech/Elevator/IO`. Goal, mode, homed and at-goal are logged under `Mech/Elevator/...`. | `./gradlew simSmoke` (the log checks read these keys) |
+| R15 | `Mech/Elevator/ComponentPoses` holds one pose per moving part of the 3D model: stage 1 at half the carriage height, the carriage at its height. `ComponentPosesGoal` is the same for the goal. | `view3d/ElevatorModelTest.componentPosesFollowCascadeRigging`, and on every log: `View3dChecks` |
 
 ## Simulator (physics) requirements
 
@@ -72,5 +72,5 @@ These cover `ElevatorIOSimPhysics`, the simulator that runs the real motor code 
 | # | Requirement | Test |
 |---|---|---|
 | S1 | kG, kV and kA are within 10% of what physics says for the masses and gearing. | `ElevatorPhysicsTest` |
-| S2 | The 3D model matches the constants (sizes, travel). | `ElevatorModelTest`, `check.sh` C3 |
-| S3 | In the full robot sim, the elevator homes, reaches every setpoint in time and stays in its travel. | `check.sh` C4, C5 |
+| S2 | The 3D model matches the constants (sizes, travel). | `view3d/ElevatorModelTest` |
+| S3 | In the full robot sim, the elevator homes, reaches every setpoint in time and stays in its travel. | `./gradlew simSmoke` (`ElevatorChecks`) |

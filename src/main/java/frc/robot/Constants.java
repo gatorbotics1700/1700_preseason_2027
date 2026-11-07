@@ -812,9 +812,8 @@ public final class Constants {
 
   /**
    * Two-stage cascade elevator. All positions are carriage height above the hard-stop bottom, in
-   * meters. The geometry block is also the source of truth for the generated 3D model in
-   * ascope_assets/ (tools/elevator/generate_model.py parses it), so keep every value on one line as
-   * a plain number literal.
+   * meters. The geometry block also sizes the 3D model in ascope_assets/: the tests in
+   * src/test/java/frc/robot/view3d/ rebuild it from these numbers, so the 3D view matches the code.
    */
   public static final class ElevatorConstants {
     // ---- Hardware ----

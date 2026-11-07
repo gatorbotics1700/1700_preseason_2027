@@ -3,37 +3,13 @@ package frc.robot.subsystems.mech;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import edu.wpi.first.hal.HAL;
-import edu.wpi.first.math.geometry.Pose3d;
 import frc.robot.Constants.ElevatorConstants;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class ElevatorKinematicsTest {
   private static final double DELTA = 1e-9;
 
-  @BeforeAll
-  public static void initHal() {
-    assertTrue(HAL.initialize(500, 0));
-  }
-
   // ---- kinematics -----------------------------------------------------------------------
-
-  /** The 3D poses follow the cascade: stage 1 rises half as far as the carriage. */
-  @Test
-  public void componentPosesFollowCascadeRigging() {
-    for (double h : new double[] {0.0, 0.37, ElevatorConstants.MAX_HEIGHT_METERS}) {
-      Pose3d[] poses = ElevatorSubsystem.componentPoses(h);
-      assertEquals(2, poses.length);
-      assertEquals(h / ElevatorConstants.RIGGING_RATIO, poses[0].getZ(), DELTA, "stage 1");
-      assertEquals(h, poses[1].getZ(), DELTA, "carriage");
-      for (Pose3d p : poses) {
-        assertEquals(0, p.getX(), DELTA);
-        assertEquals(0, p.getY(), DELTA);
-        assertEquals(0, p.getRotation().getAngle(), DELTA);
-      }
-    }
-  }
 
   /** Motor rotations per meter match the gearing, sprocket and rigging. */
   @Test

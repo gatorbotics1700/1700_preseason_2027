@@ -60,3 +60,9 @@ Every attempt per unit, including rejected ones. Format: `UNIT | attempt | chang
 | D3 sim smoke | 3 | enable only once the chooser's "active" equals the auto | simSmoke exit 0 in ~8 s, all checks pass | PASS | |
 | D3 sim smoke | 4 | unknown auto name: fail fast listing the chooser's options | bad name exits 1 with the list; failing check fails the build | PASS | |
 | D3 sim smoke | 5 | check.sh C4 = simSmoke; C5 C8 C9 and run_e2e_sim.sh, check_sim_log.py, check_loop_time.py, check_can_errors.py deleted | check.sh all; unknown default auto fails C4 | PASS | first C4 draft could mask a failure via PIPESTATUS after "|| true"; fixed before commit |
+| D4 3D view in Java | 1 | view3d/: Glb (box model writer + bounds reader), ElevatorModel (ported generate_model.py), ElevatorModelTest (rebuild-if-stale + sizes + clearance + poses), AdvantageScopeLayoutTest, View3dChecks (poses match height, layout keys logged) | bounds vs Python files identical | PASS | |
+| D4 3D view in Java | 2 | run model tests twice | 2nd run must pass | REJECT | spotless reformats config.json after every rebuild: generator and formatter fight |
+| D4 3D view in Java | 3 | spotless json excludes ascope_assets/ (generated) | 3 runs stable | PASS | |
+| D4 3D view in Java | 4 | binary geometry vs Python generator | byte-identical | REJECT | 32 normals were -0.0 vs 0.0 (Java -y on 0) |
+| D4 3D view in Java | 5 | toGltf uses 0 - y | geometry byte-identical for all 3 files; View3dChecksTest 3 tests, mutation 2/2 | PASS | |
+| D5 remove python | 1 | delete tools/elevator (check.sh, generate_model.py, wpilog.py, check_junit.py); attempt log -> docs/elevator-attempts.md; pass condition = ./gradlew build simSmoke | 61 unit tests in 10 classes + sim smoke 11 checks, ~17 s | PASS | C7 allowlist (session scaffolding) dropped with check.sh |

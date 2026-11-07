@@ -1,9 +1,11 @@
 package frc.robot.diagnostics;
 
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.util.datalog.BooleanLogEntry;
 import edu.wpi.first.util.datalog.DataLogWriter;
 import edu.wpi.first.util.datalog.DoubleLogEntry;
 import edu.wpi.first.util.datalog.StringLogEntry;
+import edu.wpi.first.util.datalog.StructArrayLogEntry;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +32,7 @@ public class TestLog {
   private final Map<String, DoubleLogEntry> numbers = new HashMap<>();
   private final Map<String, BooleanLogEntry> booleans = new HashMap<>();
   private final Map<String, StringLogEntry> texts = new HashMap<>();
+  private final Map<String, StructArrayLogEntry<Pose3d>> poses = new HashMap<>();
 
   /** Starts an empty log in a temporary file. */
   public TestLog() throws IOException {
@@ -59,6 +62,14 @@ public class TestLog {
       texts.put(key, new StringLogEntry(writer, key, 0));
     }
     texts.get(key).append(value, toMicroseconds(timeSeconds));
+  }
+
+  /** Adds a list of 3D poses (like a mechanism's ComponentPoses) at a time. */
+  public void poses(String key, double timeSeconds, Pose3d[] value) {
+    if (!poses.containsKey(key)) {
+      poses.put(key, StructArrayLogEntry.create(writer, key, Pose3d.struct));
+    }
+    poses.get(key).append(value, toMicroseconds(timeSeconds));
   }
 
   /** Finishes the file and reads it back, the way the checker reads a real log. */
