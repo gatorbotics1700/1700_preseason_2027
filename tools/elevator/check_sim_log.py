@@ -26,7 +26,7 @@ import generate_model  # noqa: E402
 import wpilog  # noqa: E402
 
 C = generate_model.load_constants()
-P = "/Mech/Elevator/"
+P = "/Mech/Elevator/IO/"
 O = "/RealOutputs/Mech/Elevator/"
 
 

@@ -241,7 +241,7 @@ public class ElevatorSubsystemTest {
 
   /** Types kP on the pretend dashboard. On the robot, AdvantageKit reads it every loop. */
   private void setDashboardKp(double kP) {
-    ElevatorSubsystem.kP.set(kP);
-    ElevatorSubsystem.kP.periodic();
+    elevator.kP.set(kP);
+    elevator.kP.periodic();
   }
 }
