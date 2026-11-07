@@ -43,8 +43,8 @@ AdvantageScope layout (nothing rendered); sim robot started in the field corner.
 3. Live: start the sim, then **File > Connect to Simulator > NetworkTables 4 (AdvantageKit)**.
    Plain "NetworkTables 4" shows keys with an `/AdvantageKit` prefix, so nothing matches.
 4. Playback: `ELEVATOR_E2E_LOG_DIR=logs/demo ./gradlew simulateJava`, then **File > Open Log(s)...**.
-5. Drive it: Sim GUI, Keyboard 0 in joystick slot 1, Teleoperated, arrow keys = heights, H = home
-   (needs the uncommitted `simgui-ds.json`, see open items). Or the "Elevator Demo" auto.
+5. Drive it: the "Elevator Demo" auto, or by hand in the Sim GUI (codriver = joystick slot 1:
+   D-pad = heights, Back = home). On a Mac laptop the keyboard needs remapping first, see open items.
 6. Quit AdvantageScope with Cmd+Q. Closing the window resets the layout.
 
 ## What we learned (keep these)
@@ -97,8 +97,13 @@ They are the team's rules and patterns, and this branch must follow them.
 
 ## Open items
 
-- `simgui-ds.json` is uncommitted: arrow-key POV + H on Keyboard 0, and slot 1 changed from
-  Keyboard 1 to Keyboard 0. Arrow keys are not yet confirmed working by hand. Commit after that.
+- Mac keyboard controls: add a short note to `CLAUDE.md` next to its Keyboard 0 tip. Mac laptops
+  have no numpad, so map the keyboard's D-pad (POV) to the arrow keys in DS > Keyboard N Settings,
+  and the Mac sim reads codriver Back from button 11 (so raise the button count and assign a key).
+  Tested Nov 7: arrows (GLFW 265/262/264/263) and H (72) on button 11 load fine in the Sim GUI.
+  Optional, only if the team agrees: commit that mapping additively on Keyboard 1 (already in slot
+  1, has no POV today). `simgui-ds.json` is shared and partly per-person, so do not change slots
+  or existing keys. Our test edits to it were discarded.
 - Nobody has driven the elevator by hand in the Sim GUI yet (only the auto and the headless run).
 - The 3D model is a generated stand-in, not real CAD. `ENABLED_ON_REAL_ROBOT = false`, and the
   CAN ID and DIO port are placeholders.
