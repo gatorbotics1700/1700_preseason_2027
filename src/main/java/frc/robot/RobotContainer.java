@@ -51,7 +51,7 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.mech.ElevatorIO;
-import frc.robot.subsystems.mech.ElevatorIOSim;
+import frc.robot.subsystems.mech.ElevatorIOSimPhysics;
 import frc.robot.subsystems.mech.ElevatorIOTalonFX;
 import frc.robot.subsystems.mech.ElevatorSubsystem;
 import frc.robot.subsystems.mech.HoodSubsystem;
@@ -151,7 +151,7 @@ public class RobotContainer {
                     drive::getPose));
         drive.setPose(Constants.FieldCoordinates.SIM_START_POSE);
         // Boot the sim carriage 5 cm up, so it starts un-homed like a real robot would.
-        elevatorSubsystem = new ElevatorSubsystem(new ElevatorIOSim(0.05));
+        elevatorSubsystem = new ElevatorSubsystem(new ElevatorIOSimPhysics(0.05));
         DriverStation.silenceJoystickConnectionWarning(true);
         break;
 

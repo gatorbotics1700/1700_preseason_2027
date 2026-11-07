@@ -11,9 +11,9 @@ import org.junit.jupiter.api.Test;
 
 /** Feedforward constants must agree with the physics model the sim uses. */
 class ElevatorPhysicsTest {
-  private static final DCMotor M = ElevatorIOSim.GEARBOX;
+  private static final DCMotor M = ElevatorIOSimPhysics.GEARBOX;
   private static final double G = 9.81;
-  private static final double R_EFF = ElevatorIOSim.EFFECTIVE_DRUM_RADIUS_METERS;
+  private static final double R_EFF = ElevatorIOSimPhysics.EFFECTIVE_DRUM_RADIUS_METERS;
 
   /** ElevatorSim reads the simulated battery voltage, which needs WPILib's HAL started. */
   @BeforeAll
@@ -31,7 +31,7 @@ class ElevatorPhysicsTest {
 
   @Test
   void kGMatchesHoldingVoltage() {
-    double motorTorque = ElevatorIOSim.EFFECTIVE_MASS_KG * G * R_EFF / GEAR_RATIO;
+    double motorTorque = ElevatorIOSimPhysics.EFFECTIVE_MASS_KG * G * R_EFF / GEAR_RATIO;
     double volts = motorTorque / M.KtNMPerAmp * M.rOhms;
     assertWithin(volts, KG, 0.10, "kG");
   }
@@ -51,7 +51,7 @@ class ElevatorPhysicsTest {
 
   @Test
   void kGHoldsTheCarriageInThePlant() {
-    ElevatorSim plant = ElevatorIOSim.createPhysics(0.5);
+    ElevatorSim plant = ElevatorIOSimPhysics.createPhysics(0.5);
     for (int i = 0; i < 50; i++) {
       plant.setInputVoltage(KG);
       plant.update(0.02);
@@ -62,7 +62,7 @@ class ElevatorPhysicsTest {
 
   @Test
   void gearingCanReachTheTopQuickly() {
-    ElevatorSim plant = ElevatorIOSim.createPhysics(0.0);
+    ElevatorSim plant = ElevatorIOSimPhysics.createPhysics(0.0);
     double t = 0;
     while (plant.getPositionMeters() < MAX_HEIGHT_METERS && t < 2.0) {
       plant.setInputVoltage(12);
@@ -77,7 +77,8 @@ class ElevatorPhysicsTest {
     // Worst case is slowing down while moving down: the motor fights gravity plus deceleration.
     // Phoenix's motor model reports ~30% more stator current than WPILib's for the same torque,
     // so require 40% headroom or Motion Magic gets current limited and overshoots (seen in sim).
-    double torque = ElevatorIOSim.EFFECTIVE_MASS_KG * (G + ACCELERATION_MPS2) * R_EFF / GEAR_RATIO;
+    double torque =
+        ElevatorIOSimPhysics.EFFECTIVE_MASS_KG * (G + ACCELERATION_MPS2) * R_EFF / GEAR_RATIO;
     double amps = torque / M.KtNMPerAmp;
     assertTrue(
         amps <= 0.6 * STATOR_CURRENT_LIMIT_AMPS,

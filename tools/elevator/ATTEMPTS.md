@@ -38,3 +38,4 @@ Every attempt per unit, including rejected ones. Format: `UNIT | attempt | chang
 | A requirements | 1 | docs/elevator-requirements.md: R1-R15 + S1-S3, each mapped to a test name; new: homing timeout in loops (R4), not-arrived alert (R12) | check.sh (doc only) | PASS | |
 | B1 move | 1 | git mv elevator files into subsystems/mech (main + tests), fix package/imports/check.sh | check.sh | REJECT | C7 compared HEAD (not the working tree) to main, so the uncommitted move showed old paths |
 | B1 move | 2 | C7 diffs merge-base vs working tree (+ untracked) | check.sh all; stray file must fail C7 | PASS | |
+| B2 sim split | 1 | ElevatorIOSim -> ElevatorIOSimPhysics (simulator); new template-style ElevatorIOSim (remembers requests, test setters); ElevatorIO docs in template voice | check.sh all | PASS | |

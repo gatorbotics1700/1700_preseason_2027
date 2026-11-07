@@ -1,114 +1,115 @@
 package frc.robot.subsystems.mech;
 
-import com.ctre.phoenix6.Utils;
-import com.ctre.phoenix6.sim.ChassisReference;
-import com.ctre.phoenix6.sim.TalonFXSimState;
-import edu.wpi.first.math.system.plant.DCMotor;
-import edu.wpi.first.wpilibj.Notifier;
-import edu.wpi.first.wpilibj.RobotController;
-import edu.wpi.first.wpilibj.simulation.DIOSim;
-import edu.wpi.first.wpilibj.simulation.ElevatorSim;
-import frc.robot.Constants.ElevatorConstants;
-import org.littletonrobotics.junction.Logger;
-
 /**
- * Physics sim of the elevator. It runs the real {@link ElevatorIOTalonFX} code against Phoenix's
- * simulated TalonFX, so the same onboard Motion Magic controller and config run in sim and on the
- * robot. WPILib's {@link ElevatorSim} turns the simulated motor voltage into carriage motion.
+ * Pretend hardware for unit tests. It has no motor: it just remembers what the subsystem told it,
+ * so a test can check it right away, with no waiting.
  *
- * <p>Cascade model: ElevatorSim has one mass on one drum. Referred to the carriage, gravity on a
- * cascade is (m_carriage + m_stage1 / R) g, and the drum moves the carriage R times its surface
- * travel, so we use that mass and drum radius * R. (Inertia is really m_carriage + m_stage1 / R^2,
- * so this slightly overestimates it, which is the conservative direction for tuning.)
- *
- * <p>The plant steps on its own 5 ms thread, not once per 20 ms robot loop. The TalonFX closes its
- * loop at 1 kHz, and feeding it positions that are up to 20 ms stale made the simulated elevator
- * overshoot 12 cm on fast moves, which the real one would not.
+ * <p>Nothing moves by itself here. A test moves the carriage with setPositionMeters() and presses
+ * the switch with setBottomLimitPressed(). For an elevator that really moves, the simulator uses
+ * ElevatorIOSimPhysics instead.
  */
-public class ElevatorIOSim extends ElevatorIOTalonFX {
-  /** Carriage height that counts as resting on the bottom limit switch. */
-  public static final double LIMIT_SWITCH_TRIGGER_METERS = 0.002;
+public class ElevatorIOSim implements ElevatorIO {
 
-  /** The real top hard stop sits a little above the soft limit. */
-  public static final double TOP_HARD_STOP_METERS = ElevatorConstants.MAX_HEIGHT_METERS + 0.02;
-
-  public static final DCMotor GEARBOX = DCMotor.getKrakenX60(1);
-  public static final double EFFECTIVE_MASS_KG =
-      ElevatorConstants.CARRIAGE_MASS_KG
-          + ElevatorConstants.STAGE_1_MASS_KG / ElevatorConstants.RIGGING_RATIO;
-  public static final double EFFECTIVE_DRUM_RADIUS_METERS =
-      ElevatorConstants.DRUM_PITCH_DIAMETER_METERS / 2.0 * ElevatorConstants.RIGGING_RATIO;
-
-  private static final double SIM_PERIOD_SECONDS = 0.005;
-
-  private final ElevatorSim physics;
-  private final DIOSim limitSim;
-  private final Notifier simThread;
-  private double lastSimTime;
-
-  /** The encoder reads 0 at boot wherever the carriage really is, like the real robot. */
-  private final double bootHeightMeters;
-
-  /**
-   * @param startHeightMeters where the carriage really is at boot. Anything above the limit switch
-   *     means the robot boots un-homed and has to run the homing routine, like the real robot.
-   */
-  public ElevatorIOSim(double startHeightMeters) {
-    super();
-    bootHeightMeters = startHeightMeters;
-    physics = createPhysics(startHeightMeters);
-    limitSim = new DIOSim(bottomLimit);
-    motor.getSimState().Orientation = ChassisReference.CounterClockwise_Positive;
-    lastSimTime = Utils.getCurrentTimeSeconds();
-    simThread = new Notifier(this::stepPhysics);
-    simThread.setName("ElevatorSim");
-    simThread.startPeriodic(SIM_PERIOD_SECONDS);
+  /** The last kind of thing the subsystem told the motor to do. */
+  public enum Request {
+    NONE,
+    POSITION,
+    VOLTAGE,
+    STOP
   }
 
-  /** The plant model, shared with ElevatorPhysicsTest so the test exercises the same physics. */
-  public static ElevatorSim createPhysics(double startHeightMeters) {
-    return new ElevatorSim(
-        GEARBOX,
-        ElevatorConstants.GEAR_RATIO,
-        EFFECTIVE_MASS_KG,
-        EFFECTIVE_DRUM_RADIUS_METERS,
-        ElevatorConstants.MIN_HEIGHT_METERS,
-        TOP_HARD_STOP_METERS,
-        true,
-        startHeightMeters);
-  }
+  private Request lastRequest = Request.NONE;
+  private double positionSetpointMeters = 0.0;
+  private double voltageVolts = 0.0;
+  private int gainUpdates = 0;
+  private double lastKp = 0.0;
 
-  /** Advances the plant by the real time since the last step, then feeds the sensors. */
-  private synchronized void stepPhysics() {
-    double now = Utils.getCurrentTimeSeconds();
-    double dt = now - lastSimTime;
-    lastSimTime = now;
+  // What the pretend hardware reports. Starts connected, so a test can unplug it.
+  private boolean connected = true;
+  private double positionMeters = 0.0;
+  private boolean bottomLimitPressed = false;
 
-    TalonFXSimState simState = motor.getSimState();
-    simState.setSupplyVoltage(RobotController.getBatteryVoltage());
-    physics.setInputVoltage(simState.getMotorVoltage());
-    physics.update(dt);
-
-    double travelSinceBoot = physics.getPositionMeters() - bootHeightMeters;
-    simState.setRawRotorPosition(travelSinceBoot * ElevatorConstants.ROTOR_ROTATIONS_PER_METER);
-    simState.setRotorVelocity(
-        physics.getVelocityMetersPerSecond() * ElevatorConstants.ROTOR_ROTATIONS_PER_METER);
-
-    boolean pressed = physics.getPositionMeters() <= LIMIT_SWITCH_TRIGGER_METERS;
-    limitSim.setValue(
-        pressed
-            ? ElevatorConstants.LIMIT_SWITCH_PRESSED_VALUE
-            : !ElevatorConstants.LIMIT_SWITCH_PRESSED_VALUE);
-  }
-
+  /** Reports whatever the test has set up. */
   @Override
   public void updateInputs(ElevatorIOInputs inputs) {
-    super.updateInputs(inputs);
-    Logger.recordOutput("Mech/Elevator/Sim/TrueHeightMeters", getTrueHeightMeters());
+    inputs.motorConnected = connected;
+    inputs.positionMeters = positionMeters;
+    inputs.bottomLimitPressed = bottomLimitPressed;
   }
 
-  /** Ground truth carriage height from the physics model (for logging and tests only). */
-  public synchronized double getTrueHeightMeters() {
-    return physics.getPositionMeters();
+  /** Remembers the height. */
+  @Override
+  public void setPositionSetpoint(double positionMeters) {
+    lastRequest = Request.POSITION;
+    positionSetpointMeters = positionMeters;
+  }
+
+  /** Remembers the voltage. */
+  @Override
+  public void setVoltage(double volts) {
+    lastRequest = Request.VOLTAGE;
+    voltageVolts = volts;
+  }
+
+  /** Remembers that it was told to stop. */
+  @Override
+  public void stop() {
+    lastRequest = Request.STOP;
+  }
+
+  /** Moves the reported height, like the real motor's encoder being reset. */
+  @Override
+  public void resetPosition(double positionMeters) {
+    this.positionMeters = positionMeters;
+  }
+
+  /** Counts gain updates, and remembers kP so a test can check which gains arrived. */
+  @Override
+  public void setGains(
+      double kP, double kI, double kD, double kS, double kG, double kV, double kA) {
+    gainUpdates++;
+    lastKp = kP;
+  }
+
+  // ---------------- For tests ----------------
+
+  /** The last kind of thing the subsystem told the motor to do. */
+  public Request getLastRequest() {
+    return lastRequest;
+  }
+
+  /** The last height sent with setPositionSetpoint. */
+  public double getPositionSetpointMeters() {
+    return positionSetpointMeters;
+  }
+
+  /** The last voltage sent with setVoltage. */
+  public double getVoltageVolts() {
+    return voltageVolts;
+  }
+
+  /** How many times new gains were sent. */
+  public int getGainUpdates() {
+    return gainUpdates;
+  }
+
+  /** The kP of the last gains sent. */
+  public double getLastKp() {
+    return lastKp;
+  }
+
+  /** Plugs in or unplugs the pretend motor. */
+  public void setConnected(boolean connected) {
+    this.connected = connected;
+  }
+
+  /** Puts the pretend carriage at a height. */
+  public void setPositionMeters(double positionMeters) {
+    this.positionMeters = positionMeters;
+  }
+
+  /** Presses or releases the pretend bottom limit switch. */
+  public void setBottomLimitPressed(boolean pressed) {
+    bottomLimitPressed = pressed;
   }
 }
