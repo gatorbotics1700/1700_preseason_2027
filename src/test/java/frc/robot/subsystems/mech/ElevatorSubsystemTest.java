@@ -97,6 +97,50 @@ public class ElevatorSubsystemTest {
     assertEquals(2, io.getPositionResets());
   }
 
+  /** R3: homing drives down at -1.5 V until the switch closes, then holds the bottom. */
+  @Test
+  public void homingDrivesDownUntilSwitch() {
+    io.setPositionMeters(0.4); // boots somewhere up the travel
+    elevator.startHoming();
+    for (int i = 0; i < 10; i++) {
+      elevator.periodic();
+      assertEquals(Request.VOLTAGE, io.getLastRequest());
+      assertEquals(-1.5, io.getVoltageVolts(), DELTA);
+    }
+    assertTrue(elevator.isHoming());
+
+    io.setBottomLimitPressed(true);
+    elevator.periodic();
+
+    assertTrue(elevator.isHomed());
+    assertFalse(elevator.isHoming());
+    assertEquals(Request.STOP, io.getLastRequest());
+    assertEquals(0.0, elevator.getGoalMeters(), DELTA);
+  }
+
+  /** R4: no switch after 200 loops (4 s): homing gives up, stops, and turns on the alert. */
+  @Test
+  public void homingGivesUpAfterTimeout() {
+    elevator.startHoming();
+    for (int i = 0; i < 199; i++) {
+      elevator.periodic();
+    }
+    assertEquals(Request.VOLTAGE, io.getLastRequest());
+    assertFalse(elevator.homingFailedAlert.get());
+
+    elevator.periodic(); // loop 200
+    assertEquals(Request.STOP, io.getLastRequest());
+    assertTrue(elevator.homingFailedAlert.get());
+    assertTrue(elevator.homingFailed());
+    assertFalse(elevator.isHoming());
+
+    // Trying again clears the alert.
+    elevator.startHoming();
+    elevator.periodic();
+    assertFalse(elevator.homingFailedAlert.get());
+    assertEquals(Request.VOLTAGE, io.getLastRequest());
+  }
+
   /** R5: goals are limited to 0 to 1.20 m. */
   @Test
   public void goalIsClampedToTravel() {
@@ -217,6 +261,34 @@ public class ElevatorSubsystemTest {
     io.setConnected(true);
     elevator.periodic();
     assertFalse(elevator.disconnectedAlert.get());
+  }
+
+  /** R12: told to move but not at the goal after 100 loops (2 s): "not arrived" alert. */
+  @Test
+  public void notArrivedAlertAfterTimeout() {
+    homeAtBottom();
+    elevator.setGoal(0.5);
+    for (int i = 0; i < 99; i++) {
+      elevator.periodic();
+    }
+    assertFalse(elevator.notArrivedAlert.get());
+
+    elevator.periodic(); // loop 100
+    assertTrue(elevator.notArrivedAlert.get());
+
+    // A new goal starts a fresh 100 loops, even while the alert is on.
+    elevator.setGoal(0.8);
+    for (int i = 0; i < 99; i++) {
+      elevator.periodic();
+      assertFalse(elevator.notArrivedAlert.get());
+    }
+
+    // Arriving turns it off.
+    elevator.periodic(); // loop 100 for the new goal
+    assertTrue(elevator.notArrivedAlert.get());
+    io.setPositionMeters(0.8);
+    elevator.periodic();
+    assertFalse(elevator.notArrivedAlert.get());
   }
 
   /** R13: dashboard gains reach the motor once per change, not every loop. */

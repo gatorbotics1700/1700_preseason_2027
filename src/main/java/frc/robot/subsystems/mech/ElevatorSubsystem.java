@@ -36,9 +36,10 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
  */
 public class ElevatorSubsystem extends SubsystemBase {
 
-  /** What the elevator is doing: nothing, moving to a height, or driving by voltage. */
+  /** What the elevator is doing: nothing, homing, moving to a height, or driving by voltage. */
   public enum ControlMode {
     IDLE,
+    HOMING,
     POSITION,
     VOLTAGE
   }
@@ -56,12 +57,22 @@ public class ElevatorSubsystem extends SubsystemBase {
   private double voltageOutputVolts = 0.0;
   private boolean homed = false;
   private boolean limitWasPressed = false;
+  private boolean homingFailed = false;
+  // Loops counted for the homing timeout and the "not arrived" alert (one loop = 20 ms).
+  private int homingLoops = 0;
+  private int notArrivedLoops = 0;
 
   // Dashboard warning. Not private, so the tests in this folder can check it.
   final Alert disconnectedAlert =
       new Alert(
           "Elevator: motor (CAN " + ElevatorConstants.MOTOR_CAN_ID + ") disconnected.",
           AlertType.kError);
+  final Alert homingFailedAlert =
+      new Alert(
+          "Elevator: homing gave up, bottom switch never pressed. Check the switch.",
+          AlertType.kError);
+  final Alert notArrivedAlert =
+      new Alert("Elevator: told to move but not at the goal after 2 s.", AlertType.kWarning);
 
   // Gains you can change on the dashboard while tuning, under /Tuning/Elevator.
   // Not private, so the tests in this folder can type on the pretend dashboard.
@@ -134,7 +145,9 @@ public class ElevatorSubsystem extends SubsystemBase {
       mode = ControlMode.IDLE;
     }
 
-    if (mode == ControlMode.POSITION) {
+    if (mode == ControlMode.HOMING) {
+      runHoming();
+    } else if (mode == ControlMode.POSITION) {
       runPositionControl();
     } else if (mode == ControlMode.VOLTAGE) {
       runVoltageControl();
@@ -142,7 +155,35 @@ public class ElevatorSubsystem extends SubsystemBase {
       io.stop();
     }
 
+    updateNotArrivedAlert();
     logOutputs();
+  }
+
+  /** Drives down slowly until the bottom switch closes, or gives up after the timeout. */
+  private void runHoming() {
+    homingLoops++;
+    if (inputs.bottomLimitPressed) {
+      // homeOnSwitchPress() has already set the position to 0. Now rest on the bottom.
+      setGoal(ElevatorConstants.STOW_HEIGHT_METERS);
+      io.stop();
+    } else if (homingLoops >= ElevatorConstants.HOMING_TIMEOUT_LOOPS) {
+      homingFailed = true;
+      homingFailedAlert.set(true);
+      mode = ControlMode.IDLE;
+      io.stop();
+    } else {
+      io.setVoltage(ElevatorConstants.HOMING_VOLTS);
+    }
+  }
+
+  /** Warns when a goal has not been reached after the timeout. A new goal starts the count. */
+  private void updateNotArrivedAlert() {
+    if (mode == ControlMode.POSITION && !atGoal()) {
+      notArrivedLoops++;
+    } else {
+      notArrivedLoops = 0;
+    }
+    notArrivedAlert.set(notArrivedLoops >= ElevatorConstants.NOT_ARRIVED_TIMEOUT_LOOPS);
   }
 
   /** Sets the position to 0 when the bottom switch closes: the only true height reference. */
@@ -230,10 +271,19 @@ public class ElevatorSubsystem extends SubsystemBase {
         heightMeters, ElevatorConstants.MIN_HEIGHT_METERS, ElevatorConstants.MAX_HEIGHT_METERS);
   }
 
+  /** Starts homing: drive down slowly until the bottom switch closes. */
+  public void startHoming() {
+    mode = ControlMode.HOMING;
+    homingLoops = 0;
+    homingFailed = false;
+    homingFailedAlert.set(false);
+  }
+
   /** Moves to a height and holds it there. Needs homing first. */
   public void setGoal(double heightMeters) {
     mode = ControlMode.POSITION;
     goalMeters = clampHeight(heightMeters);
+    notArrivedLoops = 0;
   }
 
   /** Drives by voltage. Negative is down. It stops itself on the bottom switch. */
@@ -265,6 +315,16 @@ public class ElevatorSubsystem extends SubsystemBase {
   /** True once the bottom switch has been seen, so the height is known. */
   public boolean isHomed() {
     return homed;
+  }
+
+  /** True while homing is still running. */
+  public boolean isHoming() {
+    return mode == ControlMode.HOMING;
+  }
+
+  /** True when the last homing gave up without seeing the switch. */
+  public boolean homingFailed() {
+    return homingFailed;
   }
 
   /** True while the bottom limit switch is pressed. */

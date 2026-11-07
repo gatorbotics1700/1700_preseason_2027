@@ -45,3 +45,7 @@ Every attempt per unit, including rejected ones. Format: `UNIT | attempt | chang
 | C1 safety-net tests | 4 | ElevatorIOSim counts position resets; R2 test checks once per press | mutation run 10/10 caught, check.sh all | PASS | |
 | B3 subsystem style | 1 | ElevatorSubsystem: instance gains, default constructor, inputs under Mech/Elevator/IO, if/else, periodic split into short one-job methods with one-line comments, named landing slack | check.sh all + mutation run 10/10 | PASS | no behavior change |
 | B4 config | 1 | CAN 40 / DIO 5 -> config_alecto.properties as mech.elevator_*, read by ElevatorConstants via RobotConfigLoader | check.sh all; deleting the key fails ElevatorSubsystemTest | PASS | |
+| C2 new behavior | 1 | tests first: R3 homingDrivesDownUntilSwitch, R4 homingGivesUpAfterTimeout, R12 notArrivedAlertAfterTimeout | compile must fail | PASS (expected fail) | |
+| C2 new behavior | 2 | homing moves into the subsystem (HOMING mode, 200-loop timeout, homing failed alert); not-arrived alert after 100 loops; home command = startHoming + wait; HOMING_TIMEOUT_SECONDS -> HOMING_TIMEOUT_LOOPS | check.sh all | PASS | E2E homed at 0.49 s, all moves settle |
+| C2 new behavior | 3 | mutation run, 16 breaks | each must fail its test | REJECT | missing reset in setGoal not caught: test arrived before setting the new goal |
+| C2 new behavior | 4 | R12 test sets the new goal while the alert is on | mutation run 16/16 | PASS | |

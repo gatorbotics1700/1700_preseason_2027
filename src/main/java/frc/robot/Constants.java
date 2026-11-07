@@ -859,7 +859,14 @@ public final class Constants {
 
     // ---- Homing ----
     public static final double HOMING_VOLTS = -1.5; // negative is down
-    public static final double HOMING_TIMEOUT_SECONDS = 4.0;
+    // Give up homing after this many loops (200 x 20 ms = 4 s), so a broken switch can't stall
+    // the motor against the hard stop forever. Counted in loops so tests and replay agree.
+    public static final int HOMING_TIMEOUT_LOOPS = 200;
+
+    // ---- Alerts ----
+    // Told to move but not at the goal after this many loops (100 x 20 ms = 2 s). The longest
+    // move takes about 0.7 s in the simulator. TUNED, NOT DERIVED (2026-11-07).
+    public static final int NOT_ARRIVED_TIMEOUT_LOOPS = 100;
 
     // ---- Landing on the bottom hard stop ----
     // Motion Magic stops this far up; the last bit is a gentle open loop push onto the stop, so

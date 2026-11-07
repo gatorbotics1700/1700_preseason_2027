@@ -5,29 +5,18 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.ElevatorConstants;
 import frc.robot.subsystems.mech.ElevatorSubsystem;
 
+/** The elevator's actions. Each one is a command a button or an auto can run. */
 public final class ElevatorCommands {
   private ElevatorCommands() {}
 
   /**
-   * Drives down slowly until the bottom limit switch closes (the subsystem zeroes the encoder on
-   * that edge), then holds at the bottom. Gives up after HOMING_TIMEOUT_SECONDS so a broken switch
-   * can't stall the motor forever.
+   * Homes the elevator: drives down slowly until the bottom limit switch closes, then rests on the
+   * bottom. The subsystem gives up after a timeout, so a broken switch can't stall the motor.
    */
   public static Command home(ElevatorSubsystem elevator) {
-    return Commands.run(() -> elevator.setVoltage(ElevatorConstants.HOMING_VOLTS), elevator)
-        .until(elevator::isBottomLimitPressed)
-        .withTimeout(ElevatorConstants.HOMING_TIMEOUT_SECONDS)
-        .andThen(
-            Commands.runOnce(
-                () -> {
-                  if (elevator.isHomed()) {
-                    elevator.setGoal(ElevatorConstants.STOW_HEIGHT_METERS);
-                  } else {
-                    elevator.stop();
-                  }
-                },
-                elevator))
-        .withName("ElevatorHome");
+    Command start = Commands.runOnce(elevator::startHoming, elevator);
+    Command waitUntilDone = Commands.waitUntil(() -> !elevator.isHoming());
+    return start.andThen(waitUntilDone).withName("ElevatorHome");
   }
 
   /** Moves to a carriage height and ends once there. The subsystem keeps holding it afterwards. */
