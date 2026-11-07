@@ -98,6 +98,43 @@ task(diagnoseLog, type: JavaExec) {
     ignoreExitValue = true
 }
 
+// Sim smoke: run the whole robot program in the simulator with no window, run one auto, then
+// check the log with the diagnostics. Fails if the auto does not finish or a check finds an error.
+//   ./gradlew simSmoke                              (runs the "Elevator Demo" auto)
+//   ./gradlew simSmoke -PsimSmokeAuto="My Auto"     (any auto, by its name in the chooser)
+// The log and the console are saved in logs/sim_smoke/ to open in AdvantageScope.
+def simSmokeDir = file("logs/sim_smoke")
+def simSmokeRequested = gradle.startParameter.taskNames.any { it.toLowerCase().contains("simsmoke") }
+if (simSmokeRequested) {
+    // simulateJava is a group; simulateJavaRelease is the task that really starts the robot.
+    tasks.withType(edu.wpi.first.gradlerio.simulation.JavaSimulationTask).configureEach {
+        doFirst {
+            delete simSmokeDir
+            simSmokeDir.mkdirs()
+            // Save the console to a file as well as showing it: the motor controller errors are
+            // printed there, where the robot's own log can't record them.
+            def console = new FileOutputStream(new File(simSmokeDir, "console.txt"))
+            standardOutput = new org.apache.tools.ant.util.TeeOutputStream(System.out, console)
+            errorOutput = new org.apache.tools.ant.util.TeeOutputStream(System.err, console)
+        }
+        environment "SIM_SMOKE_LOG_DIR", simSmokeDir.absolutePath
+        environment "SIM_SMOKE_AUTO", project.findProperty("simSmokeAuto") ?: "Elevator Demo"
+        // If the robot hangs, stop it instead of waiting forever.
+        timeout = java.time.Duration.ofMinutes(2)
+    }
+}
+task(simSmoke, type: JavaExec) {
+    dependsOn "simulateJavaRelease", extractReleaseNative
+    mainClass = "frc.robot.diagnostics.LogDiagnostics"
+    classpath = sourceSets.test.runtimeClasspath
+    workingDir(projectDir)
+    def jniRelease = file("$buildDir/jni/release")
+    systemProperty "java.library.path", jniRelease.absolutePath
+    environment "DYLD_LIBRARY_PATH", jniRelease.absolutePath
+    environment "LD_LIBRARY_PATH", jniRelease.absolutePath
+    args simSmokeDir.path, new File(simSmokeDir, "console.txt").path
+}
+
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 5.
 dependencies {

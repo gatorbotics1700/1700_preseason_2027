@@ -1201,10 +1201,6 @@ public class RobotContainer {
         .withName("TestShot"));
   }
 
-  public ElevatorSubsystem getElevatorSubsystem() {
-    return elevatorSubsystem;
-  }
-
   public TurretSubsystem getTurretSubsystem() {
     return turretSubsystem;
   }

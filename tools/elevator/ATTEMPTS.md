@@ -55,3 +55,8 @@ Every attempt per unit, including rejected ones. Format: `UNIT | attempt | chang
 | D2 diagnostics | 2 | settledTime seeds from the height at move start | sim log: same settle times as check_sim_log.py (0.46/0.62/0.44/0.72 s) | PASS | |
 | D2 diagnostics | 3 | ElevatorChecksTest (10) + RobotChecksTest (4) on TestLog fake logs | tests | REJECT | 6 failed: WPILib DataLogReader for-each drops a short last record (hasNext assumes >= 16 bytes) |
 | D2 diagnostics | 4 | LogFile reads with forEachRemaining; regression test readsAShortLastRecord | 20 tests; mutation run 13/13 caught | PASS | WPILib 2026.2.1 bug worth reporting upstream |
+| D3 sim smoke | 1 | SimE2E -> SimSmoke (instance state, loop counts, runs a named auto through the real autonomous path); ./gradlew simSmoke = simulateJavaRelease with env + console tee, then LogDiagnostics | simSmoke | REJECT | simulateJava is a group task (environment() not found); real JavaExec is simulateJavaRelease |
+| D3 sim smoke | 2 | configure JavaSimulationTask by type | simSmoke | REJECT | auto never started: autonomous enabled 40 ms before the chooser picked the auto |
+| D3 sim smoke | 3 | enable only once the chooser's "active" equals the auto | simSmoke exit 0 in ~8 s, all checks pass | PASS | |
+| D3 sim smoke | 4 | unknown auto name: fail fast listing the chooser's options | bad name exits 1 with the list; failing check fails the build | PASS | |
+| D3 sim smoke | 5 | check.sh C4 = simSmoke; C5 C8 C9 and run_e2e_sim.sh, check_sim_log.py, check_loop_time.py, check_can_errors.py deleted | check.sh all; unknown default auto fails C4 | PASS | first C4 draft could mask a failure via PIPESTATUS after "|| true"; fixed before commit |
