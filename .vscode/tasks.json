@@ -17,28 +17,18 @@
   },
   "tasks": [
     {
-      "label": "Gatorbotics: Check before review (build, tests, sim smoke)",
-      "detail": "Builds, runs every test, then runs sim smoke. Must end with BUILD SUCCESSFUL.",
+      "label": "Gatorbotics: Run code tests",
+      "detail": "Builds the code and runs every unit test. Must end with BUILD SUCCESSFUL.",
       "type": "shell",
       "command": "./gradlew",
       "windows": { "command": ".\\gradlew.bat" },
-      "args": ["build", "simSmoke", "--offline"],
+      "args": ["build", "--offline"],
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "Gatorbotics: Sim smoke (Elevator Demo)",
-      "detail": "Runs the Elevator Demo auto in the simulator with no window, then checks its log.",
-      "type": "shell",
-      "command": "./gradlew",
-      "windows": { "command": ".\\gradlew.bat" },
-      "args": ["simSmoke", "--offline"],
-      "group": "test",
-      "problemMatcher": []
-    },
-    {
-      "label": "Gatorbotics: Sim smoke (choose an auto)",
-      "detail": "Runs any auto from the auto chooser in the simulator, then checks its log.",
+      "label": "Gatorbotics: Smoke test sim",
+      "detail": "Runs an auto in the simulator with no window, then checks its log. Must end with BUILD SUCCESSFUL.",
       "type": "shell",
       "command": "./gradlew",
       "windows": { "command": ".\\gradlew.bat" },
@@ -47,7 +37,7 @@
       "problemMatcher": []
     },
     {
-      "label": "Gatorbotics: Check a log file",
+      "label": "Gatorbotics: Diagnose log file",
       "detail": "Runs the log checks on a .wpilog (a match, practice or sim log) and prints a report.",
       "type": "shell",
       "command": "./gradlew",
@@ -61,7 +51,7 @@
     {
       "id": "autoName",
       "type": "promptString",
-      "description": "Auto name, exactly as in the auto chooser (a wrong name lists the right ones)",
+      "description": "Auto to run, exactly as in the auto chooser. Press Enter for Elevator Demo. A wrong name lists the autos.",
       "default": "Elevator Demo"
     },
     {
