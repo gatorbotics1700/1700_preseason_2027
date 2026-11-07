@@ -36,3 +36,5 @@ Every attempt per unit, including rejected ones. Format: `UNIT | attempt | chang
 | align tests | 1 | build.gradle test{} gets forkEvery = 1 (matches intake-nidhi) | check.sh C1 | REJECT | JVM crash in ElevatorPhysicsTest: ElevatorSim reads battery voltage without HAL; it only passed because an earlier class in the same JVM had started HAL |
 | align tests | 2 | ElevatorPhysicsTest starts HAL in @BeforeAll | check.sh all | PASS | |
 | A requirements | 1 | docs/elevator-requirements.md: R1-R15 + S1-S3, each mapped to a test name; new: homing timeout in loops (R4), not-arrived alert (R12) | check.sh (doc only) | PASS | |
+| B1 move | 1 | git mv elevator files into subsystems/mech (main + tests), fix package/imports/check.sh | check.sh | REJECT | C7 compared HEAD (not the working tree) to main, so the uncommitted move showed old paths |
+| B1 move | 2 | C7 diffs merge-base vs working tree (+ untracked) | check.sh all; stray file must fail C7 | PASS | |

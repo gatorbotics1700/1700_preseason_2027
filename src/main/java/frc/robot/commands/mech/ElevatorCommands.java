@@ -3,7 +3,7 @@ package frc.robot.commands.mech;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import frc.robot.Constants.ElevatorConstants;
-import frc.robot.subsystems.elevator.ElevatorSubsystem;
+import frc.robot.subsystems.mech.ElevatorSubsystem;
 
 public final class ElevatorCommands {
   private ElevatorCommands() {}

@@ -1,4 +1,4 @@
-package frc.robot.subsystems.elevator;
+package frc.robot.subsystems.mech;
 
 import static frc.robot.Constants.ElevatorConstants.*;
 import static org.junit.jupiter.api.Assertions.*;

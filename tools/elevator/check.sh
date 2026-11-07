@@ -32,9 +32,9 @@ pass C1
 
 # ---- C2 -------------------------------------------------------------------------------
 python3 -I tools/elevator/check_junit.py build/test-results/test \
-  frc.robot.subsystems.elevator.ElevatorKinematicsTest \
-  frc.robot.subsystems.elevator.ElevatorPhysicsTest \
-  frc.robot.subsystems.elevator.ElevatorModelTest \
+  frc.robot.subsystems.mech.ElevatorKinematicsTest \
+  frc.robot.subsystems.mech.ElevatorPhysicsTest \
+  frc.robot.subsystems.mech.ElevatorModelTest \
   || fail C2 "junit results"
 pass C2
 
@@ -107,10 +107,11 @@ EOF
 pass C6
 
 # ---- C7 -------------------------------------------------------------------------------
-allow='^(RULES\.md|docs/(elevator-3d-sim-brief|elevator-requirements|3d-sim-workflow)\.md|simgui-ds\.json|build\.gradle|tools/elevator/.*|ascope_assets/Robot_GatorboticsElevator/.*|src/main/deploy/AdvantageScope-Layout\.json|src/main/java/frc/robot/(Constants|Robot|RobotContainer)\.java|src/main/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/commands/mech/ElevatorCommands\.java|src/main/java/frc/robot/util/SimE2E\.java|src/test/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/(commands/mech/(Hood|Intake|Shooting)Commands|subsystems/mech/(IntakeSubsystem|TurretSubsystem)|util/Calculations)\.java)$'
+allow='^(RULES\.md|docs/(elevator-3d-sim-brief|elevator-requirements|3d-sim-workflow)\.md|simgui-ds\.json|build\.gradle|tools/elevator/.*|ascope_assets/Robot_GatorboticsElevator/.*|src/main/deploy/AdvantageScope-Layout\.json|src/main/java/frc/robot/(Constants|Robot|RobotContainer)\.java|src/main/java/frc/robot/subsystems/mech/Elevator.*|src/main/java/frc/robot/commands/mech/ElevatorCommands\.java|src/main/java/frc/robot/util/SimE2E\.java|src/test/java/frc/robot/subsystems/mech/Elevator.*|src/main/java/frc/robot/(commands/mech/(Hood|Intake|Shooting)Commands|subsystems/mech/(IntakeSubsystem|TurretSubsystem)|util/Calculations)\.java)$'
 # compare against the remote main when there is one: a local main branch can be stale
 base="$(git rev-parse --verify -q origin/main >/dev/null && echo origin/main || echo main)"
-changed="$( { git diff --name-only "$base"...HEAD; git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)"
+# merge base vs the working tree: committed and uncommitted changes, as the branch would merge
+changed="$( { git diff --name-only "$(git merge-base "$base" HEAD)"; git ls-files --others --exclude-standard; } | sort -u)"
 bad="$(echo "$changed" | grep -v -E "$allow" | grep -v '^$' || true)"
 [[ -z "$bad" ]] || fail C7 "files outside plan: $bad"
 pass C7

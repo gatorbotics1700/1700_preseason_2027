@@ -1,4 +1,4 @@
-package frc.robot.subsystems.elevator;
+package frc.robot.subsystems.mech;
 
 import com.ctre.phoenix6.Utils;
 import com.ctre.phoenix6.sim.ChassisReference;
