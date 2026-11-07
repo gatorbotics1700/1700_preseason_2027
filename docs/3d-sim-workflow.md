@@ -9,20 +9,29 @@ guide is Step 8 (simulator physics) and more.
 
 ## What you get
 
-| Layer | What it proves | How to run it |
+| Layer | What it proves | How to run it in VS Code |
 |---|---|---|
 | Unit tests | The decisions, the math, and that the 3D model matches the constants | `WPILib: Test Robot Code` |
 | Physics simulator | The mechanism really moves, with the real motor code | `WPILib: Simulate Robot Code` |
 | 3D view | You can watch it move, live or in a log | AdvantageScope (below) |
-| Sim smoke | The whole robot runs an auto in the simulator, then the log checks pass | `./gradlew simSmoke` |
-| Log diagnostics | Finds problems in any log: sim, practice or a match | `./gradlew diagnoseLog -Plog=<file>` |
+| Sim smoke | The whole robot runs an auto in the simulator, then the log checks pass | Task `Team: Sim smoke (...)` |
+| Log diagnostics | Finds problems in any log: sim, practice or a match | Task `Team: Check a log file` |
 
-Type the `./gradlew` commands in a terminal in the project folder (in VS Code: Terminal > New
-Terminal). On Windows, type `gradlew.bat` instead of `./gradlew`. On a Mac, if it says Java is
-missing, put `JAVA_HOME=~/wpilib/2026/jdk ` in front of the command.
+**Running a task:** press Cmd+Shift+P (Ctrl+Shift+P on Windows), type `Run Task`, pick
+**Tasks: Run Task**, then pick one of the `Team:` tasks. The output shows in the Terminal panel.
+The tasks are in `.vscode/tasks.json`:
 
-**Before asking for review, run:** `./gradlew build simSmoke`. It must end with
-`BUILD SUCCESSFUL` (about 20 seconds).
+| Task | What it does |
+|---|---|
+| `Team: Check before review (build, tests, sim smoke)` | Everything below in one go. Run it before asking for review. It must end with `BUILD SUCCESSFUL` (about 20 seconds). |
+| `Team: Sim smoke (Elevator Demo)` | Sim smoke with the Elevator Demo auto |
+| `Team: Sim smoke (choose an auto)` | Asks for an auto's name, then runs sim smoke with it |
+| `Team: Check a log file` | Asks for a log file or folder, then prints the report |
+
+Prefer a terminal? Each task is one command: `./gradlew build simSmoke`, `./gradlew simSmoke
+-PsimSmokeAuto="<name>"`, `./gradlew diagnoseLog -Plog=<file>`. On Windows, type `gradlew.bat`
+instead of `./gradlew`. On a Mac, if it says Java is missing, put `JAVA_HOME=~/wpilib/2026/jdk `
+in front.
 
 ## The files, using the elevator as the example
 
@@ -93,7 +102,7 @@ check it.
 
 1. Write a command that exercises the mechanism (`ElevatorCommands.demoCycle()`: home, then
    visit every height) and add it to the auto chooser in `RobotContainer`.
-2. Run `./gradlew simSmoke -PsimSmokeAuto="<its name>"`. The robot starts in the simulator with
+2. Run the task `Team: Sim smoke (choose an auto)` and type its name. The robot starts in the simulator with
    no window, picks that auto, enables autonomous, waits for the auto to end, then runs the log
    checks. The log and console are saved in `logs/sim_smoke/`.
 
@@ -125,7 +134,7 @@ Live: start `WPILib: Simulate Robot Code` (Sim GUI), then in AdvantageScope **Fi
 Simulator > NetworkTables 4 (AdvantageKit)**. Plain "NetworkTables 4" puts `/AdvantageKit` in front
 of every key, so the 3D view finds nothing.
 
-From a log: run `./gradlew simSmoke`, then **File > Open Log(s)...** and pick the `.wpilog` in
+From a log: run a `Team: Sim smoke` task, then **File > Open Log(s)...** and pick the `.wpilog` in
 `logs/sim_smoke/`. Drag the timeline to scrub.
 
 Quit AdvantageScope with Cmd+Q (Mac). Closing the window resets the layout.
@@ -144,8 +153,10 @@ your own key setup).
 
 1. Download the logs from the robot: AdvantageScope **File > Download Logs...**, or copy them
    from the USB stick.
-2. Run `./gradlew diagnoseLog -Plog=<the .wpilog file, or the folder for the newest>`.
-3. Read the report: `FAIL` lines are problems, with the time they happened. Open the same log in
+2. Put the log in the project folder (for example in `logs/`), right-click it in the VS Code
+   Explorer, and pick **Copy Path**.
+3. Run the task `Team: Check a log file` and paste the path (a folder uses its newest log).
+4. Read the report: `FAIL` lines are problems, with the time they happened. Open the same log in
    AdvantageScope and jump to that time.
 
 ## Lessons the team learned building the elevator

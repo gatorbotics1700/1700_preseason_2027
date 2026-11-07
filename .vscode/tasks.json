@@ -1,0 +1,74 @@
+{
+  // Team commands for VS Code. Run them with Cmd+Shift+P (Ctrl+Shift+P on Windows), then
+  // "Tasks: Run Task", then pick one. See docs/3d-sim-workflow.md.
+  "version": "2.0.0",
+  "options": {
+    "env": {
+      // The Java that the WPILib installer puts on every computer.
+      "JAVA_HOME": "${userHome}/wpilib/2026/jdk"
+    }
+  },
+  "windows": {
+    "options": {
+      "env": {
+        "JAVA_HOME": "C:\\Users\\Public\\wpilib\\2026\\jdk"
+      }
+    }
+  },
+  "tasks": [
+    {
+      "label": "Team: Check before review (build, tests, sim smoke)",
+      "detail": "Builds, runs every test, then runs sim smoke. Must end with BUILD SUCCESSFUL.",
+      "type": "shell",
+      "command": "./gradlew",
+      "windows": { "command": ".\\gradlew.bat" },
+      "args": ["build", "simSmoke", "--offline"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Team: Sim smoke (Elevator Demo)",
+      "detail": "Runs the Elevator Demo auto in the simulator with no window, then checks its log.",
+      "type": "shell",
+      "command": "./gradlew",
+      "windows": { "command": ".\\gradlew.bat" },
+      "args": ["simSmoke", "--offline"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Team: Sim smoke (choose an auto)",
+      "detail": "Runs any auto from the auto chooser in the simulator, then checks its log.",
+      "type": "shell",
+      "command": "./gradlew",
+      "windows": { "command": ".\\gradlew.bat" },
+      "args": ["simSmoke", "--offline", "-PsimSmokeAuto=${input:autoName}"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Team: Check a log file",
+      "detail": "Runs the log checks on a .wpilog (a match, practice or sim log) and prints a report.",
+      "type": "shell",
+      "command": "./gradlew",
+      "windows": { "command": ".\\gradlew.bat" },
+      "args": ["diagnoseLog", "--offline", "-Plog=${input:logPath}"],
+      "group": "test",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "autoName",
+      "type": "promptString",
+      "description": "Auto name, exactly as in the auto chooser (a wrong name lists the right ones)",
+      "default": "Elevator Demo"
+    },
+    {
+      "id": "logPath",
+      "type": "promptString",
+      "description": "Log file or folder (right-click it in the Explorer > Copy Path). A folder uses its newest log.",
+      "default": "logs/sim_smoke"
+    }
+  ]
+}
