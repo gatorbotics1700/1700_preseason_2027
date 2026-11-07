@@ -8,7 +8,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Constants.FieldCoordinates;
 import frc.robot.subsystems.drive.Drive;
-import frc.robot.subsystems.mech.ShooterSubsystem;
+import frc.robot.subsystems.mech.shooter.ShooterSubsystem;
 import java.io.IOException;
 import org.json.simple.parser.ParseException;
 

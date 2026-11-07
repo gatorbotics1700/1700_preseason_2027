@@ -1,4 +1,4 @@
-package frc.robot.subsystems.mech;
+package frc.robot.subsystems.mech.shooter;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
@@ -45,14 +45,13 @@ public class ShooterIOTalonFX implements ShooterIO {
     // directly from subsystem
     flywheelMotor =
         new TalonFX(ShooterConstants.LEFT_FLYWHEEL_MOTOR_CAN_ID, TunerConstants.mechCANBus);
-    kickerMotor =
-        new TalonFX(ShooterConstants.TRANSITION_MOTOR_CAN_ID, TunerConstants.mechCANBus);
+    kickerMotor = new TalonFX(ShooterConstants.TRANSITION_MOTOR_CAN_ID, TunerConstants.mechCANBus);
     leftTransitionMotor =
         new TalonFX(ShooterConstants.LEFT_TRANSITION_MOTOR_CAN_ID, TunerConstants.mechCANBus);
     rightTransitionMotor =
         new TalonFX(ShooterConstants.RIGHT_TRANSITION_MOTOR_CAN_ID, TunerConstants.mechCANBus);
 
-    // TALONFX & MOTIONMAGIC CONFIGS    
+    // TALONFX & MOTIONMAGIC CONFIGS
     flywheelTalonFXConfigs.withMotorOutput(
         new MotorOutputConfigs()
             .withInverted(InvertedValue.CounterClockwise_Positive)
@@ -69,8 +68,7 @@ public class ShooterIOTalonFX implements ShooterIO {
     MotionMagicConfigs flywheelMotionMagicConfigs = flywheelTalonFXConfigs.MotionMagic;
     flywheelMotionMagicConfigs.MotionMagicAcceleration =
         400; // Target acceleration of 400 rps/s (0.25 seconds to max)
-    flywheelMotionMagicConfigs.MotionMagicJerk =
-        4000; // Target jerk of 4000 rps/s/s (0/1 seconds)
+    flywheelMotionMagicConfigs.MotionMagicJerk = 4000; // Target jerk of 4000 rps/s/s (0/1 seconds)
 
     flywheelTalonFXConfigs.CurrentLimits.StatorCurrentLimit = 80;
 
@@ -154,8 +152,7 @@ public class ShooterIOTalonFX implements ShooterIO {
   }
 
   private static void applyTransitionMotorCurrentLimits(TalonFXConfiguration config) {
-    config.CurrentLimits.StatorCurrentLimit =
-        ShooterConstants.TRANSITION_STATOR_CURRENT_LIMIT_AMPS;
+    config.CurrentLimits.StatorCurrentLimit = ShooterConstants.TRANSITION_STATOR_CURRENT_LIMIT_AMPS;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
   }
 }

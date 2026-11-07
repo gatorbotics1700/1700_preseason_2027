@@ -10,7 +10,7 @@ import frc.robot.commands.drive.PointAtTargetCommand;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.mech.HoodSubsystem;
 import frc.robot.subsystems.mech.HopperFloorSubsystem;
-import frc.robot.subsystems.mech.ShooterSubsystem;
+import frc.robot.subsystems.mech.shooter.ShooterSubsystem;
 import frc.robot.util.Calculations;
 import frc.robot.util.shooting.ShotParameters;
 import java.util.function.Supplier;
