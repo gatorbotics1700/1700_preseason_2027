@@ -49,3 +49,4 @@ Every attempt per unit, including rejected ones. Format: `UNIT | attempt | chang
 | C2 new behavior | 2 | homing moves into the subsystem (HOMING mode, 200-loop timeout, homing failed alert); not-arrived alert after 100 loops; home command = startHoming + wait; HOMING_TIMEOUT_SECONDS -> HOMING_TIMEOUT_LOOPS | check.sh all | PASS | E2E homed at 0.49 s, all moves settle |
 | C2 new behavior | 3 | mutation run, 16 breaks | each must fail its test | REJECT | missing reset in setGoal not caught: test arrived before setting the new goal |
 | C2 new behavior | 4 | R12 test sets the new goal while the alert is on | mutation run 16/16 | PASS | |
+| B5 style | 1 | ElevatorIOTalonFX: named numbers, StatusCode instead of var, one-line comments; math/model tests: explicit imports, ElevatorConstants.X, clear names, record -> class, one-line comment per test, public like the template | check.sh all, 34 tests (none lost) | PASS | |

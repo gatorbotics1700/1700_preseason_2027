@@ -63,7 +63,7 @@ Commands (`ElevatorCommands`): `home`, `goTo(height)`, `demoCycle`.
 | # | Requirement | Test |
 |---|---|---|
 | R14 | Hardware readings are logged under `Mech/Elevator/IO`. Goal, mode, homed and at-goal are logged under `Mech/Elevator/...`. | `tools/elevator/check.sh` C5 |
-| R15 | `Mech/Elevator/ComponentPoses` holds one pose per moving part of the 3D model: stage 1 at half the carriage height, the carriage at its height. `ComponentPosesGoal` is the same for the goal. | `componentPosesFollowCascade` |
+| R15 | `Mech/Elevator/ComponentPoses` holds one pose per moving part of the 3D model: stage 1 at half the carriage height, the carriage at its height. `ComponentPosesGoal` is the same for the goal. | `ElevatorKinematicsTest.componentPosesFollowCascadeRigging` |
 
 ## Simulator (physics) requirements
 
