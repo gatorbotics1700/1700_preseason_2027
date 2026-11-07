@@ -35,3 +35,4 @@ Every attempt per unit, including rejected ones. Format: `UNIT | attempt | chang
 | merge main | 1 | Merge origin/main (CLAUDE.md, mechanism-checklist.md, subsystems/template/) | check.sh all | PASS after C7 fix | C7 compared against stale local main; now uses origin/main. TemplateSubsystemTest (3 tests, never run on main) passes |
 | align tests | 1 | build.gradle test{} gets forkEvery = 1 (matches intake-nidhi) | check.sh C1 | REJECT | JVM crash in ElevatorPhysicsTest: ElevatorSim reads battery voltage without HAL; it only passed because an earlier class in the same JVM had started HAL |
 | align tests | 2 | ElevatorPhysicsTest starts HAL in @BeforeAll | check.sh all | PASS | |
+| A requirements | 1 | docs/elevator-requirements.md: R1-R15 + S1-S3, each mapped to a test name; new: homing timeout in loops (R4), not-arrived alert (R12) | check.sh (doc only) | PASS | |

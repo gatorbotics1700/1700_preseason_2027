@@ -107,7 +107,7 @@ EOF
 pass C6
 
 # ---- C7 -------------------------------------------------------------------------------
-allow='^(RULES\.md|docs/elevator-3d-sim-brief\.md|simgui-ds\.json|build\.gradle|tools/elevator/.*|ascope_assets/Robot_GatorboticsElevator/.*|src/main/deploy/AdvantageScope-Layout\.json|src/main/java/frc/robot/(Constants|Robot|RobotContainer)\.java|src/main/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/commands/mech/ElevatorCommands\.java|src/main/java/frc/robot/util/SimE2E\.java|src/test/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/(commands/mech/(Hood|Intake|Shooting)Commands|subsystems/mech/(IntakeSubsystem|TurretSubsystem)|util/Calculations)\.java)$'
+allow='^(RULES\.md|docs/(elevator-3d-sim-brief|elevator-requirements|3d-sim-workflow)\.md|simgui-ds\.json|build\.gradle|tools/elevator/.*|ascope_assets/Robot_GatorboticsElevator/.*|src/main/deploy/AdvantageScope-Layout\.json|src/main/java/frc/robot/(Constants|Robot|RobotContainer)\.java|src/main/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/commands/mech/ElevatorCommands\.java|src/main/java/frc/robot/util/SimE2E\.java|src/test/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/(commands/mech/(Hood|Intake|Shooting)Commands|subsystems/mech/(IntakeSubsystem|TurretSubsystem)|util/Calculations)\.java)$'
 # compare against the remote main when there is one: a local main branch can be stale
 base="$(git rev-parse --verify -q origin/main >/dev/null && echo origin/main || echo main)"
 changed="$( { git diff --name-only "$base"...HEAD; git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)"
