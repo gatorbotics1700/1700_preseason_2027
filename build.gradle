@@ -121,6 +121,9 @@ sourceSets {
 test {
     useJUnitPlatform()
     systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+    // Run each test class in its own fresh Java process. The robot simulator keeps global state
+    // (open ports, motors, the clock), so one test class could otherwise break the next.
+    forkEvery = 1
 }
 
 // Simulation configuration (e.g. environment variables).

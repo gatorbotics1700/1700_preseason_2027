@@ -3,8 +3,10 @@ package frc.robot.subsystems.elevator;
 import static frc.robot.Constants.ElevatorConstants.*;
 import static org.junit.jupiter.api.Assertions.*;
 
+import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.system.plant.DCMotor;
 import edu.wpi.first.wpilibj.simulation.ElevatorSim;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 /** Feedforward constants must agree with the physics model the sim uses. */
@@ -12,6 +14,12 @@ class ElevatorPhysicsTest {
   private static final DCMotor M = ElevatorIOSim.GEARBOX;
   private static final double G = 9.81;
   private static final double R_EFF = ElevatorIOSim.EFFECTIVE_DRUM_RADIUS_METERS;
+
+  /** ElevatorSim reads the simulated battery voltage, which needs WPILib's HAL started. */
+  @BeforeAll
+  static void startHal() {
+    assertTrue(HAL.initialize(500, 0));
+  }
 
   private static void assertWithin(double expected, double actual, double frac, String what) {
     assertEquals(
