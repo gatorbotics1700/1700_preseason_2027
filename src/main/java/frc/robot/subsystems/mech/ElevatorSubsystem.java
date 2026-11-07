@@ -48,11 +48,10 @@ public class ElevatorSubsystem extends SubsystemBase {
   private boolean homed = false;
   private boolean limitWasPressed = false;
 
-  private final Alert disconnectedAlert =
-      new Alert("Elevator motor disconnected", AlertType.kError);
+  final Alert disconnectedAlert = new Alert("Elevator motor disconnected", AlertType.kError);
 
   // Tunable gains, shown in AdvantageScope under /Tuning/Elevator
-  private static final LoggedNetworkNumber kP =
+  static final LoggedNetworkNumber kP =
       new LoggedNetworkNumber("/Tuning/Elevator/kP", ElevatorConstants.KP);
   private static final LoggedNetworkNumber kI =
       new LoggedNetworkNumber("/Tuning/Elevator/kI", ElevatorConstants.KI);

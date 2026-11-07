@@ -22,6 +22,7 @@ public class ElevatorIOSim implements ElevatorIO {
   private double positionSetpointMeters = 0.0;
   private double voltageVolts = 0.0;
   private int gainUpdates = 0;
+  private int positionResets = 0;
   private double lastKp = 0.0;
 
   // What the pretend hardware reports. Starts connected, so a test can unplug it.
@@ -60,6 +61,7 @@ public class ElevatorIOSim implements ElevatorIO {
   /** Moves the reported height, like the real motor's encoder being reset. */
   @Override
   public void resetPosition(double positionMeters) {
+    positionResets++;
     this.positionMeters = positionMeters;
   }
 
@@ -86,6 +88,11 @@ public class ElevatorIOSim implements ElevatorIO {
   /** The last voltage sent with setVoltage. */
   public double getVoltageVolts() {
     return voltageVolts;
+  }
+
+  /** How many times the position was reset (homing). */
+  public int getPositionResets() {
+    return positionResets;
   }
 
   /** How many times new gains were sent. */

@@ -39,3 +39,7 @@ Every attempt per unit, including rejected ones. Format: `UNIT | attempt | chang
 | B1 move | 1 | git mv elevator files into subsystems/mech (main + tests), fix package/imports/check.sh | check.sh | REJECT | C7 compared HEAD (not the working tree) to main, so the uncommitted move showed old paths |
 | B1 move | 2 | C7 diffs merge-base vs working tree (+ untracked) | check.sh all; stray file must fail C7 | PASS | |
 | B2 sim split | 1 | ElevatorIOSim -> ElevatorIOSimPhysics (simulator); new template-style ElevatorIOSim (remembers requests, test setters); ElevatorIO docs in template voice | check.sh all | PASS | |
+| C1 safety-net tests | 1 | ElevatorSubsystemTest (10 tests, R1 R2 R5-R11 R13) on ElevatorIOSim, typed numbers; FakeIO tests in ElevatorKinematicsTest deleted | check.sh C1 | REJECT | 2 test bugs: a switch reset shows up in the next loop's reading (same on the real motor) |
+| C1 safety-net tests | 2 | tests run one more loop after a reset | check.sh all | PASS | |
+| C1 safety-net tests | 3 | mutation run: 10 deliberate breaks of ElevatorSubsystem | each must fail its test | REJECT | switchPressHomesOnce missed a reset-every-loop break (hidden by the one-loop lag) |
+| C1 safety-net tests | 4 | ElevatorIOSim counts position resets; R2 test checks once per press | mutation run 10/10 caught, check.sh all | PASS | |

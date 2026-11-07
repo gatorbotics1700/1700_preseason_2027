@@ -5,64 +5,15 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import edu.wpi.first.hal.HAL;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.wpilibj.simulation.DriverStationSim;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ElevatorKinematicsTest {
   private static final double EPS = 1e-9;
 
-  /** Records every call so tests can assert what the subsystem told the hardware to do. */
-  static class FakeIO implements ElevatorIO {
-    double position = 0;
-    boolean limit = false;
-    final List<String> calls = new ArrayList<>();
-
-    @Override
-    public void updateInputs(ElevatorIOInputs inputs) {
-      inputs.motorConnected = true;
-      inputs.positionMeters = position;
-      inputs.bottomLimitPressed = limit;
-    }
-
-    @Override
-    public void setPositionSetpoint(double positionMeters) {
-      calls.add("position " + positionMeters);
-    }
-
-    @Override
-    public void setVoltage(double volts) {
-      calls.add("voltage " + volts);
-    }
-
-    @Override
-    public void stop() {
-      calls.add("stop");
-    }
-
-    @Override
-    public void resetPosition(double positionMeters) {
-      position = positionMeters;
-      calls.add("reset " + positionMeters);
-    }
-
-    String last() {
-      return calls.get(calls.size() - 1);
-    }
-  }
-
   @BeforeAll
   static void initHal() {
     assertTrue(HAL.initialize(500, 0));
-  }
-
-  @BeforeEach
-  void enable() {
-    DriverStationSim.setEnabled(true);
-    DriverStationSim.notifyNewData();
   }
 
   // ---- kinematics -----------------------------------------------------------------------
@@ -80,13 +31,6 @@ class ElevatorKinematicsTest {
         assertEquals(0, p.getRotation().getAngle(), EPS);
       }
     }
-  }
-
-  @Test
-  void clampKeepsGoalsInsideTravel() {
-    assertEquals(MIN_HEIGHT_METERS, ElevatorSubsystem.clampHeight(-1), EPS);
-    assertEquals(MAX_HEIGHT_METERS, ElevatorSubsystem.clampHeight(99), EPS);
-    assertEquals(0.5, ElevatorSubsystem.clampHeight(0.5), EPS);
   }
 
   @Test
@@ -136,113 +80,5 @@ class ElevatorKinematicsTest {
   void stagesNestInsideEachOther() {
     assertTrue(STAGE_1_RAIL_SPACING_METERS < BASE_RAIL_SPACING_METERS);
     assertTrue(CARRIAGE_WIDTH_METERS < STAGE_1_RAIL_SPACING_METERS);
-  }
-
-  // ---- subsystem safety logic -------------------------------------------------------------
-
-  @Test
-  void refusesPositionControlUntilHomed() {
-    FakeIO io = new FakeIO();
-    ElevatorSubsystem elevator = new ElevatorSubsystem(io);
-    elevator.setGoal(0.5);
-    elevator.periodic();
-    assertFalse(elevator.isHomed());
-    assertEquals("stop", io.last());
-    assertFalse(elevator.atGoal());
-  }
-
-  @Test
-  void limitSwitchHomesAndZeroes() {
-    FakeIO io = new FakeIO();
-    io.position = 0.3; // encoder is wrong at boot
-    ElevatorSubsystem elevator = new ElevatorSubsystem(io);
-    io.limit = true;
-    elevator.periodic();
-    assertTrue(elevator.isHomed());
-    assertTrue(io.calls.contains("reset " + MIN_HEIGHT_METERS));
-
-    elevator.setGoal(99);
-    io.limit = false;
-    elevator.periodic();
-    assertEquals("position " + MAX_HEIGHT_METERS, io.last(), "goal must be clamped");
-  }
-
-  @Test
-  void openLoopStopsAtBottomLimit() {
-    FakeIO io = new FakeIO();
-    ElevatorSubsystem elevator = new ElevatorSubsystem(io);
-    elevator.setVoltage(-2);
-    elevator.periodic();
-    assertEquals("voltage -2.0", io.last());
-    io.limit = true;
-    elevator.periodic();
-    assertEquals("stop", io.last());
-    elevator.setVoltage(2); // driving up off the switch is allowed
-    elevator.periodic();
-    assertEquals("voltage 2.0", io.last());
-  }
-
-  @Test
-  void atGoalNeedsToleranceAndHoming() {
-    FakeIO io = new FakeIO();
-    ElevatorSubsystem elevator = new ElevatorSubsystem(io);
-    io.limit = true;
-    elevator.periodic();
-    elevator.setGoal(0.5);
-    io.limit = false;
-    io.position = 0.5 - 2 * POSITION_TOLERANCE_METERS;
-    elevator.periodic();
-    assertFalse(elevator.atGoal());
-    io.position = 0.5 - POSITION_TOLERANCE_METERS / 2;
-    elevator.periodic();
-    assertTrue(elevator.atGoal());
-  }
-
-  @Test
-  void restsOnHardStopInsteadOfHoldingAtBottom() {
-    FakeIO io = new FakeIO();
-    ElevatorSubsystem elevator = new ElevatorSubsystem(io);
-    io.limit = true;
-    elevator.periodic();
-    elevator.setGoal(STOW_HEIGHT_METERS);
-    elevator.periodic();
-    assertEquals("stop", io.last(), "should go neutral on the hard stop");
-    assertTrue(elevator.atGoal());
-    elevator.setGoal(0.5);
-    elevator.periodic();
-    assertEquals("position 0.5", io.last(), "must still leave the bottom when asked");
-  }
-
-  @Test
-  void landsGentlyWhenGoingToTheBottom() {
-    FakeIO io = new FakeIO();
-    ElevatorSubsystem elevator = new ElevatorSubsystem(io);
-    io.limit = true;
-    elevator.periodic();
-    io.limit = false;
-    io.position = 0.8;
-    elevator.setGoal(STOW_HEIGHT_METERS);
-    elevator.periodic();
-    assertEquals("position " + LANDING_HEIGHT_METERS, io.last(), "profile only to landing height");
-    io.position = LANDING_HEIGHT_METERS;
-    elevator.periodic();
-    assertEquals("voltage " + LANDING_VOLTS, io.last(), "then a gentle push");
-    io.limit = true;
-    elevator.periodic();
-    assertEquals("stop", io.last(), "then neutral on the stop");
-  }
-
-  @Test
-  void disablingDropsTheGoal() {
-    FakeIO io = new FakeIO();
-    ElevatorSubsystem elevator = new ElevatorSubsystem(io);
-    io.limit = true;
-    elevator.periodic();
-    elevator.setGoal(0.5);
-    DriverStationSim.setEnabled(false);
-    DriverStationSim.notifyNewData();
-    elevator.periodic();
-    assertEquals(ElevatorSubsystem.ControlMode.IDLE, elevator.getControlMode());
-    assertEquals("stop", io.last());
   }
 }

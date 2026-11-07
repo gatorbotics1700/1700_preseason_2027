@@ -32,6 +32,7 @@ pass C1
 
 # ---- C2 -------------------------------------------------------------------------------
 python3 -I tools/elevator/check_junit.py build/test-results/test \
+  frc.robot.subsystems.mech.ElevatorSubsystemTest \
   frc.robot.subsystems.mech.ElevatorKinematicsTest \
   frc.robot.subsystems.mech.ElevatorPhysicsTest \
   frc.robot.subsystems.mech.ElevatorModelTest \
