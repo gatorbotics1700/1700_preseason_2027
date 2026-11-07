@@ -95,10 +95,10 @@ The code must be easy for students to read. **Keep it simple.** Students have li
   - `WPILib: Test Robot Code` to run the tests
   - `WPILib: Simulate Robot Code`, then pick the Sim GUI, to run the simulator
 - **Build from the terminal (Mac):** `JAVA_HOME=~/wpilib/2026/jdk ./gradlew build --offline`. This builds, and runs the tests where they are turned on.
-- **Sim smoke and log checks:** in VS Code, Cmd+Shift+P > `Tasks: Run Task` > a `Team:` task (`.vscode/tasks.json`). The same from a terminal (any OS; `gradlew.bat` on Windows):
+- **Sim smoke and log checks:** in VS Code, Cmd+Shift+P > `Tasks: Run Task` > a `Gatorbotics:` task (`.vscode/tasks.json`). The same from a terminal (any OS; `gradlew.bat` on Windows):
   - `./gradlew simSmoke` runs the whole robot in the simulator with no window, runs one auto (`-PsimSmokeAuto="<name>"`, default "Elevator Demo"), then checks its log. It fails on any problem. Log and console: `logs/sim_smoke/`.
   - `./gradlew diagnoseLog -Plog=<file or folder>` runs the same checks on any log, such as a match log, and prints a report.
-  - Before asking for review: task `Team: Check before review` (`./gradlew build simSmoke`). How it all fits: `docs/3d-sim-workflow.md`.
+  - Before asking for review: task `Gatorbotics: Check before review` (`./gradlew build simSmoke`). How it all fits: `docs/3d-sim-workflow.md`.
 - **Tests** live in `src/test/java/frc/robot/`. **On `main`, tests are compiled but not run yet:** the `test { ... }` block in `build.gradle` is commented out. The `intake-nidhi` and `mentors/szymon/research` branches turn them on (and run each test class in its own fresh Java process, `forkEvery = 1`). Don't turn them on in another branch without asking a mentor; the team will decide when to turn them on for everyone.
 - **Don't touch** other mechanisms, the `RobotContainer` layout, or anything outside the person's mechanism unless they ask.
 - **Delete superseded in-between code** (old tests, temporary helpers). Don't keep it around. For large pieces of **working robot code** that is being replaced, ask first. The team may want an archive tag.

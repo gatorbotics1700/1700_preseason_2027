@@ -1,5 +1,5 @@
 {
-  // Team commands for VS Code. Run them with Cmd+Shift+P (Ctrl+Shift+P on Windows), then
+  // Gatorbotics commands for VS Code. Run them with Cmd+Shift+P (Ctrl+Shift+P on Windows), then
   // "Tasks: Run Task", then pick one. See docs/3d-sim-workflow.md.
   "version": "2.0.0",
   "options": {
@@ -17,7 +17,7 @@
   },
   "tasks": [
     {
-      "label": "Team: Check before review (build, tests, sim smoke)",
+      "label": "Gatorbotics: Check before review (build, tests, sim smoke)",
       "detail": "Builds, runs every test, then runs sim smoke. Must end with BUILD SUCCESSFUL.",
       "type": "shell",
       "command": "./gradlew",
@@ -27,7 +27,7 @@
       "problemMatcher": []
     },
     {
-      "label": "Team: Sim smoke (Elevator Demo)",
+      "label": "Gatorbotics: Sim smoke (Elevator Demo)",
       "detail": "Runs the Elevator Demo auto in the simulator with no window, then checks its log.",
       "type": "shell",
       "command": "./gradlew",
@@ -37,7 +37,7 @@
       "problemMatcher": []
     },
     {
-      "label": "Team: Sim smoke (choose an auto)",
+      "label": "Gatorbotics: Sim smoke (choose an auto)",
       "detail": "Runs any auto from the auto chooser in the simulator, then checks its log.",
       "type": "shell",
       "command": "./gradlew",
@@ -47,7 +47,7 @@
       "problemMatcher": []
     },
     {
-      "label": "Team: Check a log file",
+      "label": "Gatorbotics: Check a log file",
       "detail": "Runs the log checks on a .wpilog (a match, practice or sim log) and prints a report.",
       "type": "shell",
       "command": "./gradlew",
