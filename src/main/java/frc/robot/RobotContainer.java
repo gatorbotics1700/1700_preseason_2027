@@ -149,6 +149,7 @@ public class RobotContainer {
                     VisionConstants.CAMERA_1_NAME,
                     VisionConstants.ROBOT_TO_CAMERA_1,
                     drive::getPose));
+        drive.setPose(Constants.FieldCoordinates.SIM_START_POSE);
         // Boot the sim carriage 5 cm up, so it starts un-homed like a real robot would.
         elevatorSubsystem = new ElevatorSubsystem(new ElevatorIOSim(0.05));
         DriverStation.silenceJoystickConnectionWarning(true);

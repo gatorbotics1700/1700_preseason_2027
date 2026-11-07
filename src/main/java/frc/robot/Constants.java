@@ -760,6 +760,13 @@ public final class Constants {
     public static final Translation3d RED_RIGHT_FUNNELING = new Translation3d(14.858, 1.511, 0);
 
     public static final Translation2d FIELD_CENTER = new Translation2d(8.270494, 4.034663);
+
+    /**
+     * Where the physics sim starts the robot: open floor in the middle of the blue alliance zone,
+     * facing downfield, clear of the tower and hub (instead of the field corner at 0, 0).
+     */
+    public static final Pose2d SIM_START_POSE = new Pose2d(2.5, 4.034663, Rotation2d.kZero);
+
     public static final double BLUE_BUMP_AND_TRENCH_X = 4.626;
     public static final double RED_BUMP_AND_TRENCH_X = 11.915;
 

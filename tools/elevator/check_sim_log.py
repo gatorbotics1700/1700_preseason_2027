@@ -12,6 +12,7 @@ Checks (all thresholds derived from ElevatorConstants, parsed from Constants.jav
   L7  every logged ComponentPoses sample is [stage1 z = h / R, carriage z = h] for the
       logged height h, with zero x, y and identity rotation (the 3D model will track the code)
   L8  applied volts stay within +/-12.5 V and stator current within the limit + 5 A
+  L9  the robot sits on open floor, at least 0.3 m from every field wall
 """
 
 import bisect
@@ -156,6 +157,20 @@ def main() -> int:
         errors.append(f"L8 applied volts reached {max(map(abs, volts.v)):.2f}")
     if max(stator.v) > C["STATOR_CURRENT_LIMIT_AMPS"] + 5:
         errors.append(f"L8 stator current reached {max(stator.v):.1f} A")
+
+    # L9: the robot starts on open floor, fully inside the field (not in a corner or a wall)
+    import struct
+    field_x, field_y, clearance = 16.541, 8.069, 0.30
+    half = max(C["CHASSIS_LENGTH_METERS"], C["CHASSIS_WIDTH_METERS"]) / 2 + 0.08  # + bumpers
+    odo = log.get("/RealOutputs/Drive/Odometry/Robot", ("", []))[1]
+    if not odo:
+        errors.append("L9 robot pose /RealOutputs/Drive/Odometry/Robot never logged")
+    else:
+        x, y, _ = struct.unpack("<3d", odo[-1][1])
+        margin = min(x, y, field_x - x, field_y - y) - half
+        print(f"robot at x={x:.2f} y={y:.2f}, {margin:.2f} m clear of the nearest wall")
+        if margin < clearance:
+            errors.append(f"L9 robot at ({x:.2f}, {y:.2f}) is only {margin:.2f} m from a wall")
 
     print(f"samples: position {len(pos.t)}, poses {len(poses.t)}, homed at {t_homed:.2f}s, "
           f"peak current {max(stator.v):.1f} A, final current {stator.v[-1]:.1f} A")  # fmt: skip
