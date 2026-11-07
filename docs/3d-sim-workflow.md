@@ -1,0 +1,170 @@
+# Simulate a mechanism in 3D, and check it automatically
+
+This guide adds a physics simulator, a 3D view and automatic log checks to a mechanism. The
+**elevator** is the worked example: every step points at its files, so open them side by side.
+
+Do this after CLAUDE.md's Steps 0 to 7: the mechanism already has an IO layer (`XIO`,
+`XIOTalonFX`, the stand-in `XIOSim`, the do-nothing `new XIO() {}`) and subsystem tests. This
+guide is Step 8 (simulator physics) and more.
+
+## What you get
+
+| Layer | What it proves | How to run it |
+|---|---|---|
+| Unit tests | The decisions, the math, and that the 3D model matches the constants | `WPILib: Test Robot Code` |
+| Physics simulator | The mechanism really moves, with the real motor code | `WPILib: Simulate Robot Code` |
+| 3D view | You can watch it move, live or in a log | AdvantageScope (below) |
+| Sim smoke | The whole robot runs an auto in the simulator, then the log checks pass | `./gradlew simSmoke` |
+| Log diagnostics | Finds problems in any log: sim, practice or a match | `./gradlew diagnoseLog -Plog=<file>` |
+
+Type the `./gradlew` commands in a terminal in the project folder (in VS Code: Terminal > New
+Terminal). On Windows, type `gradlew.bat` instead of `./gradlew`. On a Mac, if it says Java is
+missing, put `JAVA_HOME=~/wpilib/2026/jdk ` in front of the command.
+
+**Before asking for review, run:** `./gradlew build simSmoke`. It must end with
+`BUILD SUCCESSFUL` (about 20 seconds).
+
+## The files, using the elevator as the example
+
+| What | Elevator file |
+|---|---|
+| Requirements, each with its test | `docs/elevator-requirements.md` |
+| Stand-in hardware for unit tests | `subsystems/mech/ElevatorIOSim.java` |
+| Physics simulator | `subsystems/mech/ElevatorIOSimPhysics.java` |
+| Poses for the 3D view | `ElevatorSubsystem.componentPoses()` |
+| 3D model, built from the constants | `src/test/java/frc/robot/view3d/ElevatorModel.java` |
+| 3D model checks | `src/test/java/frc/robot/view3d/ElevatorModelTest.java` |
+| Layout checks | `src/test/java/frc/robot/view3d/AdvantageScopeLayoutTest.java` |
+| Demo auto for sim smoke | `ElevatorCommands.demoCycle()`, added to the auto chooser as "Elevator Demo" |
+| Log checks | `src/test/java/frc/robot/diagnostics/ElevatorChecks.java` |
+
+## Step A: a physics simulator
+
+The stand-in `XIOSim` only remembers what it was told, so nothing moves. The physics simulator
+makes the mechanism move like the real one.
+
+1. Make `XIOSimPhysics extends XIOTalonFX`. It runs your **real** motor code against Phoenix's
+   simulated TalonFX, so the same onboard control (Motion Magic, current limits) runs in the
+   simulator and on the robot.
+2. Pick the WPILib model that fits the shape: `ElevatorSim` (elevator, climber),
+   `SingleJointedArmSim` (arm, hood), `FlywheelSim` or `DCMotorSim` (rollers, turret).
+3. Step the model on its own 5 ms thread (a `Notifier`), not once per 20 ms loop. The TalonFX
+   controls at 1 kHz; feeding it 20 ms old positions made the elevator overshoot 12 cm.
+4. Drive the simulated sensors from the simulated position (the elevator presses its bottom
+   switch when the carriage is at the bottom), so homing runs by itself.
+5. In `RobotContainer`, use `XIOSimPhysics` in the `SIM` case.
+6. The model's numbers (mass, gearing, travel) must come from the **build team**, not from
+   copying the code's constants. Otherwise the simulator only agrees with the code. Until then,
+   mark them `// TUNED, NOT DERIVED (date)`.
+
+Test it: `ElevatorPhysicsTest` checks that kG, kV and kA match the physics within 10%.
+
+## Step B: log a pose for each moving part
+
+AdvantageScope moves each part of the 3D model by a `Pose3d` (where it is and how it is turned).
+
+1. Add a `static Pose3d[] componentPoses(...)` to the subsystem: one pose per moving part, in a
+   fixed order. Each pose is how far that part moved from its "zero" position.
+2. In `periodic()`, log `Mech/<Name>/ComponentPoses`, and `Mech/<Name>/ComponentPosesGoal` for a
+   see-through "ghost" at the goal.
+3. Test the math (see `componentPosesFollowCascadeRigging`).
+
+## Step C: a 3D model
+
+AdvantageScope needs a folder in `ascope_assets/` with a `config.json` and `.glb` model files:
+`model.glb` (the robot, moves with the robot) and `model_0.glb`, `model_1.glb`, ... (one per
+moving part, in the same order as ComponentPoses).
+
+- **No CAD yet?** Build a stand-in from boxes, sized by your constants: copy `ElevatorModel.java`
+  and `ElevatorModelTest.java`. The test rebuilds the files whenever a constant changes, and fails
+  once so you notice: run the tests again and commit the new files.
+- **CAD from the build team?** Export each part from Onshape as glTF (`.glb`), positioned where it
+  sits at "zero". Keep the size and clearance tests from `ElevatorModelTest`, so the code's
+  constants and the CAD can't drift apart.
+
+## Step D: the AdvantageScope layout
+
+The team layout is `src/main/deploy/AdvantageScope-Layout.json`. In its 3D Field tab, add your
+robot model, then a "component" source reading `/RealOutputs/Mech/<Name>/ComponentPoses`. A
+component attaches to the robot listed just before it. Extend `AdvantageScopeLayoutTest` to
+check it.
+
+## Step E: a demo auto and sim smoke
+
+1. Write a command that exercises the mechanism (`ElevatorCommands.demoCycle()`: home, then
+   visit every height) and add it to the auto chooser in `RobotContainer`.
+2. Run `./gradlew simSmoke -PsimSmokeAuto="<its name>"`. The robot starts in the simulator with
+   no window, picks that auto, enables autonomous, waits for the auto to end, then runs the log
+   checks. The log and console are saved in `logs/sim_smoke/`.
+
+## Step F: log checks
+
+A log check looks for one problem in a log. The same checks run on sim smoke logs and on match
+logs, so a check you write today keeps finding that problem at competitions.
+
+1. Make `src/test/java/frc/robot/diagnostics/<Name>Checks.java`. Copy the smallest class in
+   `ElevatorChecks.java` (`StaysInVoltageAndCurrentLimits`), and add yours to `all()`.
+2. List the keys it reads in `requiredKeys()`. A log without them skips the check instead of
+   failing it. Add `SimSmokeKeys.AUTO` for a check that only makes sense in the simulator.
+3. Add `checks.addAll(<Name>Checks.all());` to `LogDiagnostics.allChecks()`.
+4. Test it with a small fake log (`TestLog`), like `ElevatorChecksTest`: one log that should
+   pass, one that should fail. Break the check on purpose once and watch the test fail.
+
+Good things to check, from the checklist's three questions: does every device stay connected?
+does it reach its goal in time without overshooting? does it stay inside its travel, voltage and
+current limits? does the 3D pose agree with the position?
+
+## Watching it in AdvantageScope
+
+Once:
+
+1. **AdvantageScope > Use Custom Assets Folder...** and pick the `ascope_assets` folder.
+2. **File > Import Layout...** and pick `src/main/deploy/AdvantageScope-Layout.json`.
+
+Live: start `WPILib: Simulate Robot Code` (Sim GUI), then in AdvantageScope **File > Connect to
+Simulator > NetworkTables 4 (AdvantageKit)**. Plain "NetworkTables 4" puts `/AdvantageKit` in front
+of every key, so the 3D view finds nothing.
+
+From a log: run `./gradlew simSmoke`, then **File > Open Log(s)...** and pick the `.wpilog` in
+`logs/sim_smoke/`. Drag the timeline to scrub.
+
+Quit AdvantageScope with Cmd+Q (Mac). Closing the window resets the layout.
+
+## Driving it by hand in the Sim GUI
+
+Drag a keyboard onto the joystick slot, click Disabled, then Teleoperated. For the elevator, the
+codriver is joystick slot 1: D-pad = heights, Back = home.
+
+On a Mac laptop there is no numpad for the D-pad: in **DS > Keyboard 1 Settings**, map the POV
+(D-pad) to the arrow keys. The Mac simulator reads the codriver's Back button as button 11, so
+raise the button count to 11 and give button 11 a key. Don't commit `simgui-ds.json` (it holds
+your own key setup).
+
+## Checking a match log
+
+1. Download the logs from the robot: AdvantageScope **File > Download Logs...**, or copy them
+   from the USB stick.
+2. Run `./gradlew diagnoseLog -Plog=<the .wpilog file, or the folder for the newest>`.
+3. Read the report: `FAIL` lines are problems, with the time they happened. Open the same log in
+   AdvantageScope and jump to that time.
+
+## Lessons the team learned building the elevator
+
+- Check that a part on a moving stage clears every other stage through the **whole** travel, not
+  just where it rests.
+- Work out kG, kV and kA from the motor model and the masses, and pin them with a test. Guessing
+  kG was 25% low.
+- Before tuning gains, log the motion profile's target next to the position. If the motor is at
+  its current limit, no gain can fix it (the elevator's "overshoot" was the 60 A limit).
+- AdvantageKit logs a value only when it changes. A check must ask "what was it at this time?",
+  not only look at the changes.
+- Test like a match: set an alliance. Bugs that depend on the alliance stay hidden otherwise.
+- Check every layout key against a real log. A key nobody logs makes AdvantageScope quietly draw
+  nothing.
+- When a check fails, first make sure it measured the right thing, then re-run it on the same log.
+  The real problem must still show.
+
+## What the simulator cannot show
+
+Jams, binding, chain stretch, real current under load, and anything the build team hasn't
+measured yet. The simulator proves the code; only the robot proves the mechanism.

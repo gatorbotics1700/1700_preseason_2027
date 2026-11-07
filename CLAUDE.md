@@ -87,13 +87,19 @@ The code must be easy for students to read. **Keep it simple.** Students have li
   - `commands/mech/`: the actions, such as `IntakeCommands.java`.
   - `util/RobotConfigLoader.java`: reads the per-robot config file.
   - `subsystems/template/`: starter files for a **new** mechanism (one motor at a set speed). Not used by the robot. See its `README.md`.
+  - `util/SimSmoke.java`: runs one auto in the simulator with no window, for `./gradlew simSmoke`.
+- **Test folders** (under `src/test/java/frc/robot/`): `subsystems/mech/` (mechanism tests), `diagnostics/` (log checks, one small class per problem to look for), `view3d/` (3D models built from the constants, and their checks).
 - **Config files:** `src/main/deploy/configFiles/`. **Only `config_alecto.properties` is in use.** The others (`hulk`, `sting`, `experimental`) are for retired robots. New keys go in `config_alecto.properties` only.
 - **Build and run (in VS Code):** press Cmd+Shift+P, then:
   - `WPILib: Build Robot Code` to build
   - `WPILib: Test Robot Code` to run the tests
   - `WPILib: Simulate Robot Code`, then pick the Sim GUI, to run the simulator
 - **Build from the terminal (Mac):** `JAVA_HOME=~/wpilib/2026/jdk ./gradlew build --offline`. This builds, and runs the tests where they are turned on.
-- **Tests** live in `src/test/java/frc/robot/`. **On `main`, tests are compiled but not run yet:** the `test { ... }` block in `build.gradle` is commented out. The `intake-nidhi` branch turns them on (and runs each test class in its own fresh Java process, `forkEvery = 1`). Don't turn them on in another branch without asking a mentor; the team will decide when to turn them on for everyone.
+- **Sim smoke and log checks** (any OS; `gradlew.bat` on Windows):
+  - `./gradlew simSmoke` runs the whole robot in the simulator with no window, runs one auto (`-PsimSmokeAuto="<name>"`, default "Elevator Demo"), then checks its log. It fails on any problem. Log and console: `logs/sim_smoke/`.
+  - `./gradlew diagnoseLog -Plog=<file or folder>` runs the same checks on any log, such as a match log, and prints a report.
+  - Before asking for review: `./gradlew build simSmoke`. How it all fits: `docs/3d-sim-workflow.md`.
+- **Tests** live in `src/test/java/frc/robot/`. **On `main`, tests are compiled but not run yet:** the `test { ... }` block in `build.gradle` is commented out. The `intake-nidhi` and `mentors/szymon/research` branches turn them on (and run each test class in its own fresh Java process, `forkEvery = 1`). Don't turn them on in another branch without asking a mentor; the team will decide when to turn them on for everyone.
 - **Don't touch** other mechanisms, the `RobotContainer` layout, or anything outside the person's mechanism unless they ask.
 - **Delete superseded in-between code** (old tests, temporary helpers). Don't keep it around. For large pieces of **working robot code** that is being replaced, ask first. The team may want an archive tag.
 
@@ -113,6 +119,7 @@ The code must be easy for students to read. **Keep it simple.** Students have li
 - **Limit switches:** an unwired roboRIO DIO port reads `true`. Check with the build team which way each switch reports.
 - **A stop rule at the same current as the motor's own current limit may never trip**, because the motor is held at that limit.
 - **Long checklist:** `mechanism-checklist.md` has the full mentor version. Read it when asked for a checklist review.
+- **Simulator, 3D and tuning lessons** from the elevator are at the end of `docs/3d-sim-workflow.md`: work out feedforward from the motor model, look at the current limit before the gains, check layout keys against a real log.
 
 ## The plan for a mechanism (tiny steps)
 
@@ -130,7 +137,7 @@ Every step ends with: the project builds, the tests pass, the simulator runs, an
 - **Step 5: Config.** CAN IDs and ports go into `config_alecto.properties`, read through the constants class. Design numbers are typed once in the constants class.
 - **Step 6: Alerts.** A Driver Station `Alert` for each motor that disconnects. An alert if the mechanism was told to move but hasn't arrived after N seconds (counted in loops). One test per alert.
 - **Step 7: Small math tests.** Unit conversions (degrees ↔ motor rotations) and the stop or decision rules.
-- **Step 8: Simulator physics.** Only after the build team gives real numbers: length, mass, gearing, travel limits.
+- **Step 8: Simulator physics, 3D view and log checks.** Follow `docs/3d-sim-workflow.md`; the elevator is the worked example. The physics numbers (length, mass, gearing, travel limits) must come from the build team; until then mark them TUNED, NOT DERIVED.
 - **Step 9: Notes.** A one-page tuning note for the wiki, the findings list for the team, and the checklist below ticked.
 
 **Testing recipe (used in Steps 4, 6 and 7):**
@@ -146,11 +153,13 @@ Every step ends with: the project builds, the tests pass, the simulator runs, an
 - In the Sim GUI, an unwired DIO port reads `true`, so limit switches can look "pressed". Click them in the DIO panel to test the switch logic by hand.
 - A move alert ("told to move but has not arrived") **will** fire in the sim after N seconds, because the pretend arm never arrives. Click the matching switch to "arrive".
 - Keyboard 0 starts with only 4 buttons. To use more (for example the right bumper, button 8), raise the button count in Keyboard 0 Settings and assign a key.
+- **Mac laptops** have no numpad for the D-pad: in DS > Keyboard N Settings, map the POV (D-pad) to the arrow keys. The Mac simulator reads a controller's Back button as button 11, so raise the button count to 11 and give it a key.
 
 **Watching and replaying in AdvantageScope:**
 - Live: connect to the sim and set Live Mode to **Logging**, not Low Bandwidth, or the export is incomplete.
 - **Playback** (works today): File → Export Data → WPILOG, then open it later. Good for demos and reviews.
-- **True AdvantageKit replay** (re-running the code on an old log) also needs the sim to write a log file (`WPILOGWriter` in `Robot.java`) and `RobotContainer` to pick the real, sim or do-nothing IO by mode. Not set up yet; ask before touching those files.
+- **Sim smoke logs** (`logs/sim_smoke/`) can be opened directly: File → Open Log(s).
+- **True AdvantageKit replay** (re-running the code on an old log) also needs `RobotContainer` to pick the do-nothing IO for every mechanism in replay mode. Not set up yet; ask before touching those files.
 
 **Physics (Step 8):**
 - Use the WPILib model that fits the shape: `SingleJointedArmSim` (arm, hood), `ElevatorSim` (elevator, climber), `FlywheelSim` or `DCMotorSim` (rollers, turret).
@@ -160,7 +169,7 @@ Every step ends with: the project builds, the tests pass, the simulator runs, an
 
 **Pictures of the mechanism:**
 - **2D (`Mechanism2d`):** a simple stick drawing (for example, a line that swings out when the intake deploys). Needs no build-team numbers, only the angle the code already knows. Easy first visual.
-- **3D (AdvantageScope 3D field):** many top teams (6328 and others) log each moving part as a `Pose3d` (where it is and how it is turned) and load a 3D robot model into AdvantageScope. You then watch the real robot, or the sim, move in 3D: the turret turning, the hood tilting, the intake swinging out. Especially useful for a **turret**, where "which way is it pointing" is hard to see from numbers. Needs: a robot model exported from CAD (the build team), and one `Logger.recordOutput("…/Pose3d", …)` per moving part. Not done on this team yet; worth a trial on the turret.
+- **3D (AdvantageScope 3D field):** many top teams (6328 and others) log each moving part as a `Pose3d` (where it is and how it is turned) and load a 3D robot model into AdvantageScope. You then watch the real robot, or the sim, move in 3D: the turret turning, the hood tilting, the intake swinging out. Especially useful for a **turret**, where "which way is it pointing" is hard to see from numbers. Needs: a robot model (from CAD, or a stand-in built from boxes) and one pose per moving part. **Done for the elevator:** follow `docs/3d-sim-workflow.md`. Next candidate: the turret.
 
 ## Worked example: the Intake (branch `intake-nidhi`)
 
@@ -208,6 +217,22 @@ Every step ends with: the project builds, the tests pass, the simulator runs, an
    - **B** (after mapping button 8 in Keyboard 0 Settings) toggles deploy.
 4. Watch `Mech/Intake/...` under NetworkTables, AdvantageKit.
 
+## Worked example: the Elevator, physics and 3D (branch `mentors/szymon/research`)
+
+A linear mechanism (two-stage cascade) taken through every step, including Step 8 with a 3D view. Requirements, each mapped to its test: `docs/elevator-requirements.md`. Every attempt, including the rejected ones: `docs/elevator-attempts.md`.
+
+**Files:**
+- `subsystems/mech/ElevatorSubsystem.java` (decisions), `ElevatorIO.java`, `ElevatorIOTalonFX.java` (real), `ElevatorIOSim.java` (stand-in for tests), `ElevatorIOSimPhysics.java` (the simulator: real motor code plus WPILib `ElevatorSim`)
+- `commands/mech/ElevatorCommands.java`: `home`, `goTo`, `demoCycle` (the "Elevator Demo" auto)
+- Tests: `subsystems/mech/ElevatorSubsystemTest.java` (one per requirement), `ElevatorKinematicsTest.java`, `ElevatorPhysicsTest.java`; `view3d/ElevatorModelTest.java`; `diagnostics/ElevatorChecksTest.java`
+- 3D: `view3d/ElevatorModel.java` builds `ascope_assets/Robot_GatorboticsElevator/` from `ElevatorConstants` (a stand-in until real CAD)
+
+**Devices:** one TalonFX and a bottom limit switch, `mech.elevator_*` in `config_alecto.properties` (placeholders: no robot has an elevator, so `ENABLED_ON_REAL_ROBOT = false`).
+
+**How it works:** onboard Motion Magic in meters. It homes on the bottom switch (gives up after 200 loops), refuses to move until homed, and lands gently on the bottom instead of holding current. Alerts: disconnected, homing failed, not arrived after 100 loops.
+
+**Simulator controls:** run the "Elevator Demo" auto, or drive it: codriver (joystick slot 1) D-pad = heights, Back = home.
+
 ## Definition of done (the team checklist)
 
 This is the short student version. The long mentor version is in `mechanism-checklist.md`.
@@ -233,6 +258,7 @@ This is the short student version. The long mentor version is in `mechanism-chec
 
 **Prove it works**
 - [ ] It runs in the simulator on a laptop.
+- [ ] Position mechanisms: a demo auto passes `./gradlew simSmoke`, and its log checks are in `diagnostics/`.
 - [ ] The robot still starts (smoke test), and all tests pass. (The repo has no CI yet, so run `WPILib: Test Robot Code` before asking for review.)
 - [ ] A few small tests cover the math and each alert.
 

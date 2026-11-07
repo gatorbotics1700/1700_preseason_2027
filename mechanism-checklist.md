@@ -63,7 +63,8 @@ Use it for every new mechanism, and for the mentors' "final good" versions that 
 - [ ] A simulated IO exists, with a physics model that fits the shape: WPILib's arm, elevator or flywheel simulation, or the real controller run in simulation.
 - [ ] The model's numbers (mass, length, gearing, limits, friction) are measured on the real mechanism, not copied from the constants the code uses. Otherwise the simulator only agrees with the code.
 - [ ] Simulated sensors come from the simulated state: limit switches, hall effect, absolute encoder with its wraparound. That lets homing and stop logic run.
-- [ ] A scripted scenario runs on a laptop and prints a report: reaches the target in a reasonable time, homes from random starting positions, feeds only when ready.
+- [ ] A scripted scenario runs on a laptop and prints a report: reaches the target in a reasonable time, homes from random starting positions, feeds only when ready. (`./gradlew simSmoke` runs a demo auto and the log checks; see docs/3d-sim-workflow.md.)
+- [ ] Log checks for the mechanism are in src/test/java/frc/robot/diagnostics/, each tested with a fake log. They run on sim smoke and on match logs (`./gradlew diagnoseLog`). [test]
 - [ ] Faults can be injected in simulation (unplug a motor or encoder) and the alert fires. [test]
 - [ ] A short note says what the simulator cannot show: jams, binding, real current under load.
 - [ ] Before physics exists, people know what to expect: the sim IO only remembers commands, so nothing moves and currents stay 0; unwired DIO switches read true (click them in the Sim GUI DIO panel); "not arrived" alerts will fire. [checklist]
@@ -71,7 +72,7 @@ Use it for every new mechanism, and for the mentors' "final good" versions that 
 
 **Pictures of the mechanism**
 - [ ] A 2D Mechanism2d drawing (for example a line that swings when the intake deploys). Needs only the angle or height the code already knows, no build-team numbers.
-- [ ] Optional, strongly suggested for a turret or hood: a 3D view in AdvantageScope. Log each moving part as a Pose3d and load the robot's CAD model from the build team, the way 6328 does. You then watch the turret turn or the hood tilt in 3D, live or in a log, which makes "which way is it pointing?" obvious.
+- [ ] Optional, strongly suggested for a turret or hood: a 3D view in AdvantageScope. Log each moving part as a Pose3d and load the robot's CAD model from the build team, the way 6328 does. Done for the elevator, with a stand-in model built from its constants; follow docs/3d-sim-workflow.md. You then watch the turret turn or the hood tilt in 3D, live or in a log, which makes "which way is it pointing?" obvious.
 
 ## 6. Util libs
 - [ ] Use the shared helpers, and add to them instead of copying code: one alliance helper, alert and debounce helpers, tunable numbers, config apply with retry, SysId setup.
