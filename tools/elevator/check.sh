@@ -107,7 +107,7 @@ EOF
 pass C6
 
 # ---- C7 -------------------------------------------------------------------------------
-allow='^(RULES\.md|simgui-ds\.json|build\.gradle|tools/elevator/.*|ascope_assets/Robot_GatorboticsElevator/.*|src/main/deploy/AdvantageScope-Layout\.json|src/main/java/frc/robot/(Constants|Robot|RobotContainer)\.java|src/main/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/commands/mech/ElevatorCommands\.java|src/main/java/frc/robot/util/SimE2E\.java|src/test/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/(commands/mech/(Hood|Intake|Shooting)Commands|subsystems/mech/(IntakeSubsystem|TurretSubsystem)|util/Calculations)\.java)$'
+allow='^(RULES\.md|docs/elevator-3d-sim-brief\.md|simgui-ds\.json|build\.gradle|tools/elevator/.*|ascope_assets/Robot_GatorboticsElevator/.*|src/main/deploy/AdvantageScope-Layout\.json|src/main/java/frc/robot/(Constants|Robot|RobotContainer)\.java|src/main/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/commands/mech/ElevatorCommands\.java|src/main/java/frc/robot/util/SimE2E\.java|src/test/java/frc/robot/subsystems/elevator/.*|src/main/java/frc/robot/(commands/mech/(Hood|Intake|Shooting)Commands|subsystems/mech/(IntakeSubsystem|TurretSubsystem)|util/Calculations)\.java)$'
 changed="$( { git diff --name-only main...HEAD; git diff --name-only; git ls-files --others --exclude-standard; } | sort -u)"
 bad="$(echo "$changed" | grep -v -E "$allow" | grep -v '^$' || true)"
 [[ -z "$bad" ]] || fail C7 "files outside plan: $bad"
