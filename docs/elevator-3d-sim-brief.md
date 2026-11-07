@@ -1,6 +1,7 @@
 # Elevator + 3D sim: session brief
 
 Branch `mentors/szymon/research`, Nov 5-7 2026. Local commits only, nothing pushed.
+Latest `main` (CLAUDE.md, mechanism-checklist.md, subsystems/template/) is merged in.
 
 ## Goal (achieved)
 
@@ -21,9 +22,9 @@ logging and checks without re-inventing them.
 | All numbers (hardware, gearing, gains, geometry) | `ElevatorConstants` in `Constants.java` |
 | 3D model, generated from `ElevatorConstants` (no real CAD yet) | `ascope_assets/Robot_GatorboticsElevator/`, `tools/elevator/generate_model.py` |
 | AdvantageScope layout (robot + live components + goal ghost) | `src/main/deploy/AdvantageScope-Layout.json` |
-| Pass condition (9 checks, about 11 s) | `tools/elevator/check.sh` |
+| Pass condition (9 checks, about 11 s; must exit 0 after every change) | `tools/elevator/check.sh` |
 | Headless E2E sim + log checker | `tools/elevator/run_e2e_sim.sh`, `check_sim_log.py`, `wpilog.py`, `util/SimE2E.java` |
-| Unit tests (26): kinematics, safety logic, physics, model vs constants | `src/test/.../subsystems/elevator/` |
+| Unit tests (26 elevator + 3 from main's template): kinematics, safety logic, physics, model vs constants | `src/test/.../subsystems/elevator/` |
 | Attempt log and learned rules | `tools/elevator/ATTEMPTS.md`, `RULES.md` |
 
 **How it works:** the sim runs the real `ElevatorIOTalonFX` code against Phoenix's simulated
@@ -60,9 +61,13 @@ AdvantageScope layout (nothing rendered); sim robot started in the field corner.
 
 ## Next session
 
-**1. Merge latest `main`.** A test merge is clean (no conflicts). `main` added `CLAUDE.md` (team
-playbook and code rules), `mechanism-checklist.md`, and `subsystems/template/`. Read all three
-first: they are now the rules this branch must follow.
+**Start here.** Run `tools/elevator/check.sh` first: it must print `ALL CHECKS PASSED`. Then read
+`CLAUDE.md`, `mechanism-checklist.md` and `src/main/java/frc/robot/subsystems/template/README.md`.
+They are the team's rules and patterns, and this branch must follow them.
+
+**1. Merge latest `main`. DONE (Nov 7).** Clean merge, no conflicts. `main`'s
+`TemplateSubsystemTest` had never run (tests are off on `main`); on this branch it runs and passes.
+`check.sh` C7 now diffs against `origin/main`, because a local `main` can be stale.
 
 **2. Bring the elevator in line with `main`'s CLAUDE.md.** Known gaps:
 
