@@ -77,6 +77,27 @@ task(generateShotTable, type: JavaExec) {
     args "--name", "AlectoHub"
 }
 
+// Check any robot log for problems (runs on your computer):
+//   ./gradlew diagnoseLog -Plog=path/to/file.wpilog    (or a folder: uses its newest .wpilog)
+// The checks are in src/test/java/frc/robot/diagnostics/. Add -Pconsole=<file> for console text
+// that is not in the log (sim smoke uses it for the simulator's motor controller errors).
+task(diagnoseLog, type: JavaExec) {
+    dependsOn extractReleaseNative
+    mainClass = "frc.robot.diagnostics.LogDiagnostics"
+    classpath = sourceSets.test.runtimeClasspath
+    workingDir(projectDir)
+    def jniRelease = file("$buildDir/jni/release")
+    systemProperty "java.library.path", jniRelease.absolutePath
+    environment "DYLD_LIBRARY_PATH", jniRelease.absolutePath
+    environment "LD_LIBRARY_PATH", jniRelease.absolutePath
+    args project.findProperty("log") ?: "logs"
+    if (project.hasProperty("console")) {
+        args project.property("console")
+    }
+    // A log with errors is a result, not a broken build: show the report either way.
+    ignoreExitValue = true
+}
+
 // Defining my dependencies. In this case, WPILib (+ friends), and vendor libraries.
 // Also defines JUnit 5.
 dependencies {

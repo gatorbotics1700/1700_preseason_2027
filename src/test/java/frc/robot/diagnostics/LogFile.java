@@ -1,5 +1,6 @@
 package frc.robot.diagnostics;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.util.datalog.DataLogReader;
 import edu.wpi.first.util.datalog.DataLogRecord;
@@ -71,15 +72,33 @@ public class LogFile {
     }
   }
 
+  /** One logged 2D pose (for example the robot on the field), and when it was logged. */
+  public static class Pose2dSample {
+    public final double timeSeconds;
+    public final Pose2d value;
+
+    Pose2dSample(double timeSeconds, Pose2d value) {
+      this.timeSeconds = timeSeconds;
+      this.value = value;
+    }
+  }
+
   private static final double MICROSECONDS_PER_SECOND = 1e6;
+  // AdvantageKit saves the robot's console output under this key.
+  public static final String CONSOLE_KEY = "/RealOutputs/Console";
 
   private final Path path;
   // The type of each key, as the log names it: "double", "boolean", "struct:Pose3d[]"...
   private final Map<String, String> types = new HashMap<>();
+  // The log names each key once (a "start" record), then refers to it by a number.
+  private final Map<Integer, StartRecordData> keysByNumber = new HashMap<>();
   private final Map<String, List<NumberSample>> numbers = new HashMap<>();
   private final Map<String, List<BooleanSample>> booleans = new HashMap<>();
   private final Map<String, List<TextSample>> texts = new HashMap<>();
   private final Map<String, List<PosesSample>> poses = new HashMap<>();
+  private final Map<String, List<Pose2dSample>> pose2ds = new HashMap<>();
+  // Console text from outside the log, added with addConsoleText().
+  private final StringBuilder extraConsoleText = new StringBuilder();
 
   private LogFile(Path path) {
     this.path = path;
@@ -92,18 +111,21 @@ public class LogFile {
       throw new IOException("Not a valid .wpilog file: " + path);
     }
     LogFile log = new LogFile(path);
-    // The log names each key once (a "start" record), then refers to it by a number.
-    Map<Integer, StartRecordData> keysByNumber = new HashMap<>();
-    for (DataLogRecord record : reader) {
-      if (record.isStart()) {
-        StartRecordData start = record.getStartData();
-        keysByNumber.put(start.entry, start);
-        log.types.put(start.name, start.type);
-      } else if (!record.isControl() && keysByNumber.containsKey(record.getEntry())) {
-        log.add(keysByNumber.get(record.getEntry()), record);
-      }
-    }
+    // WPILib's for-each loop over a reader skips a short last record (its hasNext() assumes every
+    // record is at least 16 bytes). forEachRemaining() reads them all. Found 2026-11-07, 2026.2.1.
+    reader.iterator().forEachRemaining(record -> log.addRecord(record));
     return log;
+  }
+
+  /** Learns a key's name from its start record, or stores a value record under its key. */
+  private void addRecord(DataLogRecord record) {
+    if (record.isStart()) {
+      StartRecordData start = record.getStartData();
+      keysByNumber.put(start.entry, start);
+      types.put(start.name, start.type);
+    } else if (!record.isControl() && keysByNumber.containsKey(record.getEntry())) {
+      add(keysByNumber.get(record.getEntry()), record);
+    }
   }
 
   /** Stores one record under its key, decoded by the key's type. Other types are skipped. */
@@ -123,6 +145,11 @@ public class LogFile {
       texts
           .computeIfAbsent(key.name, name -> new ArrayList<>())
           .add(new TextSample(timeSeconds, record.getString()));
+    } else if (type.equals("struct:Pose2d")) {
+      Pose2d value = StructBuffer.create(Pose2d.struct).read(ByteBuffer.wrap(record.getRaw()));
+      pose2ds
+          .computeIfAbsent(key.name, name -> new ArrayList<>())
+          .add(new Pose2dSample(timeSeconds, value));
     } else if (type.equals("struct:Pose3d[]") || type.equals("struct:Pose3d")) {
       Pose3d[] value = readPoses(record);
       poses
@@ -165,7 +192,8 @@ public class LogFile {
     return numbers.containsKey(key)
         || booleans.containsKey(key)
         || texts.containsKey(key)
-        || poses.containsKey(key);
+        || poses.containsKey(key)
+        || pose2ds.containsKey(key);
   }
 
   /** Every value of a number key, oldest first. Empty if the key is missing. */
@@ -186,6 +214,11 @@ public class LogFile {
   /** Every value of a pose list key, oldest first. Empty if the key is missing. */
   public List<PosesSample> poses(String key) {
     return poses.getOrDefault(key, List.of());
+  }
+
+  /** Every value of a 2D pose key, oldest first. Empty if the key is missing. */
+  public List<Pose2dSample> pose2ds(String key) {
+    return pose2ds.getOrDefault(key, List.of());
   }
 
   /** The value of a number key at a time: the last one logged at or before it. NaN if none. */
@@ -210,6 +243,24 @@ public class LogFile {
       value = sample.value;
     }
     return value;
+  }
+
+  /**
+   * Adds console text from outside the log. The simulator's motor controller errors are printed
+   * where AdvantageKit can't save them, so sim smoke passes them in from its console file.
+   */
+  public void addConsoleText(String text) {
+    extraConsoleText.append(text).append('\n');
+  }
+
+  /** Everything the robot printed: the log's console key plus any text added from outside. */
+  public String consoleText() {
+    StringBuilder text = new StringBuilder();
+    for (TextSample sample : texts(CONSOLE_KEY)) {
+      text.append(sample.value).append('\n');
+    }
+    text.append(extraConsoleText);
+    return text.toString();
   }
 
   /** The time of the last value of any key: roughly how long the log runs. */

@@ -93,4 +93,20 @@ public class LogFileTest {
     assertTrue(log.numbers("/Mech/Nothing").isEmpty());
     assertTrue(log.has("/Mech/Test/HeightMeters"));
   }
+
+  /**
+   * The last record is read even when it is short. WPILib's for-each loop over a log drops it
+   * (2026.2.1), which once hid a whole key from the checks.
+   */
+  @Test
+  public void readsAShortLastRecord() throws IOException {
+    TestLog shortLog = new TestLog();
+    shortLog.number("/A", 1.0, 6.0);
+    shortLog.number("/B", 1.0, 90.0);
+
+    LogFile read = shortLog.read();
+
+    assertEquals(1, read.numbers("/B").size());
+    assertEquals(90.0, read.numbers("/B").get(0).value, DELTA);
+  }
 }
