@@ -823,8 +823,10 @@ public final class Constants {
      */
     public static final boolean ENABLED_ON_REAL_ROBOT = false;
 
-    public static final int MOTOR_CAN_ID = 40; // TODO set to the real CAN ID
-    public static final int BOTTOM_LIMIT_SWITCH_DIO = 5; // TODO set to the real DIO port
+    // Wiring comes from the robot's config file.
+    public static final int MOTOR_CAN_ID = RobotConfigLoader.getInt("mech.elevator_motor_can_id");
+    public static final int BOTTOM_LIMIT_SWITCH_DIO =
+        RobotConfigLoader.getInt("mech.elevator_bottom_limit_dio");
 
     /** Wired normally-open with the roboRIO pull-up, so the DIO reads false when pressed. */
     public static final boolean LIMIT_SWITCH_PRESSED_VALUE = false;

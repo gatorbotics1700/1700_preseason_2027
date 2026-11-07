@@ -44,3 +44,4 @@ Every attempt per unit, including rejected ones. Format: `UNIT | attempt | chang
 | C1 safety-net tests | 3 | mutation run: 10 deliberate breaks of ElevatorSubsystem | each must fail its test | REJECT | switchPressHomesOnce missed a reset-every-loop break (hidden by the one-loop lag) |
 | C1 safety-net tests | 4 | ElevatorIOSim counts position resets; R2 test checks once per press | mutation run 10/10 caught, check.sh all | PASS | |
 | B3 subsystem style | 1 | ElevatorSubsystem: instance gains, default constructor, inputs under Mech/Elevator/IO, if/else, periodic split into short one-job methods with one-line comments, named landing slack | check.sh all + mutation run 10/10 | PASS | no behavior change |
+| B4 config | 1 | CAN 40 / DIO 5 -> config_alecto.properties as mech.elevator_*, read by ElevatorConstants via RobotConfigLoader | check.sh all; deleting the key fails ElevatorSubsystemTest | PASS | |
