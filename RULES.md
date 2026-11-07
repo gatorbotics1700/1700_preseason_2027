@@ -10,3 +10,4 @@ One-line rules learned from fixes that passed. Apply to every new unit of work.
 - Disable hardware with an explicit flag that skips config, control and reads, never with an invalid device ID.
 - When a background watchdog is killed, kill its children too, or they keep inherited pipes open.
 - Verify every dashboard/layout key against a real log from the code; never copy keys from an old layout.
+- Compare branches against the remote ref (origin/main), not a local branch that may be stale.
