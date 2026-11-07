@@ -20,7 +20,6 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color;
 
 
-
 import com.ctre.phoenix6.sim.TalonFXSimState.MotorType;
 
 public class ElevatorSubsystem {
