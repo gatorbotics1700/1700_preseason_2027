@@ -2,7 +2,6 @@ package frc.robot.view3d;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,11 +12,7 @@ import frc.robot.view3d.Glb.Box;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -32,31 +27,17 @@ public class ElevatorModelTest {
   /** The model files on disk match what ElevatorModel builds, and stale files are rewritten. */
   @Test
   public void modelFilesAreUpToDate() throws IOException {
-    List<String> rebuilt = new ArrayList<>();
-    Files.createDirectories(ElevatorModel.FOLDER);
-    for (Map.Entry<String, byte[]> file : ElevatorModel.files().entrySet()) {
-      Path path = ElevatorModel.FOLDER.resolve(file.getKey());
-      if (!Files.exists(path) || !Arrays.equals(Files.readAllBytes(path), file.getValue())) {
-        Files.write(path, file.getValue());
-        rebuilt.add(file.getKey());
-      }
-    }
-    if (!rebuilt.isEmpty()) {
-      fail(
-          "Rebuilt "
-              + rebuilt
-              + " in "
-              + ElevatorModel.FOLDER
-              + ". Run the tests again and commit them.");
-    }
+    List<String> rebuilt = ModelFiles.rewriteStale(ElevatorModel.FOLDER, ElevatorModel.files());
+    assertEquals(
+        List.of(),
+        rebuilt,
+        "rebuilt in " + ElevatorModel.FOLDER + ": run the tests again and commit them");
   }
 
   /** The model folder holds only the files ElevatorModel builds. */
   @Test
   public void noOtherFilesInModelFolder() throws IOException {
-    for (File file : ElevatorModel.FOLDER.toFile().listFiles()) {
-      assertTrue(ElevatorModel.files().containsKey(file.getName()), "unexpected file " + file);
-    }
+    assertEquals(List.of(), ModelFiles.extraFiles(ElevatorModel.FOLDER, ElevatorModel.files()));
   }
 
   /** The config names the robot and has one moving part for each pose the subsystem logs. */
@@ -138,5 +119,65 @@ public class ElevatorModelTest {
         carriage.maxXMeters <= stage1.minXMeters + TOLERANCE_METERS, "carriage hits stage 1");
     assertTrue(
         base.maxXMeters >= ElevatorConstants.ELEVATOR_X_METERS, "fixed stage missing from model");
+  }
+
+  /** Every named height is inside the travel limits. */
+  @Test
+  public void setpointsAreInsideTravel() {
+    for (double s :
+        new double[] {
+          ElevatorConstants.STOW_HEIGHT_METERS,
+          ElevatorConstants.LOW_HEIGHT_METERS,
+          ElevatorConstants.MID_HEIGHT_METERS,
+          ElevatorConstants.HIGH_HEIGHT_METERS
+        }) {
+      assertTrue(
+          s >= ElevatorConstants.MIN_HEIGHT_METERS && s <= ElevatorConstants.MAX_HEIGHT_METERS,
+          "setpoint " + s);
+    }
+  }
+
+  /** At full height, stage 1 still overlaps the fixed stage enough to be stiff. */
+  @Test
+  public void stagesStayEngagedAtFullExtension() {
+    double stage1Travel = ElevatorConstants.MAX_HEIGHT_METERS / ElevatorConstants.RIGGING_RATIO;
+    double baseTop = ElevatorConstants.BASE_BOTTOM_Z_METERS + ElevatorConstants.BASE_HEIGHT_METERS;
+    double stage1BottomAtMax = ElevatorConstants.STAGE_1_BOTTOM_Z_METERS + stage1Travel;
+    double overlap = baseTop - stage1BottomAtMax;
+    assertTrue(overlap >= 0.15, "stage 1 overlap with base at max is only " + overlap + " m");
+    assertTrue(
+        ElevatorConstants.STAGE_1_BOTTOM_Z_METERS >= ElevatorConstants.BASE_BOTTOM_Z_METERS,
+        "stage 1 below base");
+  }
+
+  /** At full height, the carriage still sits inside stage 1. */
+  @Test
+  public void carriageStaysInsideStage1AtFullExtension() {
+    // Relative to stage 1, the carriage travels (R - 1) / R of its absolute travel.
+    double relativeTravel =
+        ElevatorConstants.MAX_HEIGHT_METERS
+            - ElevatorConstants.MAX_HEIGHT_METERS / ElevatorConstants.RIGGING_RATIO;
+    double carriageTopRelative =
+        ElevatorConstants.CARRIAGE_BOTTOM_Z_METERS
+            - ElevatorConstants.STAGE_1_BOTTOM_Z_METERS
+            + relativeTravel
+            + ElevatorConstants.CARRIAGE_HEIGHT_METERS;
+    assertTrue(
+        carriageTopRelative <= ElevatorConstants.STAGE_1_HEIGHT_METERS + DELTA,
+        "carriage overruns stage 1 by "
+            + (carriageTopRelative - ElevatorConstants.STAGE_1_HEIGHT_METERS)
+            + " m");
+    assertTrue(
+        ElevatorConstants.CARRIAGE_BOTTOM_Z_METERS >= ElevatorConstants.STAGE_1_BOTTOM_Z_METERS,
+        "carriage below stage 1");
+  }
+
+  /** Each stage is narrower than the one it rides in. */
+  @Test
+  public void stagesNestInsideEachOther() {
+    assertTrue(
+        ElevatorConstants.STAGE_1_RAIL_SPACING_METERS < ElevatorConstants.BASE_RAIL_SPACING_METERS);
+    assertTrue(
+        ElevatorConstants.CARRIAGE_WIDTH_METERS < ElevatorConstants.STAGE_1_RAIL_SPACING_METERS);
   }
 }

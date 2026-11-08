@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 
 /** Feedforward constants must agree with the physics model the sim uses. */
 public class ElevatorPhysicsTest {
+  private static final double DELTA = 1e-9;
   private static final DCMotor MOTOR = ElevatorIOSimPhysics.GEARBOX;
   private static final double GRAVITY_MPS2 = 9.81;
   private static final double DRUM_RADIUS_METERS =
@@ -113,5 +114,16 @@ public class ElevatorPhysicsTest {
     assertTrue(
         ElevatorConstants.CRUISE_VELOCITY_MPS < 0.85 * freeSpeedMps,
         "cruise velocity above free speed");
+  }
+
+  /** Motor rotations per meter match the gearing, sprocket and rigging. */
+  @Test
+  public void rotorRatioMatchesDrivetrain() {
+    double carriagePerRotor =
+        Math.PI
+            * ElevatorConstants.DRUM_PITCH_DIAMETER_METERS
+            * ElevatorConstants.RIGGING_RATIO
+            / ElevatorConstants.GEAR_RATIO;
+    assertEquals(1.0 / carriagePerRotor, ElevatorConstants.ROTOR_ROTATIONS_PER_METER, DELTA);
   }
 }
