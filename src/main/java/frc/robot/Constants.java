@@ -729,8 +729,10 @@ public final class Constants {
   }
 
   public static final class TurretConstants {
-    public static final int TURRET_MOTOR_CAN_ID =
-        100; // TODO was 15 making it a bad number so the turret does not move
+    /** False keeps the turret off: the motor is never used and it reports facing forward. */
+    public static final boolean ENABLED = false;
+
+    public static final int TURRET_MOTOR_CAN_ID = 15;
     public static final int TURRET_BORE_ENCODER_PORT = 12; // TODO was 1 before
 
     public static final double TURRET_DEADBAND = 0.75;
@@ -754,6 +756,11 @@ public final class Constants {
     public static final Translation3d RED_RIGHT_FUNNELING = new Translation3d(14.858, 1.511, 0);
 
     public static final Translation2d FIELD_CENTER = new Translation2d(8.270494, 4.034663);
+
+    /** Where the physics sim starts the robot: open floor in the blue alliance zone. */
+    public static final Pose2d SIM_START_POSE =
+        new Pose2d(2.5, FIELD_CENTER.getY(), Rotation2d.kZero);
+
     public static final double BLUE_BUMP_AND_TRENCH_X = 4.626;
     public static final double RED_BUMP_AND_TRENCH_X = 11.915;
 

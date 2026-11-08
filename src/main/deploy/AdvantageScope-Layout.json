@@ -36,7 +36,7 @@
                 "sources": [
                   {
                     "type": "ghost",
-                    "logKey": "/RealOutputs/Odometry/Robot",
+                    "logKey": "/RealOutputs/Drive/Odometry/Robot",
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {
