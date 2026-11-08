@@ -76,6 +76,8 @@ public class RobotContainer {
   private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   private final TurretSubsystem turretSubsystem = new TurretSubsystem();
+  // Built once: the scheduler runs a subsystem's periodic() every loop on its own.
+  private final HubTrackerSubsystem hubTracker = new HubTrackerSubsystem();
 
   // Controllers
   private CommandXboxController controller = null; // port 0
@@ -135,6 +137,7 @@ public class RobotContainer {
                     VisionConstants.CAMERA_1_NAME,
                     VisionConstants.ROBOT_TO_CAMERA_1,
                     drive::getPose));
+        drive.setPose(Constants.FieldCoordinates.SIM_START_POSE);
         DriverStation.silenceJoystickConnectionWarning(true);
         break;
 
@@ -1067,8 +1070,6 @@ public class RobotContainer {
   }
 
   public void periodic() {
-    HubTrackerSubsystem hubTracker = new HubTrackerSubsystem();
-
     robotContainerLogs();
 
     // multiStepAutoChooser.updateChooserOptions();
