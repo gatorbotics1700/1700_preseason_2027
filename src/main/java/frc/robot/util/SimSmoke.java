@@ -22,6 +22,11 @@ public class SimSmoke {
   /** Set by build.gradle: the auto to run, by its name in the dashboard's auto chooser. */
   public static final String AUTO_ENV = "SIM_SMOKE_AUTO";
 
+  // Where the name of the auto it ran is logged. Log checks that only make sense in the
+  // simulator list AUTO_LOG_KEY as a key they need, so they skip themselves on match logs.
+  private static final String AUTO_OUTPUT = "SimSmoke/Auto";
+  public static final String AUTO_LOG_KEY = "/RealOutputs/" + AUTO_OUTPUT;
+
   private static final String DEFAULT_AUTO = "B LN-PL";
   // The dashboard writes "selected"; the chooser answers in "active" with the auto it will run.
   private static final String AUTO_CHOOSER = "/SmartDashboard/Auto/PathPlanner Auto/";
@@ -71,7 +76,7 @@ public class SimSmoke {
   /** Runs every loop from Robot.simulationPeriodic(): moves through the phases. */
   public void periodic() {
     phaseLoops++;
-    Logger.recordOutput("SimSmoke/Auto", autoName);
+    Logger.recordOutput(AUTO_OUTPUT, autoName);
     Logger.recordOutput("SimSmoke/Phase", phase.name());
     if (phase == Phase.BOOT && phaseLoops >= BOOT_LOOPS) {
       chooseAuto();

@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import frc.robot.diagnostics.LogDiagnostics;
 import frc.robot.diagnostics.Report;
-import frc.robot.diagnostics.SimSmokeKeys;
 import frc.robot.diagnostics.TestLog;
+import frc.robot.util.SimSmoke;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,7 +32,7 @@ public class View3dChecksTest {
   @Test
   public void layoutKeysInTheLogPass(@TempDir Path folder) throws IOException {
     TestLog log = new TestLog();
-    log.text(SimSmokeKeys.AUTO, 1.0, "Some Auto");
+    log.text(SimSmoke.AUTO_LOG_KEY, 1.0, "Some Auto");
     log.number("/RealOutputs/Robot", 1.0, 0.0);
     log.number("/RealOutputs/Mech/Arm/ComponentPoses", 1.0, 0.0);
 
@@ -47,7 +47,7 @@ public class View3dChecksTest {
   @Test
   public void layoutKeyMissingFromTheLogIsAnError(@TempDir Path folder) throws IOException {
     TestLog log = new TestLog();
-    log.text(SimSmokeKeys.AUTO, 1.0, "Some Auto");
+    log.text(SimSmoke.AUTO_LOG_KEY, 1.0, "Some Auto");
     log.number("/RealOutputs/Robot", 1.0, 0.0);
 
     View3dChecks.LayoutKeysAreLogged check =

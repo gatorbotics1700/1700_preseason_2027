@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.util.datalog.BooleanLogEntry;
@@ -11,6 +12,7 @@ import edu.wpi.first.util.datalog.DataLogWriter;
 import edu.wpi.first.util.datalog.DoubleLogEntry;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.util.datalog.StructArrayLogEntry;
+import edu.wpi.first.util.datalog.StructLogEntry;
 import java.io.IOException;
 import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeAll;
@@ -102,5 +104,18 @@ public class LogFileTest {
 
     assertEquals(1, read.numbers("/B").size());
     assertEquals(90.0, read.numbers("/B").get(0).value, DELTA);
+  }
+
+  /** has() sees keys of types LogFile doesn't read, such as a robot pose. */
+  @Test
+  public void hasSeesKeysOfAnyType(@TempDir Path folder) throws IOException {
+    Path file = folder.resolve("pose.wpilog");
+    DataLogWriter writer = new DataLogWriter(file.toString());
+    StructLogEntry<Pose2d> pose =
+        StructLogEntry.create(writer, "/RealOutputs/Robot", Pose2d.struct);
+    pose.append(new Pose2d(), 1_000_000);
+    writer.close();
+
+    assertTrue(LogFile.read(file).has("/RealOutputs/Robot"));
   }
 }
