@@ -219,7 +219,7 @@ Every step ends with: the project builds, the tests pass, the simulator runs, an
 
 ## Worked example: the Elevator, physics and 3D (branch `mentors/szymon/elevator-prototype`)
 
-A linear mechanism (two-stage cascade) taken through every step, including Step 8 with a 3D view.
+A linear mechanism (two-stage cascade) taken through every step, including Step 8 with a 3D view. How to test it: `docs/elevator.md`.
 
 **Files:**
 - `subsystems/mech/ElevatorSubsystem.java` (decisions), `ElevatorIO.java`, `ElevatorIOTalonFX.java` (real), `ElevatorIOSim.java` (stand-in for tests), `ElevatorIOSimPhysics.java` (the simulator: real motor code plus WPILib `ElevatorSim`)
