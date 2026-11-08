@@ -758,7 +758,8 @@ public final class Constants {
     public static final Translation2d FIELD_CENTER = new Translation2d(8.270494, 4.034663);
 
     /** Where the physics sim starts the robot: open floor in the blue alliance zone. */
-    public static final Pose2d SIM_START_POSE = new Pose2d(2.5, 4.034663, Rotation2d.kZero);
+    public static final Pose2d SIM_START_POSE =
+        new Pose2d(2.5, FIELD_CENTER.getY(), Rotation2d.kZero);
 
     public static final double BLUE_BUMP_AND_TRENCH_X = 4.626;
     public static final double RED_BUMP_AND_TRENCH_X = 11.915;
