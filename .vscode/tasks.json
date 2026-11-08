@@ -1,0 +1,63 @@
+{
+  // Run with Cmd+Shift+P (Ctrl+Shift+P on Windows), then "Tasks: Run Task".
+  "version": "2.0.0",
+  "options": {
+    "env": {
+      // The Java that the WPILib installer puts on every computer.
+      "JAVA_HOME": "${userHome}/wpilib/2026/jdk"
+    }
+  },
+  "windows": {
+    "options": {
+      "env": {
+        "JAVA_HOME": "C:\\Users\\Public\\wpilib\\2026\\jdk"
+      }
+    }
+  },
+  "tasks": [
+    {
+      "label": "Gatorbotics: Run code tests",
+      "detail": "Builds the code and runs every unit test. Must end with BUILD SUCCESSFUL.",
+      "type": "shell",
+      "command": "./gradlew",
+      "windows": { "command": ".\\gradlew.bat" },
+      "args": ["build", "--offline"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Gatorbotics: Smoke test sim",
+      "detail": "Runs an auto in the simulator with no window, then checks its log. Must end with BUILD SUCCESSFUL.",
+      "type": "shell",
+      "command": "./gradlew",
+      "windows": { "command": ".\\gradlew.bat" },
+      "args": ["simSmoke", "--offline", "-PsimSmokeAuto=${input:autoName}"],
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "Gatorbotics: Diagnose log file",
+      "detail": "Runs the log checks on a .wpilog (a match, practice or sim log) and prints a report.",
+      "type": "shell",
+      "command": "./gradlew",
+      "windows": { "command": ".\\gradlew.bat" },
+      "args": ["diagnoseLog", "--offline", "-Plog=${input:logPath}"],
+      "group": "test",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "autoName",
+      "type": "promptString",
+      "description": "Auto to run, exactly as in the auto chooser. Press Enter for B LN-PL. A wrong name lists the autos.",
+      "default": "B LN-PL"
+    },
+    {
+      "id": "logPath",
+      "type": "promptString",
+      "description": "Log file or folder (right-click it in the Explorer > Copy Path). A folder uses its newest log.",
+      "default": "logs/sim_smoke"
+    }
+  ]
+}

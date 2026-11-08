@@ -29,6 +29,7 @@ import frc.robot.Constants.TunerConstants;
 import frc.robot.commands.mech.HoodCommands;
 import frc.robot.util.Elastic;
 import frc.robot.util.RobotConfigLoader;
+import frc.robot.util.SimSmoke;
 import frc.robot.util.logging.PDHLogger;
 import java.util.Optional;
 import org.littletonrobotics.junction.LogFileUtil;
@@ -47,6 +48,8 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private RobotContainer robotContainer;
+  // Only set in a sim smoke run (./gradlew simSmoke).
+  private SimSmoke simSmoke = null;
   private final PowerDistribution pdh;
 
   // generate the lookup table
@@ -83,6 +86,10 @@ public class Robot extends LoggedRobot {
       case SIM:
         // Running a physics simulator, log to NT
         Logger.addDataReceiver(new NT4Publisher());
+        if (SimSmoke.isRequested()) {
+          // Sim smoke also writes a log file for the diagnostics to check
+          Logger.addDataReceiver(new WPILOGWriter(SimSmoke.logDir()));
+        }
         break;
 
       case REPLAY:
@@ -116,6 +123,9 @@ public class Robot extends LoggedRobot {
     // Instantiate our RobotContainer. This will perform all our button bindings,
     // and put our autonomous chooser on the dashboard.
     robotContainer = new RobotContainer();
+    if (SimSmoke.isRequested()) {
+      simSmoke = new SimSmoke(robotContainer);
+    }
 
     if (Constants.currentMode == Constants.Mode.REPLAY) {
       pdh = null;
@@ -265,5 +275,9 @@ public class Robot extends LoggedRobot {
 
   /** This function is called periodically whilst in simulation. */
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+    if (simSmoke != null) {
+      simSmoke.periodic();
+    }
+  }
 }
