@@ -9,8 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Runs every check on a robot log and prints what it found. Works on any .wpilog: from a match,
- * from practice, or from the simulator.
+ * Runs every check on a robot log (match, practice or simulator) and prints what it found.
  *
  * <p>From a terminal in the project folder:
  *
@@ -18,9 +17,6 @@ import java.util.List;
  *   ./gradlew diagnoseLog -Plog=path/to/file.wpilog
  *   ./gradlew diagnoseLog -Plog=path/to/folder      (uses the newest .wpilog in it)
  * </pre>
- *
- * <p>On Windows, type gradlew.bat instead of ./gradlew. Sim smoke runs the same checks on the
- * simulator's log, and fails if any check finds an error.
  */
 public final class LogDiagnostics {
 
@@ -44,11 +40,7 @@ public final class LogDiagnostics {
     return report;
   }
 
-  /**
-   * Reads a log (or the newest one in a folder), runs every check, prints the report, and exits 1
-   * if any check found an error. A second argument adds a console text file, for messages the log
-   * itself does not have (the simulator's motor controller errors).
-   */
+  /** Checks a log (plus an optional console text file) and exits 1 if any check found an error. */
   public static void main(String[] args) throws IOException {
     if (args.length < 1) {
       System.out.println("Give a log: ./gradlew diagnoseLog -Plog=path/to/file.wpilog");

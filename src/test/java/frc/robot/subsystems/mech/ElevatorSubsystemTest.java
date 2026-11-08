@@ -14,12 +14,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 /**
- * Tests for the elevator's decisions, one per requirement in docs/elevator-requirements.md. Each
- * test builds a fresh subsystem with ElevatorIOSim, calls periodic() directly, and checks the
- * answer right away, with no waiting.
- *
- * <p>Expected numbers are typed here, not read from ElevatorConstants, so an accidental change
- * makes a test fail. After writing a test, break the code on purpose once and check that it fails.
+ * Tests for the elevator's decisions, using ElevatorIOSim and calling periodic() directly. Expected
+ * numbers are typed here, not read from ElevatorConstants, so an accidental change fails a test.
  */
 public class ElevatorSubsystemTest {
 
@@ -61,7 +57,7 @@ public class ElevatorSubsystemTest {
     io.setBottomLimitPressed(false);
   }
 
-  /** R1: before homing, a goal never moves the motor. */
+  /** Before homing, a goal never moves the motor. */
   @Test
   public void refusesToMoveBeforeHoming() {
     elevator.setGoal(0.5);
@@ -72,7 +68,7 @@ public class ElevatorSubsystemTest {
     assertFalse(elevator.atGoal());
   }
 
-  /** R2: a switch press sets the position to 0 and homes, once per press. */
+  /** A switch press sets the position to 0 and homes, once per press. */
   @Test
   public void switchPressHomesOnce() {
     io.setPositionMeters(0.3); // the encoder is wrong at boot
@@ -97,7 +93,7 @@ public class ElevatorSubsystemTest {
     assertEquals(2, io.getPositionResets());
   }
 
-  /** R3: homing drives down at -1.5 V until the switch closes, then holds the bottom. */
+  /** Homing drives down at -1.5 V until the switch closes, then holds the bottom. */
   @Test
   public void homingDrivesDownUntilSwitch() {
     io.setPositionMeters(0.4); // boots somewhere up the travel
@@ -118,7 +114,7 @@ public class ElevatorSubsystemTest {
     assertEquals(0.0, elevator.getGoalMeters(), DELTA);
   }
 
-  /** R4: no switch after 200 loops (4 s): homing gives up, stops, and turns on the alert. */
+  /** No switch after 200 loops (4 s): homing gives up, stops, and turns on the alert. */
   @Test
   public void homingGivesUpAfterTimeout() {
     elevator.startHoming();
@@ -141,7 +137,7 @@ public class ElevatorSubsystemTest {
     assertEquals(Request.VOLTAGE, io.getLastRequest());
   }
 
-  /** R5: goals are limited to 0 to 1.20 m. */
+  /** Goals are limited to 0 to 1.20 m. */
   @Test
   public void goalIsClampedToTravel() {
     homeAtBottom();
@@ -154,7 +150,7 @@ public class ElevatorSubsystemTest {
     assertEquals(0.0, elevator.getGoalMeters(), DELTA);
   }
 
-  /** R6: a goal above the bottom goes to the motor's Motion Magic. */
+  /** A goal above the bottom goes to the motor's Motion Magic. */
   @Test
   public void goalIsSentToMotor() {
     homeAtBottom();
@@ -166,7 +162,7 @@ public class ElevatorSubsystemTest {
     assertEquals(0.5, io.getPositionSetpointMeters(), DELTA);
   }
 
-  /** R7: to the bottom, Motion Magic to 0.03 m, a gentle -0.5 V push, then no power. */
+  /** To the bottom, Motion Magic to 0.03 m, a gentle -0.5 V push, then no power. */
   @Test
   public void landsGentlyAtTheBottom() {
     homeAtBottom();
@@ -195,7 +191,7 @@ public class ElevatorSubsystemTest {
     assertEquals(Request.POSITION, io.getLastRequest());
   }
 
-  /** R8: voltage passes through, but stops when driving down onto a pressed switch. */
+  /** Voltage passes through, but stops when driving down onto a pressed switch. */
   @Test
   public void voltageStopsAtBottomSwitch() {
     elevator.setVoltage(-2);
@@ -214,7 +210,7 @@ public class ElevatorSubsystemTest {
     assertEquals(2, io.getVoltageVolts(), DELTA);
   }
 
-  /** R9: disabling forgets the goal, and it stays stopped after re-enabling. */
+  /** Disabling forgets the goal, and it stays stopped after re-enabling. */
   @Test
   public void disablingForgetsTheGoal() {
     homeAtBottom();
@@ -229,7 +225,7 @@ public class ElevatorSubsystemTest {
     assertEquals(Request.STOP, io.getLastRequest());
   }
 
-  /** R10: atGoal needs homed, a position goal, and within 0.01 m. */
+  /** The atGoal check needs homed, a position goal, and within 0.01 m. */
   @Test
   public void atGoalNeedsHomedAndClose() {
     homeAtBottom();
@@ -248,7 +244,7 @@ public class ElevatorSubsystemTest {
     assertFalse(elevator.atGoal());
   }
 
-  /** R11: unplugging the motor turns on the alert, and plugging it back turns it off. */
+  /** Unplugging the motor turns on the alert, and plugging it back turns it off. */
   @Test
   public void disconnectedMotorTurnsOnAlert() {
     elevator.periodic();
@@ -263,7 +259,7 @@ public class ElevatorSubsystemTest {
     assertFalse(elevator.disconnectedAlert.get());
   }
 
-  /** R12: told to move but not at the goal after 100 loops (2 s): "not arrived" alert. */
+  /** Told to move but not at the goal after 100 loops (2 s): "not arrived" alert. */
   @Test
   public void notArrivedAlertAfterTimeout() {
     homeAtBottom();
@@ -291,7 +287,7 @@ public class ElevatorSubsystemTest {
     assertFalse(elevator.notArrivedAlert.get());
   }
 
-  /** R13: dashboard gains reach the motor once per change, not every loop. */
+  /** Dashboard gains reach the motor once per change, not every loop. */
   @Test
   public void gainsSentOnlyWhenChanged() {
     elevator.periodic();
@@ -304,14 +300,14 @@ public class ElevatorSubsystemTest {
     assertEquals(1, io.getGainUpdates());
     assertEquals(70, io.getLastKp(), DELTA);
 
-    // Put the default back, so the next test starts clean (the dashboard is shared).
+    // Put the default back, because the dashboard is shared between tests.
     setDashboardKp(60);
     elevator.periodic();
     assertEquals(2, io.getGainUpdates());
     assertEquals(60, io.getLastKp(), DELTA);
   }
 
-  /** Types kP on the pretend dashboard. On the robot, AdvantageKit reads it every loop. */
+  /** Types kP on the pretend dashboard. */
   private void setDashboardKp(double kP) {
     elevator.kP.set(kP);
     elevator.kP.periodic();

@@ -77,10 +77,7 @@ task(generateShotTable, type: JavaExec) {
     args "--name", "AlectoHub"
 }
 
-// Check any robot log for problems (runs on your computer):
-//   ./gradlew diagnoseLog -Plog=path/to/file.wpilog    (or a folder: uses its newest .wpilog)
-// The checks are in src/test/java/frc/robot/diagnostics/. Add -Pconsole=<file> for console text
-// that is not in the log (sim smoke uses it for the simulator's motor controller errors).
+// Check a robot log for problems: ./gradlew diagnoseLog -Plog=<file or folder> [-Pconsole=<file>]
 task(diagnoseLog, type: JavaExec) {
     dependsOn extractReleaseNative
     mainClass = "frc.robot.diagnostics.LogDiagnostics"
@@ -98,11 +95,8 @@ task(diagnoseLog, type: JavaExec) {
     ignoreExitValue = true
 }
 
-// Sim smoke: run the whole robot program in the simulator with no window, run one auto, then
-// check the log with the diagnostics. Fails if the auto does not finish or a check finds an error.
-//   ./gradlew simSmoke                              (runs the "Elevator Demo" auto)
-//   ./gradlew simSmoke -PsimSmokeAuto="My Auto"     (any auto, by its name in the chooser)
-// The log and the console are saved in logs/sim_smoke/ to open in AdvantageScope.
+// Sim smoke: run one auto in a windowless simulator, then check its log with the diagnostics.
+//   ./gradlew simSmoke [-PsimSmokeAuto="My Auto"]   (log and console saved in logs/sim_smoke/)
 def simSmokeDir = file("logs/sim_smoke")
 def simSmokeRequested = gradle.startParameter.taskNames.any { it.toLowerCase().contains("simsmoke") }
 if (simSmokeRequested) {
@@ -111,8 +105,7 @@ if (simSmokeRequested) {
         doFirst {
             delete simSmokeDir
             simSmokeDir.mkdirs()
-            // Save the console to a file as well as showing it: the motor controller errors are
-            // printed there, where the robot's own log can't record them.
+            // Also save the console: motor controller errors are printed there, not in the log.
             def console = new FileOutputStream(new File(simSmokeDir, "console.txt"))
             standardOutput = new org.apache.tools.ant.util.TeeOutputStream(System.out, console)
             errorOutput = new org.apache.tools.ant.util.TeeOutputStream(System.err, console)
@@ -179,8 +172,7 @@ sourceSets {
 test {
     useJUnitPlatform()
     systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
-    // Run each test class in its own fresh Java process. The robot simulator keeps global state
-    // (open ports, motors, the clock), so one test class could otherwise break the next.
+    // Fresh Java process per test class, because the simulator keeps global state.
     forkEvery = 1
 }
 

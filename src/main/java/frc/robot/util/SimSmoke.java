@@ -11,12 +11,8 @@ import java.util.Arrays;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * Sim smoke: runs the whole robot program in the simulator with no window, runs one auto, writes a
- * log, and exits. Then the log diagnostics check that log. Start it with ./gradlew simSmoke (see
- * build.gradle). It does nothing in a normal simulator run or on the robot.
- *
- * <p>It works like a match: pick the auto on the dashboard, get an alliance, enable autonomous. The
- * robot's own autonomousInit() then schedules the auto, so the real auto path is tested.
+ * Sim smoke (./gradlew simSmoke): runs one auto like a match in a windowless simulator, writes a
+ * log, and exits. It does nothing in a normal sim run or on the robot.
  */
 public class SimSmoke {
 
@@ -27,11 +23,10 @@ public class SimSmoke {
   public static final String AUTO_ENV = "SIM_SMOKE_AUTO";
 
   private static final String DEFAULT_AUTO = "Elevator Demo";
-  // The auto chooser in RobotContainer: the dashboard writes "selected", and the chooser answers
-  // in "active" with the auto it will really run.
+  // The dashboard writes "selected"; the chooser answers in "active" with the auto it will run.
   private static final String AUTO_CHOOSER = "/SmartDashboard/Auto/PathPlanner Auto/";
 
-  // Counted in robot loops (one loop = 20 ms), so the timing is the same on every computer.
+  // Counted in robot loops (one loop = 20 ms).
   private static final int BOOT_LOOPS = 50; // 1 s for everything to start
   private static final int CHOOSE_TIMEOUT_LOOPS = 250; // 5 s for the chooser to pick it
   private static final int START_TIMEOUT_LOOPS = 250; // 5 s for the auto to start
@@ -97,10 +92,7 @@ public class SimSmoke {
     setPhase(Phase.CHOOSING);
   }
 
-  /**
-   * Enables autonomous, like the field does, once the chooser says it will run our auto. Enabling
-   * sooner would start whatever was chosen before.
-   */
+  /** Enables autonomous once the chooser says it will run our auto, not the one chosen before. */
   private void enableOnceChosen() {
     NetworkTableInstance tables = NetworkTableInstance.getDefault();
     String active = tables.getEntry(AUTO_CHOOSER + "active").getString("");
@@ -135,6 +127,7 @@ public class SimSmoke {
     }
   }
 
+  /** Moves to the next phase and restarts its loop count. */
   private void setPhase(Phase next) {
     phase = next;
     phaseLoops = 0;

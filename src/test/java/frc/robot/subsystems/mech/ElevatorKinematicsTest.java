@@ -6,10 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import frc.robot.Constants.ElevatorConstants;
 import org.junit.jupiter.api.Test;
 
+/** The elevator's gearing and sizes fit together through its full travel. */
 public class ElevatorKinematicsTest {
   private static final double DELTA = 1e-9;
-
-  // ---- kinematics -----------------------------------------------------------------------
 
   /** Motor rotations per meter match the gearing, sprocket and rigging. */
   @Test
@@ -21,8 +20,6 @@ public class ElevatorKinematicsTest {
             / ElevatorConstants.GEAR_RATIO;
     assertEquals(1.0 / carriagePerRotor, ElevatorConstants.ROTOR_ROTATIONS_PER_METER, 1e-9);
   }
-
-  // ---- geometry: the mechanism must physically fit through its full travel ---------------
 
   /** Every named height is inside the travel limits. */
   @Test
@@ -56,7 +53,7 @@ public class ElevatorKinematicsTest {
   /** At full height, the carriage still sits inside stage 1. */
   @Test
   public void carriageStaysInsideStage1AtFullExtension() {
-    // relative to stage 1, the carriage travels (R - 1) / R of its absolute travel
+    // Relative to stage 1, the carriage travels (R - 1) / R of its absolute travel.
     double relativeTravel =
         ElevatorConstants.MAX_HEIGHT_METERS
             - ElevatorConstants.MAX_HEIGHT_METERS / ElevatorConstants.RIGGING_RATIO;

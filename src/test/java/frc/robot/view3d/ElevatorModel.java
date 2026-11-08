@@ -18,30 +18,23 @@ import java.util.Map;
 
 /**
  * The elevator robot's 3D model for AdvantageScope, built from boxes sized by ElevatorConstants.
- * The code and the model read the same numbers, so the 3D view can't drift from the code.
- * ElevatorModelTest rebuilds it on every test run and fails if the saved files are out of date.
- *
- * <p>This is a stand-in until the build team exports real CAD. Then the .glb files come from CAD,
- * and ElevatorModelTest checks them against the constants instead of rebuilding them.
+ * Each part is drawn with the elevator fully down, so each logged pose is how far it has risen.
  *
  * <p>Files (in ascope_assets/Robot_GatorboticsElevator/):
  *
  * <ul>
- *   <li>model.glb: chassis, bumpers and the fixed stage. Moves with the robot.
- *   <li>model_0.glb: stage 1. Moved by ComponentPoses[0].
- *   <li>model_1.glb: the carriage. Moved by ComponentPoses[1].
- *   <li>config.json: tells AdvantageScope the robot's name and its moving parts.
+ *   <li>model.glb: chassis, bumpers and the fixed stage.
+ *   <li>model_0.glb: stage 1, moved by ComponentPoses[0].
+ *   <li>model_1.glb: the carriage, moved by ComponentPoses[1].
+ *   <li>config.json: the robot's name and its moving parts.
  * </ul>
- *
- * <p>Every part is drawn where it sits with the elevator fully down, so each logged pose is just
- * how far that part has risen.
  */
 public final class ElevatorModel {
 
   /** Where the model files live. AdvantageScope loads this folder as custom assets. */
   public static final Path FOLDER = Path.of("ascope_assets", "Robot_GatorboticsElevator");
 
-  /** The robot's name in AdvantageScope's model list. The layout picks the model by this name. */
+  /** The robot's name in AdvantageScope's model list. */
   public static final String ROBOT_NAME = "Gatorbotics Elevator Bot";
 
   // Colors: red, green, blue, opacity.
@@ -53,8 +46,7 @@ public final class ElevatorModel {
 
   private static final double BUMPER_THICKNESS_METERS = 0.08;
   private static final double CARRIAGE_PLATE_THICKNESS_METERS = 0.02;
-  // A shelf on the carriage's back face makes the motion easy to see. It sits away from the rails
-  // and their crossbars, so it never passes through them (ElevatorModelTest checks this).
+  // A shelf on the carriage makes its motion easy to see.
   private static final double SHELF_DEPTH_METERS = 0.24;
   private static final double SHELF_THICKNESS_METERS = 0.02;
 
@@ -167,7 +159,7 @@ public final class ElevatorModel {
     config.putArray("position").add(0).add(0).add(0);
     config.putArray("cameras");
     ArrayNode components = config.putArray("components");
-    // One component per moving part, in the same order as ComponentPoses: stage 1, carriage.
+    // Same order as ComponentPoses: stage 1, carriage.
     int movingParts = ElevatorSubsystem.componentPoses(0).length;
     for (int i = 0; i < movingParts; i++) {
       ObjectNode component = components.addObject();
@@ -178,9 +170,7 @@ public final class ElevatorModel {
     return text.getBytes(StandardCharsets.UTF_8);
   }
 
-  /**
-   * The 90 degree turn about x that makes a glTF model (y up) stand up in AdvantageScope (z up).
-   */
+  /** Turns the model 90 degrees about x, because glTF is y-up and AdvantageScope is z-up. */
   private static void upright(ArrayNode rotations) {
     rotations.addObject().put("axis", "x").put("degrees", 90);
   }

@@ -25,31 +25,22 @@ import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.TunerConstants;
 
 /**
- * The real hardware: one TalonFX running Motion Magic onboard, plus a bottom limit switch on the
- * roboRIO. This class only passes values to and from the hardware; all decisions stay in
- * ElevatorSubsystem.
- *
- * <p>The TalonFX's SensorToMechanismRatio is set so its "rotations" are meters of carriage travel,
- * which keeps every gain and setpoint in meters.
- *
- * <p>ElevatorIOSimPhysics builds on this class (the one level of inheritance in the elevator), so
- * the simulator runs this exact code.
+ * The real hardware: one TalonFX running Motion Magic onboard, plus a bottom limit switch. Motor
+ * "rotations" are meters of carriage travel, so every gain and setpoint is in meters.
  */
 public class ElevatorIOTalonFX implements ElevatorIO {
 
-  // How many times to try sending the settings. They can fail right after power-on.
+  // Settings can fail right after power-on, so retry.
   private static final int CONFIG_ATTEMPTS = 5;
   private static final double CONFIG_TIMEOUT_SECONDS = 0.25;
-  // Gains are sent while the robot runs, so don't wait for an answer: the loop must not stall.
+  // Don't wait for an answer, so the loop never stalls.
   private static final double GAINS_TIMEOUT_SECONDS = 0.0;
-  // Readings the decisions use are sent 100 times a second; temperature only needs 4.
   private static final double FAST_SIGNAL_HZ = 100.0;
   private static final double TEMPERATURE_SIGNAL_HZ = 4.0;
-  // The motor must miss readings for this long before it counts as disconnected, so one late
-  // reading does not flicker the alert.
+  // So one late reading does not flicker the alert.
   private static final double DISCONNECT_DEBOUNCE_SECONDS = 0.5;
 
-  // Not private, so ElevatorIOSimPhysics can drive the simulated motor and switch.
+  // Not private, so ElevatorIOSimPhysics can drive them.
   protected final TalonFX motor =
       new TalonFX(ElevatorConstants.MOTOR_CAN_ID, TunerConstants.mechCANBus);
   protected final DigitalInput bottomLimit =
@@ -95,13 +86,11 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     config.MotionMagic.MotionMagicAcceleration = ElevatorConstants.ACCELERATION_MPS2;
     config.MotionMagic.MotionMagicJerk = ElevatorConstants.JERK_MPS3;
 
-    // Soft limits back up the clamp in ElevatorSubsystem. They only make sense once homed, which
-    // is why the reverse limit is just below zero rather than exactly at it.
+    // Backs up the clamp in ElevatorSubsystem. No reverse limit: the bottom is found by homing.
     config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorConstants.MAX_HEIGHT_METERS;
     config.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
 
-    // Settings are slow to send, so send them once, here, and retry if the motor says no.
     // KNOWN GAP: if every try fails, tryUntilOk gives up quietly, with no alert.
     tryUntilOk(
         CONFIG_ATTEMPTS, () -> motor.getConfigurator().apply(config, CONFIG_TIMEOUT_SECONDS));

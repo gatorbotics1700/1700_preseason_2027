@@ -7,10 +7,7 @@ import java.io.IOException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * The elevator checks catch what they are meant to catch, and pass a good log. Each test builds a
- * small fake log with TestLog. Expected numbers are typed here, not read from constants.
- */
+/** The elevator checks catch what they are meant to catch, and pass a good log. */
 public class ElevatorChecksTest {
 
   private static final String IO = "/Mech/Elevator/IO/";

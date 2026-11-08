@@ -7,15 +7,12 @@ import java.io.IOException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/**
- * The team's AdvantageScope layout draws the elevator robot correctly in its 3D tab. Whether the
- * keys it reads are really logged is checked on a real log by View3dChecks (in sim smoke).
- */
+/** The elevator's AdvantageScope layout draws the elevator robot correctly in its 3D tab. */
 public class AdvantageScopeLayoutTest {
 
   /**
-   * The 3D tab draws, in order: the robot, its moving parts, the goal ghost, and the ghost's moving
-   * parts. Order matters: a moving part attaches to the robot or ghost listed just before it.
+   * The 3D tab draws the robot, its parts, the goal ghost, then the ghost's parts. Order matters
+   * because a part attaches to the robot or ghost listed just before it.
    */
   @Test
   public void field3dTabDrawsRobotThenPartsThenGhost() throws IOException {

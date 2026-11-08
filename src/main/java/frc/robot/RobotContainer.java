@@ -88,7 +88,7 @@ public class RobotContainer {
   // Controllers
   private CommandXboxController controller = null; // port 0
   private CommandXboxController controller_two = null; // port 1
-  // Simulator only: Keyboard 2 in the Sim GUI drives the elevator (see configureElevatorSimKeys).
+  // Simulator only: Keyboard 2 in the Sim GUI drives the elevator.
   private static final int SIM_ELEVATOR_KEYBOARD_PORT = 2;
   // An arrow key moves its keyboard axis all the way to -1 or 1; past half counts as pressed.
   private static final double ARROW_KEY_PRESSED = 0.5;
@@ -907,10 +907,7 @@ public class RobotContainer {
     }
   }
 
-  /**
-   * Elevator controls. On a controller: the codriver's D-pad picks a height, Back homes it (nothing
-   * else uses these buttons). In the simulator: the arrow keys and Home key, below.
-   */
+  /** Elevator controls: codriver D-pad picks a height and Back homes; arrow keys in the sim. */
   public void configureElevatorBindings() {
     if (Constants.currentMode == Constants.Mode.SIM) {
       configureElevatorSimKeys();
@@ -934,10 +931,8 @@ public class RobotContainer {
   }
 
   /**
-   * Simulator only: drive the elevator from the keyboard with no remapping. The team's Sim GUI
-   * setup (simgui-ds.json) already puts Keyboard 2 on joystick 2: its arrow keys are axes 0 and 1,
-   * and the Home key is button 2. No robot code uses joystick 2. Same layout as the D-pad: Up =
-   * high, Right = mid, Left = low, Down = stow, Home = home (Fn+Left on a Mac laptop).
+   * Simulator only: arrow keys pick a height like the D-pad, and Home (Fn+Left on a Mac) homes.
+   * simgui-ds.json puts Keyboard 2 on joystick 2: arrows are axes 0 and 1, Home is button 2.
    */
   private void configureElevatorSimKeys() {
     CommandGenericHID keyboard = new CommandGenericHID(SIM_ELEVATOR_KEYBOARD_PORT);

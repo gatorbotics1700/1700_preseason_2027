@@ -1,13 +1,6 @@
 package frc.robot.subsystems.mech;
 
-/**
- * Pretend hardware for unit tests. It has no motor: it just remembers what the subsystem told it,
- * so a test can check it right away, with no waiting.
- *
- * <p>Nothing moves by itself here. A test moves the carriage with setPositionMeters() and presses
- * the switch with setBottomLimitPressed(). For an elevator that really moves, the simulator uses
- * ElevatorIOSimPhysics instead.
- */
+/** Pretend hardware for unit tests. It remembers what it was told and moves nothing by itself. */
 public class ElevatorIOSim implements ElevatorIO {
 
   /** The last kind of thing the subsystem told the motor to do. */
@@ -25,7 +18,7 @@ public class ElevatorIOSim implements ElevatorIO {
   private int positionResets = 0;
   private double lastKp = 0.0;
 
-  // What the pretend hardware reports. Starts connected, so a test can unplug it.
+  // What the pretend hardware reports.
   private boolean connected = true;
   private double positionMeters = 0.0;
   private boolean bottomLimitPressed = false;

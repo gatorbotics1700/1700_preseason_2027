@@ -9,10 +9,7 @@ import frc.robot.subsystems.mech.ElevatorSubsystem;
 public final class ElevatorCommands {
   private ElevatorCommands() {}
 
-  /**
-   * Homes the elevator: drives down slowly until the bottom limit switch closes, then rests on the
-   * bottom. The subsystem gives up after a timeout, so a broken switch can't stall the motor.
-   */
+  /** Homes the elevator on the bottom limit switch and ends when homing is done or gives up. */
   public static Command home(ElevatorSubsystem elevator) {
     Command start = Commands.runOnce(elevator::startHoming, elevator);
     Command waitUntilDone = Commands.waitUntil(() -> !elevator.isHoming());
@@ -26,7 +23,7 @@ public final class ElevatorCommands {
         .withName("ElevatorGoTo " + heightMeters);
   }
 
-  /** Homes, then visits every setpoint: a quick end-to-end check of the whole mechanism. */
+  /** Homes, then visits every setpoint, as a quick check of the whole mechanism. */
   public static Command demoCycle(ElevatorSubsystem elevator) {
     double dwell = 0.5;
     return Commands.sequence(

@@ -14,13 +14,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Log checks that keep the 3D view honest: what the robot logged is what AdvantageScope will draw.
- * LogDiagnostics runs them with the other checks.
- */
+/** Log checks that what the robot logged is what AdvantageScope will draw in 3D. */
 public final class View3dChecks {
 
-  /** The team's AdvantageScope layout, which the 3D view tab reads its keys from. */
+  /** The elevator's AdvantageScope layout, which the 3D view tab reads its keys from. */
   public static final Path LAYOUT =
       Path.of("src", "main", "deploy", "AdvantageScope-Layout-Elevator.json");
 
@@ -39,10 +36,7 @@ public final class View3dChecks {
     return checks;
   }
 
-  /**
-   * Every logged ComponentPoses matches the logged height: stage 1 at height / RIGGING_RATIO, the
-   * carriage at the height, straight up. Then the 3D model moves exactly as the code thinks.
-   */
+  /** Every logged ComponentPoses matches the logged height, so the model moves like the code. */
   static class ElevatorPosesMatchHeight implements LogCheck {
     private static final String POSITION = "/Mech/Elevator/IO/PositionMeters";
     private static final String POSES = "/RealOutputs/Mech/Elevator/ComponentPoses";
@@ -87,10 +81,7 @@ public final class View3dChecks {
     }
   }
 
-  /**
-   * Simulator only: every key the layout's 3D tab reads is in the log. A key the robot never logs
-   * makes AdvantageScope quietly draw nothing (this once hid the whole robot).
-   */
+  /** Simulator only: every key the layout's 3D tab reads is in the log, or nothing is drawn. */
   static class LayoutKeysAreLogged implements LogCheck {
     public String name() {
       return "3D view: layout keys are logged";

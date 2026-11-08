@@ -87,7 +87,7 @@ public class Robot extends LoggedRobot {
         // Running a physics simulator, log to NT
         Logger.addDataReceiver(new NT4Publisher());
         if (SimSmoke.isRequested()) {
-          // Sim smoke (./gradlew simSmoke) also writes a log file for the diagnostics to check
+          // Sim smoke also writes a log file for the diagnostics to check
           Logger.addDataReceiver(new WPILOGWriter(SimSmoke.logDir()));
         }
         break;

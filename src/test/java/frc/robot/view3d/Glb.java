@@ -14,13 +14,9 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * Reads and writes .glb files: the 3D model format AdvantageScope loads. A model here is made of
- * colored boxes, which is enough for a stand-in until the build team exports real CAD.
- *
- * <p>Positions are in the robot frame: +x forward, +y left, +z up, in meters, with the origin on
- * the floor at the robot's center. glTF (the format inside .glb) has +y up instead, so this class
- * turns robot (x, y, z) into glTF (x, z, -y) when writing, and back when reading. The robot config
- * rotates the models 90 degrees about x to undo it, like AdvantageScope's own robot models.
+ * Reads and writes .glb files (the 3D model format AdvantageScope loads) made of colored boxes.
+ * Positions are in the robot frame in meters (+x forward, +y left, +z up). glTF is y-up, so robot
+ * (x, y, z) is written as (x, z, -y).
  */
 public final class Glb {
 
@@ -68,9 +64,7 @@ public final class Glb {
     }
   }
 
-  // Each face of a box: which way it points, and its 4 corners in counterclockwise order seen from
-  // outside (so the renderer knows which side is the front). A corner is {x, y, z}, where 0 picks
-  // the box's min and 1 its max.
+  // Corners go counterclockwise seen from outside, so the renderer knows the front. 0=min, 1=max.
   private static final int[][] FACE_NORMALS = {
     {1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}
   };
@@ -179,7 +173,6 @@ public final class Glb {
           max[axis] = Math.max(max[axis], glPosition[axis]);
         }
       }
-      // Two triangles make the square face: corners 0-1-2 and 0-2-3.
       int[] triangles = {0, 1, 2, 0, 2, 3};
       for (int offset : triangles) {
         indices.putShort((short) (corner + offset));
@@ -189,7 +182,7 @@ public final class Glb {
     return corner;
   }
 
-  /** Robot frame (z up) to glTF (y up). 0 - y, not -y, so 0 stays 0 instead of -0. */
+  /** Robot frame (z up) to glTF (y up). Uses 0 - y so 0 stays 0 instead of -0. */
   private static float[] toGltf(double x, double y, double z) {
     return new float[] {(float) x, (float) z, (float) (0.0 - y)};
   }

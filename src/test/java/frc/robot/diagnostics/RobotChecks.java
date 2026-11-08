@@ -9,10 +9,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Things to look for in any robot log, whatever mechanisms it has. Each check is one small class
- * below; all() lists them.
- */
+/** Things to look for in any robot log, whatever mechanisms it has. */
 public final class RobotChecks {
 
   private RobotChecks() {}
@@ -26,11 +23,7 @@ public final class RobotChecks {
     return checks;
   }
 
-  /**
-   * Every logged "...Connected" value (motors, encoders, gyro, cameras) stays true once it is true.
-   * A device that drops out is an error. One that never connects is a warning: in the simulator
-   * some devices (the gyro, the radio) never do.
-   */
+  /** Every "...Connected" value stays true; never connecting is a warning (some sim devices). */
   static class DevicesStayConnected implements LogCheck {
     public String name() {
       return "Robot: devices stay connected";
@@ -65,11 +58,7 @@ public final class RobotChecks {
     }
   }
 
-  /**
-   * No CTRE device (TalonFX, CANcoder, Pigeon) reports the same error twice in the console. One
-   * error each is normal while devices boot; the same one again means the device never came up, for
-   * example a CAN ID with no device on it.
-   */
+  /** No CTRE device repeats a console error; one each at boot is normal, a repeat is not. */
   static class CanDevicesRespond implements LogCheck {
     // Phoenix prints errors like: talon fx 40 ("") Status Signal Position
     private static final Pattern DEVICE_ERROR =

@@ -19,7 +19,7 @@ public class View3dChecksTest {
   private static final String POSITION = "/Mech/Elevator/IO/PositionMeters";
   private static final String POSES = "/RealOutputs/Mech/Elevator/ComponentPoses";
 
-  /** The poses for a carriage height, built by hand: stage 1 at half the height. */
+  /** Builds the poses for stage 1 and the carriage by hand. */
   private static Pose3d[] poses(double stage1Meters, double carriageMeters) {
     Pose3d stage1 = new Pose3d(0, 0, stage1Meters, new Rotation3d());
     Pose3d carriage = new Pose3d(0, 0, carriageMeters, new Rotation3d());

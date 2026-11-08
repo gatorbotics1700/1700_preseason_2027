@@ -17,14 +17,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * A robot log file (.wpilog), read into memory so checks can look at any logged value over time. It
- * reads logs from the simulator and from the real robot the same way.
- *
- * <p>Keys are the names AdvantageScope shows, for example "/Mech/Elevator/IO/PositionMeters" (a
- * hardware reading) or "/RealOutputs/Mech/Elevator/GoalMeters" (something the code logged).
- *
- * <p>AdvantageKit only writes a value when it changes, so a key has one sample per change, not one
- * per loop. Use valueAt() to ask "what was it at this time?".
+ * A robot log file (.wpilog), read into memory so checks can look at any logged value over time.
+ * AdvantageKit logs a value only when it changes, so use numberAt() to ask what it was at a time.
  */
 public class LogFile {
 
@@ -111,8 +105,7 @@ public class LogFile {
       throw new IOException("Not a valid .wpilog file: " + path);
     }
     LogFile log = new LogFile(path);
-    // WPILib's for-each loop over a reader skips a short last record (its hasNext() assumes every
-    // record is at least 16 bytes). forEachRemaining() reads them all. Found 2026-11-07, 2026.2.1.
+    // forEachRemaining, not for-each: WPILib's iterator skips a short last record.
     reader.iterator().forEachRemaining(record -> log.addRecord(record));
     return log;
   }
@@ -245,10 +238,7 @@ public class LogFile {
     return value;
   }
 
-  /**
-   * Adds console text from outside the log. The simulator's motor controller errors are printed
-   * where AdvantageKit can't save them, so sim smoke passes them in from its console file.
-   */
+  /** Adds console text from outside the log, such as the simulator's motor controller errors. */
   public void addConsoleText(String text) {
     extraConsoleText.append(text).append('\n');
   }

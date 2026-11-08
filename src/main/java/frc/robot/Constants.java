@@ -729,11 +729,7 @@ public final class Constants {
   }
 
   public static final class TurretConstants {
-    /**
-     * False keeps the turret still: TurretSubsystem never configures, commands, or reads the motor,
-     * and reports it facing forward. (This used to be done with CAN ID 100, which does not exist,
-     * so every loop logged CAN errors.)
-     */
+    /** False keeps the turret off: the motor is never used and it reports facing forward. */
     public static final boolean ENABLED = false;
 
     public static final int TURRET_MOTOR_CAN_ID = 15;
@@ -761,10 +757,7 @@ public final class Constants {
 
     public static final Translation2d FIELD_CENTER = new Translation2d(8.270494, 4.034663);
 
-    /**
-     * Where the physics sim starts the robot: open floor in the middle of the blue alliance zone,
-     * facing downfield, clear of the tower and hub (instead of the field corner at 0, 0).
-     */
+    /** Where the physics sim starts the robot: open floor in the blue alliance zone. */
     public static final Pose2d SIM_START_POSE = new Pose2d(2.5, 4.034663, Rotation2d.kZero);
 
     public static final double BLUE_BUMP_AND_TRENCH_X = 4.626;
@@ -811,15 +804,11 @@ public final class Constants {
   }
 
   /**
-   * Two-stage cascade elevator. All positions are carriage height above the hard-stop bottom, in
-   * meters. The geometry block also sizes the 3D model in ascope_assets/: the tests in
-   * src/test/java/frc/robot/view3d/ rebuild it from these numbers, so the 3D view matches the code.
+   * Two-stage cascade elevator. Positions are carriage height in meters above the bottom hard stop.
    */
   public static final class ElevatorConstants {
     // ---- Hardware ----
-    /**
-     * No current robot has an elevator; flip to true on the robot that does. Sim always has one.
-     */
+    /** No current robot has an elevator; set true on the one that does. Sim always has one. */
     public static final boolean ENABLED_ON_REAL_ROBOT = false;
 
     // Wiring comes from the robot's config file.
@@ -858,24 +847,20 @@ public final class Constants {
 
     // ---- Homing ----
     public static final double HOMING_VOLTS = -1.5; // negative is down
-    // Give up homing after this many loops (200 x 20 ms = 4 s), so a broken switch can't stall
-    // the motor against the hard stop forever. Counted in loops so tests and replay agree.
+    // 200 x 20 ms = 4 s, so a broken switch can't stall the motor against the hard stop.
     public static final int HOMING_TIMEOUT_LOOPS = 200;
 
     // ---- Alerts ----
-    // Told to move but not at the goal after this many loops (100 x 20 ms = 2 s). The longest
-    // move takes about 0.7 s in the simulator. TUNED, NOT DERIVED (2026-11-07).
+    // 100 x 20 ms = 2 s. TUNED, NOT DERIVED (2026-11-07).
     public static final int NOT_ARRIVED_TIMEOUT_LOOPS = 100;
 
     // ---- Landing on the bottom hard stop ----
-    // Motion Magic stops this far up; the last bit is a gentle open loop push onto the stop, so
-    // the carriage never slams into it at profile speed.
+    // Motion Magic stops this far up, then a gentle push lands the carriage without slamming.
     public static final double LANDING_HEIGHT_METERS = 0.03;
     public static final double LANDING_VOLTS = -0.5;
 
     // ---- Closed loop (Phoenix Slot0, mechanism units = meters) ----
-    // kG, kV, kA are derived from the Kraken X60 model and masses above; ElevatorPhysicsTest
-    // fails if they drift more than 10% from physics. Re-tune kP/kD on the real robot.
+    // kG, kV, kA come from the motor model and masses; ElevatorPhysicsTest checks them.
     public static final double KP = 60.0; // V per meter of error
     public static final double KI = 0.0;
     public static final double KD = 1.0; // V per m/s of error
@@ -889,6 +874,7 @@ public final class Constants {
     public static final double JERK_MPS3 = 80.0;
 
     // ---- Geometry (robot frame: +x forward, +y left, +z up, origin on the floor) ----
+    // Also sizes the 3D model, rebuilt by the tests in src/test/java/frc/robot/view3d/.
     public static final double ELEVATOR_X_METERS = 0.10;
     public static final double BASE_BOTTOM_Z_METERS = 0.08;
     public static final double BASE_HEIGHT_METERS = 0.90;

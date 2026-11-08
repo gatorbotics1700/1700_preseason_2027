@@ -21,18 +21,15 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /**
- * Keeps the elevator's 3D view honest: the model files match ElevatorConstants, the moving parts
- * line up with the poses ElevatorSubsystem logs, and nothing collides through the whole travel.
- *
- * <p>Changed a size in ElevatorConstants? Run the tests: modelFilesAreUpToDate rebuilds the model
- * files and fails once, so you notice. Run them again (they pass), and commit the new files.
+ * Checks the elevator's 3D model files match ElevatorConstants and the logged poses. After changing
+ * a size, the tests rewrite the stale files and fail once; run again and commit.
  */
 public class ElevatorModelTest {
 
   private static final double TOLERANCE_METERS = 1e-4; // model files store float32
   private static final double DELTA = 1e-9;
 
-  /** The model files on disk are what ElevatorModel builds now. Stale files are rebuilt. */
+  /** The model files on disk match what ElevatorModel builds, and stale files are rewritten. */
   @Test
   public void modelFilesAreUpToDate() throws IOException {
     List<String> rebuilt = new ArrayList<>();
@@ -54,7 +51,7 @@ public class ElevatorModelTest {
     }
   }
 
-  /** The model folder holds only the files ElevatorModel builds, so nothing stale lingers. */
+  /** The model folder holds only the files ElevatorModel builds. */
   @Test
   public void noOtherFilesInModelFolder() throws IOException {
     for (File file : ElevatorModel.FOLDER.toFile().listFiles()) {
@@ -125,10 +122,7 @@ public class ElevatorModelTest {
     assertEquals(ElevatorConstants.CARRIAGE_WIDTH_METERS / 2, carriage.maxY, TOLERANCE_METERS);
   }
 
-  /**
-   * No moving part hits another anywhere in the travel. Stages only slide up and down, so parts can
-   * only hit if they overlap front to back. Each stage must sit fully behind the one it rides in.
-   */
+  /** Each stage sits fully behind the one it rides in, so no parts collide anywhere in travel. */
   @Test
   public void movingPartsClearEachOtherThroughFullTravel() throws IOException {
     Box base = Glb.readBounds(ElevatorModel.FOLDER.resolve("model.glb"));

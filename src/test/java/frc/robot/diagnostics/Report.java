@@ -3,13 +3,7 @@ package frc.robot.diagnostics;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * What the checks found in one log. Each check adds its findings while it runs; at the end the
- * report prints one line per check and says whether the log passed.
- *
- * <p>An error means something is wrong (sim smoke fails on it). A warning is worth a look. A note
- * is a useful number, like how long a move took.
- */
+/** What the checks found in one log: errors (sim smoke fails on them), warnings and notes. */
 public class Report {
 
   /** How serious a finding is. */

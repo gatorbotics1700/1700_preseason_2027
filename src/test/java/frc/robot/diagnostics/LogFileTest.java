@@ -17,10 +17,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * LogFile reads back exactly what was written. The test writes a small log with WPILib's own writer
- * (the same one the robot uses), so it needs no robot and no saved log file.
- */
+/** LogFile reads back exactly what WPILib's log writer wrote. */
 public class LogFileTest {
 
   private static final double DELTA = 1e-9;
@@ -94,10 +91,7 @@ public class LogFileTest {
     assertTrue(log.has("/Mech/Test/HeightMeters"));
   }
 
-  /**
-   * The last record is read even when it is short. WPILib's for-each loop over a log drops it
-   * (2026.2.1), which once hid a whole key from the checks.
-   */
+  /** The last record is read even when it is short. */
   @Test
   public void readsAShortLastRecord() throws IOException {
     TestLog shortLog = new TestLog();

@@ -58,8 +58,8 @@ makes the mechanism move like the real one.
    simulator and on the robot.
 2. Pick the WPILib model that fits the shape: `ElevatorSim` (elevator, climber),
    `SingleJointedArmSim` (arm, hood), `FlywheelSim` or `DCMotorSim` (rollers, turret).
-3. Step the model on its own 5 ms thread (a `Notifier`), not once per 20 ms loop. The TalonFX
-   controls at 1 kHz; feeding it 20 ms old positions made the elevator overshoot 12 cm.
+3. Step the model on its own 5 ms thread (a `Notifier`), not once per 20 ms loop: the TalonFX
+   controls at 1 kHz and needs fresh positions.
 4. Drive the simulated sensors from the simulated position (the elevator presses its bottom
    switch when the carriage is at the bottom), so homing runs by itself.
 5. In `RobotContainer`, use `XIOSimPhysics` in the `SIM` case.
@@ -179,21 +179,16 @@ commit `simgui-ds.json`: it holds your own key setup.
 4. Read the report: `FAIL` lines are problems, with the time they happened. Open the same log in
    AdvantageScope and jump to that time.
 
-## Lessons the team learned building the elevator
+## Lessons
 
-- Check that a part on a moving stage clears every other stage through the **whole** travel, not
-  just where it rests.
-- Work out kG, kV and kA from the motor model and the masses, and pin them with a test. Guessing
-  kG was 25% low.
-- Before tuning gains, log the motion profile's target next to the position. If the motor is at
-  its current limit, no gain can fix it (the elevator's "overshoot" was the 60 A limit).
-- AdvantageKit logs a value only when it changes. A check must ask "what was it at this time?",
-  not only look at the changes.
-- Test like a match: set an alliance. Bugs that depend on the alliance stay hidden otherwise.
-- Check every layout key against a real log. A key nobody logs makes AdvantageScope quietly draw
-  nothing.
-- When a check fails, first make sure it measured the right thing, then re-run it on the same log.
-  The real problem must still show.
+- A part on a moving stage must clear every other stage through the whole travel, not just at rest.
+- Work out kG, kV and kA from the motor model and the masses, and pin them with a test.
+- Before tuning gains, log the motion profile's target next to the position. If the motor sits at
+  its current limit, no gain can fix it.
+- AdvantageKit logs a value only when it changes. A check must ask "what was it at this time?".
+- Test like a match: set an alliance.
+- Check every layout key against a real log. A key nobody logs makes AdvantageScope draw nothing.
+- When a check fails, first make sure it measured the right thing.
 
 ## What the simulator cannot show
 

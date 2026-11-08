@@ -18,21 +18,8 @@ import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 /**
- * The decisions for a two-stage cascade elevator. It talks to the hardware only through ElevatorIO,
- * so tests can use ElevatorIOSim and the simulator can use ElevatorIOSimPhysics.
- *
- * <p>Every height is the carriage height in meters above the bottom hard stop. The motor's position
- * reads 0 at boot wherever the carriage really is, so the elevator refuses to move to a goal until
- * it has seen the bottom limit switch (homed). What it must do is written in
- * docs/elevator-requirements.md.
- *
- * <p>For AdvantageScope it logs, under Mech/Elevator/:
- *
- * <ul>
- *   <li>ComponentPoses: where each moving part of the 3D model is (0 = stage 1, 1 = carriage)
- *   <li>ComponentPosesGoal: the same for the goal, drawn as a see-through "ghost"
- *   <li>Mechanism2d: a 2D side view
- * </ul>
+ * The decisions for a two-stage cascade elevator, talking to hardware only through ElevatorIO. It
+ * won't move to a goal until it has seen the bottom limit switch (homed).
  */
 public class ElevatorSubsystem extends SubsystemBase {
 
@@ -44,11 +31,9 @@ public class ElevatorSubsystem extends SubsystemBase {
     VOLTAGE
   }
 
-  // Within this much of the landing height counts as "there". It is a little more than the motor
-  // can stop short by, so the elevator always switches from Motion Magic to the gentle push.
+  // A bit more than Motion Magic can stop short by, so it always switches to the gentle push.
   private static final double LANDING_SLACK_METERS = 0.005;
 
-  // The hardware layer: real, simulated, or one that does nothing.
   private final ElevatorIO io;
   private final ElevatorIOInputsAutoLogged inputs = new ElevatorIOInputsAutoLogged();
 
@@ -62,7 +47,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private int homingLoops = 0;
   private int notArrivedLoops = 0;
 
-  // Dashboard warning. Not private, so the tests in this folder can check it.
+  // Not private, so tests can check them.
   final Alert disconnectedAlert =
       new Alert(
           "Elevator: motor (CAN " + ElevatorConstants.MOTOR_CAN_ID + ") disconnected.",
@@ -74,8 +59,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   final Alert notArrivedAlert =
       new Alert("Elevator: told to move but not at the goal after 2 s.", AlertType.kWarning);
 
-  // Gains you can change on the dashboard while tuning, under /Tuning/Elevator.
-  // Not private, so the tests in this folder can type on the pretend dashboard.
+  // Tuning gains on the dashboard. Not private, so tests can set them.
   final LoggedNetworkNumber kP =
       new LoggedNetworkNumber("/Tuning/Elevator/kP", ElevatorConstants.KP);
   final LoggedNetworkNumber kI =
@@ -91,7 +75,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   final LoggedNetworkNumber kA =
       new LoggedNetworkNumber("/Tuning/Elevator/kA", ElevatorConstants.KA);
 
-  // The gains the motor has now, so new ones are sent only when something changed.
+  // Last gains sent, so new ones go out only when one changes.
   private final double[] sentGains = {
     ElevatorConstants.KP,
     ElevatorConstants.KI,
@@ -102,7 +86,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     ElevatorConstants.KA
   };
 
-  // 2D side view: the fixed stage, and a carriage line that grows with height.
+  // 2D side view: a fixed base and a carriage line that grows with height.
   private final LoggedMechanism2d mechanism2d = new LoggedMechanism2d(1.0, 1.8);
   private final LoggedMechanismLigament2d carriageLine;
 
@@ -132,7 +116,6 @@ public class ElevatorSubsystem extends SubsystemBase {
   /** Runs every 20 ms: read the hardware, check for problems, decide, then log. */
   @Override
   public void periodic() {
-    // Read the hardware first, so every decision below uses this loop's values.
     io.updateInputs(inputs);
     Logger.processInputs("Mech/Elevator/IO", inputs);
 
@@ -163,7 +146,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private void runHoming() {
     homingLoops++;
     if (inputs.bottomLimitPressed) {
-      // homeOnSwitchPress() has already set the position to 0. Now rest on the bottom.
+      // homeOnSwitchPress() already zeroed the position.
       setGoal(ElevatorConstants.STOW_HEIGHT_METERS);
       io.stop();
     } else if (homingLoops >= ElevatorConstants.HOMING_TIMEOUT_LOOPS) {
@@ -253,11 +236,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     Logger.recordOutput("Mech/Elevator/Mechanism2d", mechanism2d);
   }
 
-  /**
-   * Where each moving part of the 3D model is, for a carriage height. The model's parts are
-   * exported with the elevator fully down, so each pose is just how far that part has risen. In a
-   * cascade, stage 1 rises half as far as the carriage (1 / RIGGING_RATIO).
-   */
+  /** 3D model poses for a carriage height: stage 1 rises 1 / RIGGING_RATIO as far. */
   public static Pose3d[] componentPoses(double carriageHeightMeters) {
     double stage1HeightMeters = carriageHeightMeters / ElevatorConstants.RIGGING_RATIO;
     Pose3d stage1 = new Pose3d(0, 0, stage1HeightMeters, new Rotation3d());

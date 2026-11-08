@@ -71,7 +71,6 @@ public class ElevatorPhysicsTest {
       plant.setInputVoltage(ElevatorConstants.KG);
       plant.update(0.02);
     }
-    // the plant's gravity uses the gravity-exact mass, so kG should hold to within a few mm
     assertEquals(0.5, plant.getPositionMeters(), 0.01, "carriage drifted under kG alone");
   }
 
@@ -91,9 +90,7 @@ public class ElevatorPhysicsTest {
   /** The current limit leaves room for the hardest stop: slowing down while moving down. */
   @Test
   public void statorLimitLeavesHeadroomForWorstCaseDeceleration() {
-    // Worst case is slowing down while moving down: the motor fights gravity plus deceleration.
-    // Phoenix's motor model reports ~30% more stator current than WPILib's for the same torque,
-    // so require 40% headroom or Motion Magic gets current limited and overshoots (seen in sim).
+    // Phoenix reports about 30% more stator current than WPILib's model, so keep 40% headroom.
     double torque =
         ElevatorIOSimPhysics.EFFECTIVE_MASS_KG
             * (GRAVITY_MPS2 + ElevatorConstants.ACCELERATION_MPS2)
@@ -112,7 +109,6 @@ public class ElevatorPhysicsTest {
   /** The Motion Magic cruise speed is below what the motor can reach. */
   @Test
   public void profileIsAchievable() {
-    // the cruise velocity must be under ~85% of free speed at 12 V so Motion Magic can track it
     double freeSpeedMps = 12.0 / ElevatorConstants.KV;
     assertTrue(
         ElevatorConstants.CRUISE_VELOCITY_MPS < 0.85 * freeSpeedMps,

@@ -12,21 +12,8 @@ import frc.robot.Constants.ElevatorConstants;
 import org.littletonrobotics.junction.Logger;
 
 /**
- * The elevator the simulator uses (CLAUDE.md Step 8, physics): it really moves, in the Sim GUI and
- * in AdvantageScope's 3D view. Unit tests use the simpler ElevatorIOSim instead.
- *
- * <p>It runs the real {@link ElevatorIOTalonFX} code against Phoenix's simulated TalonFX, so the
- * same onboard Motion Magic controller and config run in sim and on the robot. WPILib's {@link
- * ElevatorSim} turns the simulated motor voltage into carriage motion.
- *
- * <p>Cascade model: ElevatorSim has one mass on one drum. Referred to the carriage, gravity on a
- * cascade is (m_carriage + m_stage1 / R) g, and the drum moves the carriage R times its surface
- * travel, so we use that mass and drum radius * R. (Inertia is really m_carriage + m_stage1 / R^2,
- * so this slightly overestimates it, which is the conservative direction for tuning.)
- *
- * <p>The plant steps on its own 5 ms thread, not once per 20 ms robot loop. The TalonFX closes its
- * loop at 1 kHz, and feeding it positions that are up to 20 ms stale made the simulated elevator
- * overshoot 12 cm on fast moves, which the real one would not.
+ * The simulator's elevator: runs the real ElevatorIOTalonFX code against a simulated TalonFX and a
+ * WPILib ElevatorSim physics model. The cascade is modeled as one mass on one drum.
  */
 public class ElevatorIOSimPhysics extends ElevatorIOTalonFX {
   /** Carriage height that counts as resting on the bottom limit switch. */
@@ -36,12 +23,14 @@ public class ElevatorIOSimPhysics extends ElevatorIOTalonFX {
   public static final double TOP_HARD_STOP_METERS = ElevatorConstants.MAX_HEIGHT_METERS + 0.02;
 
   public static final DCMotor GEARBOX = DCMotor.getKrakenX60(1);
+  // Cascade referred to the carriage: gravity sees m_carriage + m_stage1 / R, drum radius is R x.
   public static final double EFFECTIVE_MASS_KG =
       ElevatorConstants.CARRIAGE_MASS_KG
           + ElevatorConstants.STAGE_1_MASS_KG / ElevatorConstants.RIGGING_RATIO;
   public static final double EFFECTIVE_DRUM_RADIUS_METERS =
       ElevatorConstants.DRUM_PITCH_DIAMETER_METERS / 2.0 * ElevatorConstants.RIGGING_RATIO;
 
+  // Faster than the 20 ms robot loop, so the TalonFX's 1 kHz loop doesn't see stale positions.
   private static final double SIM_PERIOD_SECONDS = 0.005;
 
   private final ElevatorSim physics;
@@ -52,10 +41,7 @@ public class ElevatorIOSimPhysics extends ElevatorIOTalonFX {
   /** The encoder reads 0 at boot wherever the carriage really is, like the real robot. */
   private final double bootHeightMeters;
 
-  /**
-   * @param startHeightMeters where the carriage really is at boot. Anything above the limit switch
-   *     means the robot boots un-homed and has to run the homing routine, like the real robot.
-   */
+  /** Builds the sim with the carriage at startHeightMeters; above the switch means un-homed. */
   public ElevatorIOSimPhysics(double startHeightMeters) {
     super();
     bootHeightMeters = startHeightMeters;
@@ -68,7 +54,7 @@ public class ElevatorIOSimPhysics extends ElevatorIOTalonFX {
     simThread.startPeriodic(SIM_PERIOD_SECONDS);
   }
 
-  /** The plant model, shared with ElevatorPhysicsTest so the test exercises the same physics. */
+  /** The plant model, shared with ElevatorPhysicsTest. */
   public static ElevatorSim createPhysics(double startHeightMeters) {
     return new ElevatorSim(
         GEARBOX,
@@ -104,6 +90,7 @@ public class ElevatorIOSimPhysics extends ElevatorIOTalonFX {
             : !ElevatorConstants.LIMIT_SWITCH_PRESSED_VALUE);
   }
 
+  /** Reads the simulated motor and also logs the true height. */
   @Override
   public void updateInputs(ElevatorIOInputs inputs) {
     super.updateInputs(inputs);

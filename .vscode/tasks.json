@@ -1,6 +1,5 @@
 {
-  // Gatorbotics commands for VS Code. Run them with Cmd+Shift+P (Ctrl+Shift+P on Windows), then
-  // "Tasks: Run Task", then pick one. See docs/3d-sim-workflow.md.
+  // Run with Cmd+Shift+P (Ctrl+Shift+P on Windows), then "Tasks: Run Task".
   "version": "2.0.0",
   "options": {
     "env": {

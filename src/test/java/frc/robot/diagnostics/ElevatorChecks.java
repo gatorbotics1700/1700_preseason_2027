@@ -8,11 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Things to look for in the elevator's log. Each check is one small class below; all() lists them.
- * Limits come from ElevatorConstants, so the checks follow the code when it is retuned.
- *
- * <p>To add a check: copy the smallest class below (StaysInVoltageAndCurrentLimits), give it a new
- * name and logic, and add it to all().
+ * Things to look for in the elevator's log, with limits read from ElevatorConstants. To add a
+ * check, copy StaysInVoltageAndCurrentLimits and add it to all().
  */
 public final class ElevatorChecks {
 
@@ -64,9 +61,7 @@ public final class ElevatorChecks {
     }
   }
 
-  /**
-   * Each move settles within tolerance in about its Motion Magic profile time, without overshoot.
-   */
+  /** Each move settles within tolerance in about its profile time, without overshoot. */
   static class MovesReachGoalInTime implements LogCheck {
     // Extra time allowed on top of the profile, for the last bit of settling.
     private static final double SETTLE_MARGIN_SECONDS = 0.6;
@@ -311,11 +306,7 @@ public final class ElevatorChecks {
     }
   }
 
-  /**
-   * Every move in the log. A move starts when the elevator enters POSITION mode or gets a new goal
-   * while in it, and ends at the next start, when it leaves POSITION mode, or at the end of the
-   * log.
-   */
+  /** Every move in the log: each new goal or entry into POSITION mode starts one. */
   static List<Move> findMoves(LogFile log) {
     List<Double> changeTimes = new ArrayList<>();
     for (TextSample mode : log.texts(OUT + "ControlMode")) {
@@ -378,10 +369,7 @@ public final class ElevatorChecks {
     return largest;
   }
 
-  /**
-   * About how long Motion Magic takes to move a distance: speed up, cruise, slow down, plus the
-   * jerk ramps at each end.
-   */
+  /** About how long Motion Magic takes to move a distance, including the jerk ramps. */
   static double profileSeconds(double distanceMeters) {
     double cruise = ElevatorConstants.CRUISE_VELOCITY_MPS;
     double accel = ElevatorConstants.ACCELERATION_MPS2;
