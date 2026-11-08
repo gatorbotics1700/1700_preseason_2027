@@ -95,7 +95,7 @@ public class ElevatorModelTest {
   public void fixedStageMatchesConstants() throws IOException {
     Box base = Glb.readBounds(ElevatorModel.FOLDER.resolve("model.glb"));
     double topZ = ElevatorConstants.BASE_BOTTOM_Z_METERS + ElevatorConstants.BASE_HEIGHT_METERS;
-    assertEquals(topZ, base.maxZ, TOLERANCE_METERS, "base top");
+    assertEquals(topZ, base.maxZMeters, TOLERANCE_METERS, "base top");
   }
 
   /** Stage 1 in the model matches the constants. */
@@ -105,10 +105,11 @@ public class ElevatorModelTest {
     double bottomZ = ElevatorConstants.STAGE_1_BOTTOM_Z_METERS;
     double halfWidth =
         (ElevatorConstants.STAGE_1_RAIL_SPACING_METERS + ElevatorConstants.RAIL_TUBE_Y_METERS) / 2;
-    assertEquals(bottomZ, stage1.minZ, TOLERANCE_METERS);
-    assertEquals(bottomZ + ElevatorConstants.STAGE_1_HEIGHT_METERS, stage1.maxZ, TOLERANCE_METERS);
-    assertEquals(halfWidth, stage1.maxY, TOLERANCE_METERS);
-    assertEquals(-halfWidth, stage1.minY, TOLERANCE_METERS);
+    assertEquals(bottomZ, stage1.minZMeters, TOLERANCE_METERS);
+    assertEquals(
+        bottomZ + ElevatorConstants.STAGE_1_HEIGHT_METERS, stage1.maxZMeters, TOLERANCE_METERS);
+    assertEquals(halfWidth, stage1.maxYMeters, TOLERANCE_METERS);
+    assertEquals(-halfWidth, stage1.minYMeters, TOLERANCE_METERS);
   }
 
   /** The carriage in the model matches the constants. */
@@ -116,10 +117,11 @@ public class ElevatorModelTest {
   public void carriageMatchesConstants() throws IOException {
     Box carriage = Glb.readBounds(ElevatorModel.FOLDER.resolve("model_1.glb"));
     double bottomZ = ElevatorConstants.CARRIAGE_BOTTOM_Z_METERS;
-    assertEquals(bottomZ, carriage.minZ, TOLERANCE_METERS);
+    assertEquals(bottomZ, carriage.minZMeters, TOLERANCE_METERS);
     assertEquals(
-        bottomZ + ElevatorConstants.CARRIAGE_HEIGHT_METERS, carriage.maxZ, TOLERANCE_METERS);
-    assertEquals(ElevatorConstants.CARRIAGE_WIDTH_METERS / 2, carriage.maxY, TOLERANCE_METERS);
+        bottomZ + ElevatorConstants.CARRIAGE_HEIGHT_METERS, carriage.maxZMeters, TOLERANCE_METERS);
+    assertEquals(
+        ElevatorConstants.CARRIAGE_WIDTH_METERS / 2, carriage.maxYMeters, TOLERANCE_METERS);
   }
 
   /** Each stage sits fully behind the one it rides in, so no parts collide anywhere in travel. */
@@ -130,8 +132,11 @@ public class ElevatorModelTest {
     Box carriage = Glb.readBounds(ElevatorModel.FOLDER.resolve("model_1.glb"));
     double baseRailBackX =
         ElevatorConstants.ELEVATOR_X_METERS - ElevatorConstants.RAIL_TUBE_X_METERS / 2;
-    assertTrue(stage1.maxX <= baseRailBackX + TOLERANCE_METERS, "stage 1 hits the fixed stage");
-    assertTrue(carriage.maxX <= stage1.minX + TOLERANCE_METERS, "carriage hits stage 1");
-    assertTrue(base.maxX >= ElevatorConstants.ELEVATOR_X_METERS, "fixed stage missing from model");
+    assertTrue(
+        stage1.maxXMeters <= baseRailBackX + TOLERANCE_METERS, "stage 1 hits the fixed stage");
+    assertTrue(
+        carriage.maxXMeters <= stage1.minXMeters + TOLERANCE_METERS, "carriage hits stage 1");
+    assertTrue(
+        base.maxXMeters >= ElevatorConstants.ELEVATOR_X_METERS, "fixed stage missing from model");
   }
 }

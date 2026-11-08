@@ -4,7 +4,16 @@ import org.littletonrobotics.junction.AutoLog;
 
 /**
  * The elevator hardware layer: one motor and a bottom limit switch. Heights are carriage meters
- * above the bottom hard stop; new ElevatorIO() {} does nothing.
+ * above the bottom hard stop.
+ *
+ * <p>An interface is a list of methods with no code of its own. Each version fills them in:
+ *
+ * <ul>
+ *   <li>ElevatorIOTalonFX: the real motor and switch.
+ *   <li>ElevatorIOSimPhysics: the simulator, with physics.
+ *   <li>ElevatorIOSim: pretend hardware for unit tests.
+ *   <li>new ElevatorIO() {}: does nothing, to turn the elevator off.
+ * </ul>
  */
 public interface ElevatorIO {
 
