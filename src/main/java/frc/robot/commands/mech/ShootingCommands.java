@@ -59,8 +59,7 @@ public class ShootingCommands {
       if (Calculations.withinDeadband(
           shooterSubsystem.getFlywheelRotorVelocity(),
           shotParameters.shotSpeed,
-          ShooterConstants.FLYWHEEL_SPEED_DEADBAND,
-          false)) {
+          ShooterConstants.FLYWHEEL_SPEED_DEADBAND, false)) {
         shooterSubsystem.setDesiredTransitionSpeed(ShooterConstants.TRANSITION_SPEED);
       }
     }
