@@ -88,7 +88,8 @@ The code must be easy for students to read. **Keep it simple.** Students have li
   - `util/RobotConfigLoader.java`: reads the per-robot config file.
   - `subsystems/template/`: starter files for a **new** mechanism (one motor at a set speed). Not used by the robot. See its `README.md`.
   - `util/SimSmoke.java`: runs one auto in the simulator with no window, for `./gradlew simSmoke`.
-- **Test folders** (under `src/test/java/frc/robot/`): `subsystems/mech/` (mechanism tests), `diagnostics/` (log checks, one small class per problem to look for), `view3d/` (3D models built from the constants, and their checks).
+  - `util/TunableGains.java` (dashboard gains, sent only when changed) and `util/LoopTimer.java` (counts loops for timeouts and alerts): shared helpers for any mechanism.
+- **Test folders** (under `src/test/java/frc/robot/`): `subsystems/mech/` (mechanism tests), `diagnostics/` (log checks, one small class per problem; `PositionChecks` gives any position mechanism the standard ones), `view3d/` (3D models built from the constants, and their checks).
 - **Config files:** `src/main/deploy/configFiles/`. **Only `config_alecto.properties` is in use.** The others (`hulk`, `sting`, `experimental`) are for retired robots. New keys go in `config_alecto.properties` only.
 - **Build and run (in VS Code):** press Cmd+Shift+P, then:
   - `WPILib: Build Robot Code` to build

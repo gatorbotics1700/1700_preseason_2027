@@ -30,16 +30,20 @@ Before asking for review, run code tests, then smoke test sim. Both must end wit
    `ComponentPosesGoal` for a see-through ghost at the goal). Test the math.
 3. **3D model.** A folder in `ascope_assets/` with `config.json`, `model.glb` (the robot) and
    `model_0.glb`, `model_1.glb`... (one per pose). No CAD yet? Build boxes from your constants with
-   `view3d/Glb`, in a test that rebuilds the files when a constant changes. CAD later? Export
+   `view3d/Glb`, in a test that keeps them in sync with `view3d/ModelFiles`. CAD later? Export
    `.glb` files from Onshape and keep the size tests.
 4. **Layout.** Give the mechanism its own AdvantageScope layout file and leave the team layout
    alone. In its 3D tab, list the robot, then a "component" reading your ComponentPoses. Add a
    `View3dChecks.LayoutKeysAreLogged` check for it.
 5. **Demo auto.** A command that exercises the mechanism, added to the auto chooser. Run it with
    Smoke test sim.
-6. **Log checks.** Make `diagnostics/<Name>Checks.java` (copy a class from `RobotChecks`), list
-   the keys each check needs (missing keys skip it), add it to `LogDiagnostics.allChecks()`, and
-   test it with a small fake log (`TestLog`).
+6. **Log checks.** A position mechanism gets the standard checks (homes before moving, moves reach
+   the goal, stays in travel and in its limits) by filling in a `PositionChecks.Settings`. Put
+   that, and any checks of its own, in `diagnostics/<Name>Checks.java`, add it to
+   `LogDiagnostics.allChecks()`, and test new checks with a small fake log (`TestLog`).
+
+Shared helpers for the robot code: `util/TunableGains` (dashboard gains, sent only when changed)
+and `util/LoopTimer` (counts loops for timeouts and "not arrived" alerts).
 
 ## Watching it in AdvantageScope
 
