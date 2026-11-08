@@ -40,4 +40,7 @@ short last record; worked around in `LogFile`, worth reporting upstream).
 - The elevator's model is a stand-in, its CAN ID and DIO port are placeholders, and
   `ENABLED_ON_REAL_ROBOT = false`. Real CAD needs the build team's export and measured masses.
 - Tests are on in this branch (`forkEvery = 1`, like `intake-nidhi`); main still has them off.
-- Nobody has driven the elevator by hand in the Sim GUI yet.
+- The elevator drives from the arrow keys in the simulator (Keyboard 2, joystick 2). Checked by
+  scripting the key presses; nobody has pressed them by hand yet.
+- Found while testing teleop: intake deploy motors 9 and 10 report the same "Config" CAN error 3
+  times each, once the robot is in teleop (sim smoke runs only an auto, so it misses this).

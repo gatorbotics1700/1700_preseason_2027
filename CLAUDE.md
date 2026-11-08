@@ -231,7 +231,7 @@ A linear mechanism (two-stage cascade) taken through every step, including Step 
 
 **How it works:** onboard Motion Magic in meters. It homes on the bottom switch (gives up after 200 loops), refuses to move until homed, and lands gently on the bottom instead of holding current. Alerts: disconnected, homing failed, not arrived after 100 loops.
 
-**Simulator controls:** run the "Elevator Demo" auto, or drive it: codriver (joystick slot 1) D-pad = heights, Back = home.
+**Simulator controls:** run the "Elevator Demo" auto, or drive it with no key setup: Keyboard 2 (already on joystick 2) arrow keys Up = high, Right = mid, Left = low, Down = stow; Home key (Fn+Left on a Mac) = home. On the robot: codriver D-pad and Back.
 
 ## Definition of done (the team checklist)
 

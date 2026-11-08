@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -89,6 +90,10 @@ public class RobotContainer {
   // Controllers
   private CommandXboxController controller = null; // port 0
   private CommandXboxController controller_two = null; // port 1
+  // Simulator only: Keyboard 2 in the Sim GUI drives the elevator (see configureElevatorSimKeys).
+  private static final int SIM_ELEVATOR_KEYBOARD_PORT = 2;
+  // An arrow key moves its keyboard axis all the way to -1 or 1; past half counts as pressed.
+  private static final double ARROW_KEY_PRESSED = 0.5;
 
   // Dashboard inputs
   // private final MultiStepAutoChooser multiStepAutoChooser; // COMMENTED OUT - using PathPlanner
@@ -904,8 +909,14 @@ public class RobotContainer {
     }
   }
 
-  /** Codriver D-pad picks an elevator height, Back homes it. Nothing else uses these buttons. */
+  /**
+   * Elevator controls. On a controller: the codriver's D-pad picks a height, Back homes it (nothing
+   * else uses these buttons). In the simulator: the arrow keys and Home key, below.
+   */
   public void configureElevatorBindings() {
+    if (Constants.currentMode == Constants.Mode.SIM) {
+      configureElevatorSimKeys();
+    }
     if (controller_two == null) {
       return;
     }
@@ -921,6 +932,29 @@ public class RobotContainer {
         .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.MID_HEIGHT_METERS));
     controller_two
         .povUp()
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.HIGH_HEIGHT_METERS));
+  }
+
+  /**
+   * Simulator only: drive the elevator from the keyboard with no remapping. The team's Sim GUI
+   * setup (simgui-ds.json) already puts Keyboard 2 on joystick 2: its arrow keys are axes 0 and 1,
+   * and the Home key is button 2. No robot code uses joystick 2. Same layout as the D-pad: Up =
+   * high, Right = mid, Left = low, Down = stow, Home = home (Fn+Left on a Mac laptop).
+   */
+  private void configureElevatorSimKeys() {
+    CommandGenericHID keyboard = new CommandGenericHID(SIM_ELEVATOR_KEYBOARD_PORT);
+    keyboard.button(2).onTrue(ElevatorCommands.home(elevatorSubsystem));
+    keyboard
+        .axisGreaterThan(1, ARROW_KEY_PRESSED)
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.STOW_HEIGHT_METERS));
+    keyboard
+        .axisLessThan(0, -ARROW_KEY_PRESSED)
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.LOW_HEIGHT_METERS));
+    keyboard
+        .axisGreaterThan(0, ARROW_KEY_PRESSED)
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.MID_HEIGHT_METERS));
+    keyboard
+        .axisLessThan(1, -ARROW_KEY_PRESSED)
         .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.HIGH_HEIGHT_METERS));
   }
 

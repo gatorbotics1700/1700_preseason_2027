@@ -143,13 +143,30 @@ Quit AdvantageScope with Cmd+Q (Mac). Closing the window resets the layout.
 
 ## Driving it by hand in the Sim GUI
 
-Drag a keyboard onto the joystick slot, click Disabled, then Teleoperated. For the elevator, the
-codriver is joystick slot 1: D-pad = heights, Back = home.
+Start `WPILib: Simulate Robot Code` (Sim GUI), click Disabled, then Teleoperated. Click into the
+Sim GUI window so it gets your key presses.
 
-On a Mac laptop there is no numpad for the D-pad: in **DS > Keyboard 1 Settings**, map the POV
-(D-pad) to the arrow keys. The Mac simulator reads the codriver's Back button as button 11, so
-raise the button count to 11 and give button 11 a key. Don't commit `simgui-ds.json` (it holds
-your own key setup).
+**Elevator, no setup needed:** the team's Sim GUI setup already puts Keyboard 2 on joystick 2, and
+in the simulator the elevator listens to it:
+
+| Key | Elevator |
+|---|---|
+| Up arrow | high (1.15 m) |
+| Right arrow | mid (0.80 m) |
+| Left arrow | low (0.40 m) |
+| Down arrow | stow (0 m) |
+| Home (Fn+Left arrow on a Mac laptop) | home |
+
+If nothing happens, check that the Sim GUI's Joysticks panel shows Keyboard 2 on Joystick[2].
+
+**Your own mechanism:** do the same. Bind it, in the simulator only, to a keyboard that is already
+set up, on a joystick port no robot code uses (see `configureElevatorSimKeys()` in
+`RobotContainer`). Then nobody has to remap keys. On the real robot, the codriver's D-pad and Back
+button drive the elevator.
+
+If you do remap keys (for example the codriver's D-pad on a Mac laptop, which has no numpad: map
+the POV to keys in **DS > Keyboard 1 Settings**; the Mac simulator reads Back as button 11), don't
+commit `simgui-ds.json`: it holds your own key setup.
 
 ## Checking a match log
 
