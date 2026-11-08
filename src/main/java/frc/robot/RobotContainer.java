@@ -26,9 +26,11 @@ import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandGenericHID;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.Constants.ElevatorConstants;
 import frc.robot.Constants.HoodConstants;
 import frc.robot.Constants.HopperFloorConstants;
 import frc.robot.Constants.IntakeConstants;
@@ -39,6 +41,7 @@ import frc.robot.commands.drive.DriveCommands;
 import frc.robot.commands.drive.DriveSystemsCheckCommands;
 import frc.robot.commands.drive.DriveUnderTrenchCommand;
 import frc.robot.commands.drive.PointAtTargetCommand;
+import frc.robot.commands.mech.ElevatorCommands;
 import frc.robot.commands.mech.HoodCommands;
 import frc.robot.commands.mech.IntakeCommands;
 import frc.robot.commands.mech.ShootingCommands;
@@ -48,6 +51,10 @@ import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.mech.ElevatorIO;
+import frc.robot.subsystems.mech.ElevatorIOSimPhysics;
+import frc.robot.subsystems.mech.ElevatorIOTalonFX;
+import frc.robot.subsystems.mech.ElevatorSubsystem;
 import frc.robot.subsystems.mech.HoodSubsystem;
 import frc.robot.subsystems.mech.HopperFloorSubsystem;
 import frc.robot.subsystems.mech.HubTrackerSubsystem;
@@ -70,6 +77,7 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Vision vision;
+  private final ElevatorSubsystem elevatorSubsystem;
 
   private final HoodSubsystem hoodSubsystem = new HoodSubsystem();
   private final HopperFloorSubsystem hopperFloorSubsystem = new HopperFloorSubsystem();
@@ -82,6 +90,10 @@ public class RobotContainer {
   // Controllers
   private CommandXboxController controller = null; // port 0
   private CommandXboxController controller_two = null; // port 1
+  // Simulator only: Keyboard 2 in the Sim GUI drives the elevator.
+  private static final int SIM_ELEVATOR_KEYBOARD_PORT = 2;
+  // An arrow key moves its keyboard axis all the way to -1 or 1; past half counts as pressed.
+  private static final double ARROW_KEY_PRESSED = 0.5;
 
   // Dashboard inputs
   // private final MultiStepAutoChooser multiStepAutoChooser; // COMMENTED OUT - using PathPlanner
@@ -114,6 +126,11 @@ public class RobotContainer {
                     VisionConstants.CAMERA_0_NAME, VisionConstants.ROBOT_TO_CAMERA_0),
                 new VisionIOPhotonVision(
                     VisionConstants.CAMERA_1_NAME, VisionConstants.ROBOT_TO_CAMERA_1));
+        elevatorSubsystem =
+            new ElevatorSubsystem(
+                ElevatorConstants.ENABLED_ON_REAL_ROBOT
+                    ? new ElevatorIOTalonFX()
+                    : new ElevatorIO() {});
         break;
 
       case SIM:
@@ -138,6 +155,8 @@ public class RobotContainer {
                     VisionConstants.ROBOT_TO_CAMERA_1,
                     drive::getPose));
         drive.setPose(Constants.FieldCoordinates.SIM_START_POSE);
+        // Boot the sim carriage 5 cm up, so it starts un-homed like a real robot would.
+        elevatorSubsystem = new ElevatorSubsystem(new ElevatorIOSimPhysics(0.05));
         DriverStation.silenceJoystickConnectionWarning(true);
         break;
 
@@ -152,6 +171,7 @@ public class RobotContainer {
                 new ModuleIO() {},
                 (pose) -> {});
         vision = new Vision(drive);
+        elevatorSubsystem = new ElevatorSubsystem(new ElevatorIO() {});
 
         break;
     }
@@ -191,6 +211,7 @@ public class RobotContainer {
     // Set up auto routines with PathPlanner's auto chooser (using pre-made .auto files)
     autoChooser =
         new LoggedDashboardChooser<>("Auto/PathPlanner Auto", AutoBuilder.buildAutoChooser());
+    autoChooser.addOption("Elevator Demo", ElevatorCommands.demoCycle(elevatorSubsystem));
 
     // COMMENTED OUT - using PathPlanner pre-made autos instead of DynamicAutoBuilder
     // multiStepAutoChooser =
@@ -888,6 +909,50 @@ public class RobotContainer {
     }
   }
 
+  /** Elevator controls: codriver D-pad picks a height and Back homes; arrow keys in the sim. */
+  public void configureElevatorBindings() {
+    if (Constants.currentMode == Constants.Mode.SIM) {
+      configureElevatorSimKeys();
+    }
+    if (controller_two == null) {
+      return;
+    }
+    controller_two.back().onTrue(ElevatorCommands.home(elevatorSubsystem));
+    controller_two
+        .povDown()
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.STOW_HEIGHT_METERS));
+    controller_two
+        .povLeft()
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.LOW_HEIGHT_METERS));
+    controller_two
+        .povRight()
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.MID_HEIGHT_METERS));
+    controller_two
+        .povUp()
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.HIGH_HEIGHT_METERS));
+  }
+
+  /**
+   * Simulator only: arrow keys pick a height like the D-pad, and Home (Fn+Left on a Mac) homes.
+   * simgui-ds.json puts Keyboard 2 on joystick 2: arrows are axes 0 and 1, Home is button 2.
+   */
+  private void configureElevatorSimKeys() {
+    CommandGenericHID keyboard = new CommandGenericHID(SIM_ELEVATOR_KEYBOARD_PORT);
+    keyboard.button(2).onTrue(ElevatorCommands.home(elevatorSubsystem));
+    keyboard
+        .axisGreaterThan(1, ARROW_KEY_PRESSED)
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.STOW_HEIGHT_METERS));
+    keyboard
+        .axisLessThan(0, -ARROW_KEY_PRESSED)
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.LOW_HEIGHT_METERS));
+    keyboard
+        .axisGreaterThan(0, ARROW_KEY_PRESSED)
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.MID_HEIGHT_METERS));
+    keyboard
+        .axisLessThan(1, -ARROW_KEY_PRESSED)
+        .onTrue(ElevatorCommands.goTo(elevatorSubsystem, ElevatorConstants.HIGH_HEIGHT_METERS));
+  }
+
   public Command getAutonomousCommand() {
     // Using PathPlanner pre-made autos
     Command selected = autoChooser.get();
@@ -950,6 +1015,7 @@ public class RobotContainer {
     CommandScheduler.getInstance().getActiveButtonLoop().clear();
     configureCompDriverButtonBindings();
     configureCompCodriverButtonBindings();
+    configureElevatorBindings();
     // configureDriverButtonBindings();
     // configureCodriverButtonBindings();
   }
