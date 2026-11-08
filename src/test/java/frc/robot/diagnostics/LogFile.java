@@ -1,6 +1,5 @@
 package frc.robot.diagnostics;
 
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.util.datalog.DataLogIterator;
 import edu.wpi.first.util.datalog.DataLogReader;
@@ -71,18 +70,6 @@ public class LogFile {
     }
   }
 
-  /** One logged 2D pose (for example the robot on the field), and when it was logged. */
-  public static class Pose2dSample {
-    public final double timeSeconds;
-    public final Pose2d value;
-
-    /** A 2D pose logged at a time. */
-    Pose2dSample(double timeSeconds, Pose2d value) {
-      this.timeSeconds = timeSeconds;
-      this.value = value;
-    }
-  }
-
   private static final double MICROSECONDS_PER_SECOND = 1e6;
   // AdvantageKit saves the robot's console output under this key.
   public static final String CONSOLE_KEY = "/RealOutputs/Console";
@@ -96,7 +83,6 @@ public class LogFile {
   private final Map<String, List<BooleanSample>> booleans = new HashMap<>();
   private final Map<String, List<TextSample>> texts = new HashMap<>();
   private final Map<String, List<PosesSample>> poses = new HashMap<>();
-  private final Map<String, List<Pose2dSample>> pose2ds = new HashMap<>();
   // Console text from outside the log, added with addConsoleText().
   private final StringBuilder extraConsoleText = new StringBuilder();
 
@@ -139,8 +125,6 @@ public class LogFile {
       storeBoolean(key.name, new BooleanSample(timeSeconds, record.getBoolean()));
     } else if (type.equals("string")) {
       storeText(key.name, new TextSample(timeSeconds, record.getString()));
-    } else if (type.equals("struct:Pose2d")) {
-      storePose2d(key.name, new Pose2dSample(timeSeconds, readPose2d(record)));
     } else if (type.equals("struct:Pose3d[]") || type.equals("struct:Pose3d")) {
       storePoses(key.name, new PosesSample(timeSeconds, readPoses(record)));
     }
@@ -170,27 +154,12 @@ public class LogFile {
     texts.get(key).add(sample);
   }
 
-  /** Adds a 2D pose to its key's list, starting the list the first time. */
-  private void storePose2d(String key, Pose2dSample sample) {
-    if (!pose2ds.containsKey(key)) {
-      pose2ds.put(key, new ArrayList<>());
-    }
-    pose2ds.get(key).add(sample);
-  }
-
   /** Adds a pose list to its key's list, starting the list the first time. */
   private void storePoses(String key, PosesSample sample) {
     if (!poses.containsKey(key)) {
       poses.put(key, new ArrayList<>());
     }
     poses.get(key).add(sample);
-  }
-
-  /** Reads one Pose2d, with the same code the robot uses to write it. */
-  private static Pose2d readPose2d(DataLogRecord record) {
-    StructBuffer<Pose2d> buffer = StructBuffer.create(Pose2d.struct);
-    ByteBuffer bytes = ByteBuffer.wrap(record.getRaw());
-    return buffer.read(bytes);
   }
 
   /** Reads a number record of any number type as a double. */
@@ -222,13 +191,9 @@ public class LogFile {
     return new TreeSet<>(types.keySet());
   }
 
-  /** True if the log has this key with at least one value. */
+  /** True if the log has this key, of any type (even types this class doesn't read). */
   public boolean has(String key) {
-    return numbers.containsKey(key)
-        || booleans.containsKey(key)
-        || texts.containsKey(key)
-        || poses.containsKey(key)
-        || pose2ds.containsKey(key);
+    return types.containsKey(key);
   }
 
   /** Every value of a number key, oldest first. Empty if the key is missing. */
@@ -249,11 +214,6 @@ public class LogFile {
   /** Every value of a pose list key, oldest first. Empty if the key is missing. */
   public List<PosesSample> poses(String key) {
     return poses.getOrDefault(key, List.of());
-  }
-
-  /** Every value of a 2D pose key, oldest first. Empty if the key is missing. */
-  public List<Pose2dSample> pose2ds(String key) {
-    return pose2ds.getOrDefault(key, List.of());
   }
 
   /** The value of a number key at a time: the last one logged at or before it. NaN if none. */

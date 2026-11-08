@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import frc.robot.diagnostics.LogCheck;
 import frc.robot.diagnostics.LogFile;
 import frc.robot.diagnostics.Report;
-import frc.robot.diagnostics.SimSmokeKeys;
+import frc.robot.util.SimSmoke;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -49,7 +49,7 @@ public final class View3dChecks {
 
     /** The log keys this check needs. */
     public String[] requiredKeys() {
-      return new String[] {SimSmokeKeys.AUTO};
+      return new String[] {SimSmoke.AUTO_LOG_KEY};
     }
 
     /** Looks through the log and reports what it finds. */
