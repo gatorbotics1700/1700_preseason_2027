@@ -1,6 +1,5 @@
 package frc.robot.diagnostics;
 
-import frc.robot.view3d.ElevatorView3dChecks;
 import frc.robot.view3d.View3dChecks;
 import java.io.File;
 import java.io.IOException;
@@ -34,7 +33,6 @@ public final class LogDiagnostics {
     checks.addAll(RobotChecks.all());
     checks.addAll(View3dChecks.all());
     checks.addAll(ElevatorChecks.all());
-    checks.addAll(ElevatorView3dChecks.all());
     return checks;
   }
 

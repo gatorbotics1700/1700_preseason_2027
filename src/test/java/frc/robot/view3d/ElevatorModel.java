@@ -34,6 +34,10 @@ public final class ElevatorModel {
   /** Where the model files live. AdvantageScope loads this folder as custom assets. */
   public static final Path FOLDER = Path.of("ascope_assets", "Robot_GatorboticsElevator");
 
+  /** The elevator's AdvantageScope layout. */
+  public static final Path LAYOUT =
+      Path.of("src", "main", "deploy", "AdvantageScope-Layout-Elevator.json");
+
   /** The robot's name in AdvantageScope's model list. */
   public static final String ROBOT_NAME = "Gatorbotics Elevator Bot";
 

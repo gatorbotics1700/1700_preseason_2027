@@ -16,7 +16,7 @@ public class AdvantageScopeLayoutTest {
    */
   @Test
   public void field3dTabDrawsRobotThenPartsThenGhost() throws IOException {
-    List<JsonNode> sources = View3dChecks.field3dSources(ElevatorView3dChecks.LAYOUT);
+    List<JsonNode> sources = View3dChecks.field3dSources(ElevatorModel.LAYOUT);
 
     assertEquals(4, sources.size());
     assertSource(sources.get(0), "robot", "/RealOutputs/Drive/Odometry/Robot");
@@ -28,7 +28,7 @@ public class AdvantageScopeLayoutTest {
   /** The robot and the ghost use the model ElevatorModel builds, by its name. */
   @Test
   public void robotAndGhostUseTheElevatorModel() throws IOException {
-    List<JsonNode> sources = View3dChecks.field3dSources(ElevatorView3dChecks.LAYOUT);
+    List<JsonNode> sources = View3dChecks.field3dSources(ElevatorModel.LAYOUT);
 
     assertEquals(ElevatorModel.ROBOT_NAME, sources.get(0).get("options").get("model").asText());
     assertEquals(ElevatorModel.ROBOT_NAME, sources.get(2).get("options").get("model").asText());
