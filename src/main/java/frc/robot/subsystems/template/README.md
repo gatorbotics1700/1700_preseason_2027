@@ -107,6 +107,20 @@ The real intake version:
     mech.intake_right_roller_can_id=11
     ...
 
+## Next: physics, a 3D view and log checks
+
+Once your mechanism works with TemplateIOSim and its tests pass, follow
+docs/3d-sim-workflow.md. It adds, in this order:
+
+- a physics simulator (`<Name>IOSimPhysics`) that runs your real motor code,
+  so the mechanism moves in the simulator
+- a 3D view in AdvantageScope (one pose per moving part, and a model)
+- a demo auto checked by `./gradlew simSmoke`
+- log checks that also run on match logs (`./gradlew diagnoseLog`)
+
+The elevator (branch mentors/szymon/elevator-prototype) has all of these. Use it as the
+example, the way the intake is the example for this template.
+
 ## Known gaps
 
 - If the motor rejects its settings 5 times in a row, it gives up quietly,
