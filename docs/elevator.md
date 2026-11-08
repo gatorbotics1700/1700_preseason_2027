@@ -19,9 +19,9 @@ matches the code. When real CAD arrives, replace the generated files and keep th
 | Hardware: real motor, physics sim, test stand-in, do-nothing | `ElevatorIO`, `ElevatorIOTalonFX`, `ElevatorIOSimPhysics`, `ElevatorIOSim`, `new ElevatorIO() {}` |
 | Commands: home, go to a height, demo auto | `commands/mech/ElevatorCommands.java` |
 | Numbers | `ElevatorConstants` in `Constants.java`; wiring `mech.elevator_*` in `config_alecto.properties` |
-| Unit tests | `subsystems/mech/ElevatorSubsystemTest.java`, `ElevatorKinematicsTest.java`, `ElevatorPhysicsTest.java` |
-| 3D model and its checks | `view3d/ElevatorModel.java`, `ElevatorModelTest.java`, `ElevatorView3dChecks.java`, `AdvantageScopeLayoutTest.java` |
-| Log checks | `diagnostics/ElevatorChecks.java` |
+| Unit tests | `subsystems/mech/ElevatorSubsystemTest.java`, `ElevatorPhysicsTest.java` |
+| 3D model and its checks | `view3d/ElevatorModel.java`, `ElevatorModelTest.java`, `AdvantageScopeLayoutTest.java` |
+| Log checks: the shared `PositionChecks` set up for the elevator, plus its own | `diagnostics/ElevatorChecks.java` |
 | 3D files and layout | `ascope_assets/Robot_GatorboticsElevator/`, `src/main/deploy/AdvantageScope-Layout-Elevator.json` |
 
 ## How it works
