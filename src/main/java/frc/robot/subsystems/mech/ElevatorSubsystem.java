@@ -6,16 +6,11 @@ import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ElevatorConstants;
-import java.util.Arrays;
+import frc.robot.util.LoopTimer;
+import frc.robot.util.TunableGains;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
-import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
-import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 /**
  * The decisions for a two-stage cascade elevator, talking to hardware only through ElevatorIO. It
@@ -43,9 +38,9 @@ public class ElevatorSubsystem extends SubsystemBase {
   private boolean homed = false;
   private boolean limitWasPressed = false;
   private boolean homingFailed = false;
-  // Loops counted for the homing timeout and the "not arrived" alert (one loop = 20 ms).
-  private int homingLoops = 0;
-  private int notArrivedLoops = 0;
+  private final LoopTimer homingTimer = new LoopTimer(ElevatorConstants.HOMING_TIMEOUT_LOOPS);
+  private final LoopTimer notArrivedTimer =
+      new LoopTimer(ElevatorConstants.NOT_ARRIVED_TIMEOUT_LOOPS);
 
   // Not private, so tests can check them.
   final Alert disconnectedAlert =
@@ -59,43 +54,17 @@ public class ElevatorSubsystem extends SubsystemBase {
   final Alert notArrivedAlert =
       new Alert("Elevator: told to move but not at the goal after 2 s.", AlertType.kWarning);
 
-  // Tuning gains on the dashboard. Not private, so tests can set them.
-  final LoggedNetworkNumber kP =
-      new LoggedNetworkNumber("/Tuning/Elevator/kP", ElevatorConstants.KP);
-  final LoggedNetworkNumber kI =
-      new LoggedNetworkNumber("/Tuning/Elevator/kI", ElevatorConstants.KI);
-  final LoggedNetworkNumber kD =
-      new LoggedNetworkNumber("/Tuning/Elevator/kD", ElevatorConstants.KD);
-  final LoggedNetworkNumber kS =
-      new LoggedNetworkNumber("/Tuning/Elevator/kS", ElevatorConstants.KS);
-  final LoggedNetworkNumber kG =
-      new LoggedNetworkNumber("/Tuning/Elevator/kG", ElevatorConstants.KG);
-  final LoggedNetworkNumber kV =
-      new LoggedNetworkNumber("/Tuning/Elevator/kV", ElevatorConstants.KV);
-  final LoggedNetworkNumber kA =
-      new LoggedNetworkNumber("/Tuning/Elevator/kA", ElevatorConstants.KA);
-
-  // Last gains sent, so new ones go out only when one changes.
-  private final double[] sentGains = {
-    ElevatorConstants.KP,
-    ElevatorConstants.KI,
-    ElevatorConstants.KD,
-    ElevatorConstants.KS,
-    ElevatorConstants.KG,
-    ElevatorConstants.KV,
-    ElevatorConstants.KA
-  };
-
-  // 2D side view: a fixed base and a carriage line that grows with height.
-  private static final double VIEW_WIDTH_METERS = 1.0;
-  private static final double VIEW_HEIGHT_METERS = 1.8;
-  private static final double VIEW_ELEVATOR_X_METERS = 0.5;
-  private static final double UPRIGHT_DEGREES = 90;
-  private static final double BASE_LINE_WIDTH = 10;
-  private static final double CARRIAGE_LINE_WIDTH = 6;
-  private final LoggedMechanism2d mechanism2d =
-      new LoggedMechanism2d(VIEW_WIDTH_METERS, VIEW_HEIGHT_METERS);
-  private final LoggedMechanismLigament2d carriageLine;
+  // Tuning gains on the dashboard, under /Tuning/Elevator. Not private, so tests can set them.
+  final TunableGains gains =
+      new TunableGains(
+          "Elevator",
+          ElevatorConstants.KP,
+          ElevatorConstants.KI,
+          ElevatorConstants.KD,
+          ElevatorConstants.KS,
+          ElevatorConstants.KG,
+          ElevatorConstants.KV,
+          ElevatorConstants.KA);
 
   /** Builds the elevator with the real hardware. */
   public ElevatorSubsystem() {
@@ -105,24 +74,6 @@ public class ElevatorSubsystem extends SubsystemBase {
   /** Builds the elevator with any hardware layer: real, simulated, or one that does nothing. */
   public ElevatorSubsystem(ElevatorIO io) {
     this.io = io;
-    LoggedMechanismRoot2d root =
-        mechanism2d.getRoot(
-            "Elevator", VIEW_ELEVATOR_X_METERS, ElevatorConstants.BASE_BOTTOM_Z_METERS);
-    root.append(
-        new LoggedMechanismLigament2d(
-            "Base",
-            ElevatorConstants.BASE_HEIGHT_METERS,
-            UPRIGHT_DEGREES,
-            BASE_LINE_WIDTH,
-            new Color8Bit(Color.kOrange)));
-    carriageLine =
-        root.append(
-            new LoggedMechanismLigament2d(
-                "Carriage",
-                ElevatorConstants.CARRIAGE_HEIGHT_METERS,
-                UPRIGHT_DEGREES,
-                CARRIAGE_LINE_WIDTH,
-                new Color8Bit(Color.kBlue)));
   }
 
   /** Runs every 20 ms: read the hardware, check for problems, decide, then log. */
@@ -157,12 +108,12 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   /** Drives down slowly until the bottom switch closes, or gives up after the timeout. */
   private void runHoming() {
-    homingLoops++;
+    boolean timedOut = homingTimer.update(true);
     if (inputs.bottomLimitPressed) {
       // homeOnSwitchPress() already zeroed the position.
       setGoal(ElevatorConstants.STOW_HEIGHT_METERS);
       io.stop();
-    } else if (homingLoops >= ElevatorConstants.HOMING_TIMEOUT_LOOPS) {
+    } else if (timedOut) {
       homingFailed = true;
       homingFailedAlert.set(true);
       mode = ControlMode.IDLE;
@@ -174,12 +125,8 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   /** Warns when a goal has not been reached after the timeout. A new goal starts the count. */
   private void updateNotArrivedAlert() {
-    if (mode == ControlMode.POSITION && !atGoal()) {
-      notArrivedLoops++;
-    } else {
-      notArrivedLoops = 0;
-    }
-    notArrivedAlert.set(notArrivedLoops >= ElevatorConstants.NOT_ARRIVED_TIMEOUT_LOOPS);
+    boolean movingToGoal = mode == ControlMode.POSITION && !atGoal();
+    notArrivedAlert.set(notArrivedTimer.update(movingToGoal));
   }
 
   /** Sets the position to 0 when the bottom switch closes: the only true height reference. */
@@ -194,12 +141,16 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   /** Sends the dashboard gains to the motor, only when one of them changed. */
   private void sendGainsIfChanged() {
-    double[] gains = {kP.get(), kI.get(), kD.get(), kS.get(), kG.get(), kV.get(), kA.get()};
-    if (Arrays.equals(gains, sentGains)) {
-      return;
+    if (gains.changed()) {
+      io.setGains(
+          gains.kP.get(),
+          gains.kI.get(),
+          gains.kD.get(),
+          gains.kS.get(),
+          gains.kG.get(),
+          gains.kV.get(),
+          gains.kA.get());
     }
-    System.arraycopy(gains, 0, sentGains, 0, gains.length);
-    io.setGains(gains[0], gains[1], gains[2], gains[3], gains[4], gains[5], gains[6]);
   }
 
   /** Moves to the goal height, or sets the carriage down gently when the goal is the bottom. */
@@ -239,14 +190,12 @@ public class ElevatorSubsystem extends SubsystemBase {
   /** Logs what the elevator was told to do. What it did is already logged in inputs. */
   private void logOutputs() {
     double heightMeters = getPositionMeters();
-    carriageLine.setLength(ElevatorConstants.CARRIAGE_HEIGHT_METERS + heightMeters);
     Logger.recordOutput("Mech/Elevator/GoalMeters", goalMeters);
     Logger.recordOutput("Mech/Elevator/ControlMode", mode.name());
     Logger.recordOutput("Mech/Elevator/Homed", homed);
     Logger.recordOutput("Mech/Elevator/AtGoal", atGoal());
     Logger.recordOutput("Mech/Elevator/ComponentPoses", componentPoses(heightMeters));
     Logger.recordOutput("Mech/Elevator/ComponentPosesGoal", componentPoses(goalMeters));
-    Logger.recordOutput("Mech/Elevator/Mechanism2d", mechanism2d);
   }
 
   /** 3D model poses for a carriage height: stage 1 rises 1 / RIGGING_RATIO as far. */
@@ -266,7 +215,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   /** Starts homing: drive down slowly until the bottom switch closes. */
   public void startHoming() {
     mode = ControlMode.HOMING;
-    homingLoops = 0;
+    homingTimer.reset();
     homingFailed = false;
     homingFailedAlert.set(false);
   }
@@ -275,7 +224,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   public void setGoal(double heightMeters) {
     mode = ControlMode.POSITION;
     goalMeters = clampHeight(heightMeters);
-    notArrivedLoops = 0;
+    notArrivedTimer.reset();
   }
 
   /** Drives by voltage. Negative is down. It stops itself on the bottom switch. */

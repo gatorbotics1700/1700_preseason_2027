@@ -309,7 +309,7 @@ public class ElevatorSubsystemTest {
 
   /** Types kP on the pretend dashboard. */
   private void setDashboardKp(double kP) {
-    elevator.kP.set(kP);
-    elevator.kP.periodic();
+    elevator.gains.kP.set(kP);
+    elevator.gains.kP.periodic();
   }
 }
