@@ -217,22 +217,6 @@ Every step ends with: the project builds, the tests pass, the simulator runs, an
    - **B** (after mapping button 8 in Keyboard 0 Settings) toggles deploy.
 4. Watch `Mech/Intake/...` under NetworkTables, AdvantageKit.
 
-## Worked example: the Elevator, physics and 3D (branch `mentors/szymon/elevator-prototype`)
-
-A linear mechanism (two-stage cascade) taken through every step, including Step 8 with a 3D view. How to test it: `docs/elevator.md`.
-
-**Files:**
-- `subsystems/mech/ElevatorSubsystem.java` (decisions), `ElevatorIO.java`, `ElevatorIOTalonFX.java` (real), `ElevatorIOSim.java` (stand-in for tests), `ElevatorIOSimPhysics.java` (the simulator: real motor code plus WPILib `ElevatorSim`)
-- `commands/mech/ElevatorCommands.java`: `home`, `goTo`, `demoCycle` (the "Elevator Demo" auto)
-- Tests: `subsystems/mech/ElevatorSubsystemTest.java` (one per requirement), `ElevatorKinematicsTest.java`, `ElevatorPhysicsTest.java`; `view3d/ElevatorModelTest.java`; `diagnostics/ElevatorChecksTest.java`
-- 3D: `view3d/ElevatorModel.java` builds `ascope_assets/Robot_GatorboticsElevator/` from `ElevatorConstants` (a stand-in until real CAD)
-
-**Devices:** one TalonFX and a bottom limit switch, `mech.elevator_*` in `config_alecto.properties` (placeholders: no robot has an elevator, so `ENABLED_ON_REAL_ROBOT = false`).
-
-**How it works:** onboard Motion Magic in meters. It homes on the bottom switch (gives up after 200 loops), refuses to move until homed, and lands gently on the bottom instead of holding current. Alerts: disconnected, homing failed, not arrived after 100 loops.
-
-**Simulator controls:** run the "Elevator Demo" auto, or drive it with no key setup: Keyboard 2 (already on joystick 2) arrow keys Up = high, Right = mid, Left = low, Down = stow; Home key (Fn+Left on a Mac) = home. On the robot: codriver D-pad and Back.
-
 ## Definition of done (the team checklist)
 
 This is the short student version. The long mentor version is in `mechanism-checklist.md`.
