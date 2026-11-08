@@ -33,14 +33,17 @@ public final class ElevatorChecks {
 
   /** The bottom switch closes and Homed turns on before any raised goal is set. */
   static class HomesBeforeMoving implements LogCheck {
+    /** The check's name in the report. */
     public String name() {
       return "Elevator: homes before moving";
     }
 
+    /** The log keys this check needs. */
     public String[] requiredKeys() {
       return new String[] {IO + "BottomLimitPressed", OUT + "Homed", OUT + "GoalMeters"};
     }
 
+    /** Looks through the log and reports what it finds. */
     public void check(LogFile log, Report report) {
       double homedTime = firstTrue(log.booleans(OUT + "Homed"));
       double switchTime = firstTrue(log.booleans(IO + "BottomLimitPressed"));
@@ -67,14 +70,17 @@ public final class ElevatorChecks {
     private static final double SETTLE_MARGIN_SECONDS = 0.6;
     private static final double MAX_OVERSHOOT_METERS = 0.02;
 
+    /** The check's name in the report. */
     public String name() {
       return "Elevator: moves reach the goal in time";
     }
 
+    /** The log keys this check needs. */
     public String[] requiredKeys() {
       return new String[] {IO + "PositionMeters", OUT + "GoalMeters", OUT + "ControlMode"};
     }
 
+    /** Looks through the log and reports what it finds. */
     public void check(LogFile log, Report report) {
       for (Move move : findMoves(log)) {
         checkMove(log, move, report);
@@ -92,14 +98,29 @@ public final class ElevatorChecks {
               "move %.2f -> %.2f m at %.2f s", startMeters, move.goalMeters, move.startSeconds);
 
       if (Double.isNaN(settledSeconds)) {
-        if (move.endSeconds - move.startSeconds >= allowedSeconds) {
-          report.error(what + ": never reached the goal");
-        } else {
-          report.note(what + ": interrupted before it was due");
-        }
+        reportNotSettled(move, allowedSeconds, what, report);
         return;
       }
-      double tookSeconds = settledSeconds - move.startSeconds;
+      reportSettleTime(settledSeconds - move.startSeconds, allowedSeconds, what, report);
+      double overshootMeters = overshoot(log, move, startMeters);
+      if (overshootMeters > MAX_OVERSHOOT_METERS) {
+        report.error(String.format("%s: went %.1f cm past the goal", what, overshootMeters * 100));
+      }
+    }
+
+    /** A move that never settled: an error if it had time to, a note if a new goal cut it off. */
+    private static void reportNotSettled(
+        Move move, double allowedSeconds, String what, Report report) {
+      if (move.endSeconds - move.startSeconds >= allowedSeconds) {
+        report.error(what + ": never reached the goal");
+      } else {
+        report.note(what + ": interrupted before it was due");
+      }
+    }
+
+    /** How long a move took to settle: an error if longer than allowed, a note otherwise. */
+    private static void reportSettleTime(
+        double tookSeconds, double allowedSeconds, String what, Report report) {
       String timing =
           String.format(
               "%s: settled in %.2f s (allowed %.2f s)", what, tookSeconds, allowedSeconds);
@@ -108,10 +129,6 @@ public final class ElevatorChecks {
       } else {
         report.note(timing);
       }
-      double overshootMeters = overshoot(log, move, startMeters);
-      if (overshootMeters > MAX_OVERSHOOT_METERS) {
-        report.error(String.format("%s: went %.1f cm past the goal", what, overshootMeters * 100));
-      }
     }
 
     /** The time after which the carriage stays within tolerance until the move ends, or NaN. */
@@ -119,8 +136,10 @@ public final class ElevatorChecks {
       // Heights are logged only when they change, so start from the height at the move's start.
       double startMeters = log.numberAt(IO + "PositionMeters", move.startSeconds);
       double tolerance = ElevatorConstants.POSITION_TOLERANCE_METERS;
-      double settled =
-          Math.abs(startMeters - move.goalMeters) <= tolerance ? move.startSeconds : Double.NaN;
+      double settled = Double.NaN;
+      if (Math.abs(startMeters - move.goalMeters) <= tolerance) {
+        settled = move.startSeconds;
+      }
       for (NumberSample sample : log.numbers(IO + "PositionMeters")) {
         if (sample.timeSeconds < move.startSeconds || sample.timeSeconds > move.endSeconds) {
           continue;
@@ -142,7 +161,10 @@ public final class ElevatorChecks {
       double worst = 0;
       for (NumberSample sample : log.numbers(IO + "PositionMeters")) {
         if (sample.timeSeconds >= move.startSeconds && sample.timeSeconds <= move.endSeconds) {
-          double past = goingUp ? sample.value - move.goalMeters : move.goalMeters - sample.value;
+          double past = move.goalMeters - sample.value;
+          if (goingUp) {
+            past = sample.value - move.goalMeters;
+          }
           worst = Math.max(worst, past);
         }
       }
@@ -157,14 +179,17 @@ public final class ElevatorChecks {
     // The position reset lands one loop after the switch closes, so skip a little after homing.
     private static final double AFTER_HOMING_SECONDS = 0.03;
 
+    /** The check's name in the report. */
     public String name() {
       return "Elevator: stays inside its travel";
     }
 
+    /** The log keys this check needs. */
     public String[] requiredKeys() {
       return new String[] {IO + "PositionMeters", OUT + "Homed"};
     }
 
+    /** Looks through the log and reports what it finds. */
     public void check(LogFile log, Report report) {
       double homedTime = firstTrue(log.booleans(OUT + "Homed"));
       double lowest = ElevatorConstants.MIN_HEIGHT_METERS - SLACK_METERS;
@@ -185,14 +210,17 @@ public final class ElevatorChecks {
     // The motor's current limit is not exact; allow a little over it.
     private static final double CURRENT_SLACK_AMPS = 5.0;
 
+    /** The check's name in the report. */
     public String name() {
       return "Elevator: stays inside voltage and current limits";
     }
 
+    /** The log keys this check needs. */
     public String[] requiredKeys() {
       return new String[] {IO + "AppliedVolts", IO + "StatorCurrentAmps"};
     }
 
+    /** Looks through the log and reports what it finds. */
     public void check(LogFile log, Report report) {
       double maxVolts = largest(log.numbers(IO + "AppliedVolts"), true);
       double maxAmps = largest(log.numbers(IO + "StatorCurrentAmps"), false);
@@ -216,10 +244,12 @@ public final class ElevatorChecks {
     private static final double AFTER_HOMING_SECONDS = 0.05;
     private static final double TOP_HARD_STOP_SLACK_METERS = 0.02;
 
+    /** The check's name in the report. */
     public String name() {
       return "Elevator (sim): encoder matches the true height";
     }
 
+    /** The log keys this check needs. */
     public String[] requiredKeys() {
       return new String[] {
         OUT + "Sim/TrueHeightMeters",
@@ -229,6 +259,7 @@ public final class ElevatorChecks {
       };
     }
 
+    /** Looks through the log and reports what it finds. */
     public void check(LogFile log, Report report) {
       double homedTime = firstTrue(log.booleans(OUT + "Homed"));
       double worstError = 0;
@@ -253,14 +284,20 @@ public final class ElevatorChecks {
 
   /** Simulator only: the Elevator Demo auto visits stow, low, high, mid, then stow. */
   static class DemoVisitsEveryHeight implements LogCheck {
+    // Goals closer than this count as the same height.
+    private static final double SAME_HEIGHT_METERS = 1e-6;
+
+    /** The check's name in the report. */
     public String name() {
       return "Elevator (sim): demo visits every height";
     }
 
+    /** The log keys this check needs. */
     public String[] requiredKeys() {
       return new String[] {SimSmokeKeys.AUTO, OUT + "GoalMeters", OUT + "ControlMode"};
     }
 
+    /** Looks through the log and reports what it finds. */
     public void check(LogFile log, Report report) {
       List<TextSample> autos = log.texts(SimSmokeKeys.AUTO);
       if (!autos.get(0).value.equals("Elevator Demo")) {
@@ -275,19 +312,31 @@ public final class ElevatorChecks {
         ElevatorConstants.STOW_HEIGHT_METERS
       };
       List<Move> moves = findMoves(log);
-      StringBuilder visited = new StringBuilder();
-      for (Move move : moves) {
-        visited.append(String.format(" %.2f", move.goalMeters));
+      if (!visitedInOrder(moves, wanted)) {
+        report.error("goals were" + goalList(moves) + ", expected stow, low, high, mid, stow");
       }
-      boolean sameCount = moves.size() == wanted.length;
-      for (int i = 0; sameCount && i < wanted.length; i++) {
-        if (Math.abs(moves.get(i).goalMeters - wanted[i]) > 1e-6) {
-          sameCount = false;
+    }
+
+    /** True if the moves' goals are exactly these heights, in this order. */
+    private static boolean visitedInOrder(List<Move> moves, double[] wanted) {
+      if (moves.size() != wanted.length) {
+        return false;
+      }
+      for (int i = 0; i < wanted.length; i++) {
+        if (Math.abs(moves.get(i).goalMeters - wanted[i]) > SAME_HEIGHT_METERS) {
+          return false;
         }
       }
-      if (!sameCount) {
-        report.error("goals were" + visited + ", expected stow, low, high, mid, stow");
+      return true;
+    }
+
+    /** The moves' goals as text, for the report. */
+    private static String goalList(List<Move> moves) {
+      StringBuilder goals = new StringBuilder();
+      for (Move move : moves) {
+        goals.append(String.format(" %.2f", move.goalMeters));
       }
+      return goals.toString();
     }
   }
 
@@ -299,6 +348,7 @@ public final class ElevatorChecks {
     final double endSeconds;
     final double goalMeters;
 
+    /** A move toward a goal, from start to end. */
     Move(double startSeconds, double endSeconds, double goalMeters) {
       this.startSeconds = startSeconds;
       this.endSeconds = endSeconds;
@@ -308,16 +358,7 @@ public final class ElevatorChecks {
 
   /** Every move in the log: each new goal or entry into POSITION mode starts one. */
   static List<Move> findMoves(LogFile log) {
-    List<Double> changeTimes = new ArrayList<>();
-    for (TextSample mode : log.texts(OUT + "ControlMode")) {
-      changeTimes.add(mode.timeSeconds);
-    }
-    for (NumberSample goal : log.numbers(OUT + "GoalMeters")) {
-      changeTimes.add(goal.timeSeconds);
-    }
-    changeTimes.add(log.endTimeSeconds());
-    changeTimes.sort(null);
-
+    List<Double> changeTimes = changeTimes(log);
     List<Move> moves = new ArrayList<>();
     for (int i = 0; i < changeTimes.size() - 1; i++) {
       double start = changeTimes.get(i);
@@ -335,6 +376,20 @@ public final class ElevatorChecks {
       }
     }
     return moves;
+  }
+
+  /** Every time the mode or the goal changed, plus the end of the log, in order. */
+  static List<Double> changeTimes(LogFile log) {
+    List<Double> times = new ArrayList<>();
+    for (TextSample mode : log.texts(OUT + "ControlMode")) {
+      times.add(mode.timeSeconds);
+    }
+    for (NumberSample goal : log.numbers(OUT + "GoalMeters")) {
+      times.add(goal.timeSeconds);
+    }
+    times.add(log.endTimeSeconds());
+    times.sort(null);
+    return times;
   }
 
   /** The elevator's control mode at a time, or "" before the first one. */
@@ -363,7 +418,10 @@ public final class ElevatorChecks {
   static double largest(List<NumberSample> samples, boolean useSize) {
     double largest = 0;
     for (NumberSample sample : samples) {
-      double value = useSize ? Math.abs(sample.value) : sample.value;
+      double value = sample.value;
+      if (useSize) {
+        value = Math.abs(sample.value);
+      }
       largest = Math.max(largest, value);
     }
     return largest;

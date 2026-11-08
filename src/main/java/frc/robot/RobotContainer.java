@@ -92,6 +92,8 @@ public class RobotContainer {
   private CommandXboxController controller_two = null; // port 1
   // Simulator only: Keyboard 2 in the Sim GUI drives the elevator.
   private static final int SIM_ELEVATOR_KEYBOARD_PORT = 2;
+  // The sim carriage boots a little up, so it starts un-homed like a real robot would.
+  private static final double SIM_ELEVATOR_START_HEIGHT_METERS = 0.05;
   // An arrow key moves its keyboard axis all the way to -1 or 1; past half counts as pressed.
   private static final double ARROW_KEY_PRESSED = 0.5;
 
@@ -155,8 +157,8 @@ public class RobotContainer {
                     VisionConstants.ROBOT_TO_CAMERA_1,
                     drive::getPose));
         drive.setPose(Constants.FieldCoordinates.SIM_START_POSE);
-        // Boot the sim carriage 5 cm up, so it starts un-homed like a real robot would.
-        elevatorSubsystem = new ElevatorSubsystem(new ElevatorIOSimPhysics(0.05));
+        elevatorSubsystem =
+            new ElevatorSubsystem(new ElevatorIOSimPhysics(SIM_ELEVATOR_START_HEIGHT_METERS));
         DriverStation.silenceJoystickConnectionWarning(true);
         break;
 

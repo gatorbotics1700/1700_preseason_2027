@@ -62,8 +62,8 @@ public class ElevatorModelTest {
   /** The config names the robot and has one moving part for each pose the subsystem logs. */
   @Test
   public void configHasOnePartPerLoggedPose() throws IOException {
-    JsonNode config =
-        new ObjectMapper().readTree(ElevatorModel.FOLDER.resolve("config.json").toFile());
+    File configFile = ElevatorModel.FOLDER.resolve("config.json").toFile();
+    JsonNode config = new ObjectMapper().readTree(configFile);
     int loggedPoses = ElevatorSubsystem.componentPoses(0).length;
 
     assertEquals(ElevatorModel.ROBOT_NAME, config.get("name").asText());

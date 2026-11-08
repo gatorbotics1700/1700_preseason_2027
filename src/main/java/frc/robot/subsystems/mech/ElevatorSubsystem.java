@@ -87,7 +87,14 @@ public class ElevatorSubsystem extends SubsystemBase {
   };
 
   // 2D side view: a fixed base and a carriage line that grows with height.
-  private final LoggedMechanism2d mechanism2d = new LoggedMechanism2d(1.0, 1.8);
+  private static final double VIEW_WIDTH_METERS = 1.0;
+  private static final double VIEW_HEIGHT_METERS = 1.8;
+  private static final double VIEW_ELEVATOR_X_METERS = 0.5;
+  private static final double UPRIGHT_DEGREES = 90;
+  private static final double BASE_LINE_WIDTH = 10;
+  private static final double CARRIAGE_LINE_WIDTH = 6;
+  private final LoggedMechanism2d mechanism2d =
+      new LoggedMechanism2d(VIEW_WIDTH_METERS, VIEW_HEIGHT_METERS);
   private final LoggedMechanismLigament2d carriageLine;
 
   /** Builds the elevator with the real hardware. */
@@ -99,17 +106,22 @@ public class ElevatorSubsystem extends SubsystemBase {
   public ElevatorSubsystem(ElevatorIO io) {
     this.io = io;
     LoggedMechanismRoot2d root =
-        mechanism2d.getRoot("Elevator", 0.5, ElevatorConstants.BASE_BOTTOM_Z_METERS);
+        mechanism2d.getRoot(
+            "Elevator", VIEW_ELEVATOR_X_METERS, ElevatorConstants.BASE_BOTTOM_Z_METERS);
     root.append(
         new LoggedMechanismLigament2d(
-            "Base", ElevatorConstants.BASE_HEIGHT_METERS, 90, 10, new Color8Bit(Color.kOrange)));
+            "Base",
+            ElevatorConstants.BASE_HEIGHT_METERS,
+            UPRIGHT_DEGREES,
+            BASE_LINE_WIDTH,
+            new Color8Bit(Color.kOrange)));
     carriageLine =
         root.append(
             new LoggedMechanismLigament2d(
                 "Carriage",
                 ElevatorConstants.CARRIAGE_HEIGHT_METERS,
-                90,
-                6,
+                UPRIGHT_DEGREES,
+                CARRIAGE_LINE_WIDTH,
                 new Color8Bit(Color.kBlue)));
   }
 
@@ -122,12 +134,16 @@ public class ElevatorSubsystem extends SubsystemBase {
     disconnectedAlert.set(!inputs.motorConnected);
     homeOnSwitchPress();
     sendGainsIfChanged();
+    runMode();
+    updateNotArrivedAlert();
+    logOutputs();
+  }
 
+  /** Does what the current mode asks. Disabling stops it, so an old goal never resumes. */
+  private void runMode() {
     if (DriverStation.isDisabled()) {
-      // Don't resume an old goal or voltage when re-enabled.
       mode = ControlMode.IDLE;
     }
-
     if (mode == ControlMode.HOMING) {
       runHoming();
     } else if (mode == ControlMode.POSITION) {
@@ -137,9 +153,6 @@ public class ElevatorSubsystem extends SubsystemBase {
     } else {
       io.stop();
     }
-
-    updateNotArrivedAlert();
-    logOutputs();
   }
 
   /** Drives down slowly until the bottom switch closes, or gives up after the timeout. */

@@ -63,6 +63,17 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
   /** Sets up the motor once. */
   public ElevatorIOTalonFX() {
+    configureOutputAndLimits();
+    configureControl();
+    // KNOWN GAP: if every try fails, tryUntilOk gives up quietly, with no alert.
+    tryUntilOk(
+        CONFIG_ATTEMPTS, () -> motor.getConfigurator().apply(config, CONFIG_TIMEOUT_SECONDS));
+    tryUntilOk(CONFIG_ATTEMPTS, () -> motor.setPosition(0.0, CONFIG_TIMEOUT_SECONDS));
+    configureSignals();
+  }
+
+  /** Direction, brake mode, current limits, and the top soft limit. */
+  private void configureOutputAndLimits() {
     config.MotorOutput.Inverted = InvertedValue.CounterClockwise_Positive; // + is up
     config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
@@ -71,6 +82,14 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
     config.CurrentLimits.SupplyCurrentLimit = ElevatorConstants.SUPPLY_CURRENT_LIMIT_AMPS;
 
+    // Backs up the clamp in ElevatorSubsystem. No reverse limit: the bottom is found by homing.
+    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorConstants.MAX_HEIGHT_METERS;
+    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
+  }
+
+  /** Units in meters, closed loop gains, and the Motion Magic profile. */
+  private void configureControl() {
     config.Feedback.SensorToMechanismRatio = ElevatorConstants.ROTOR_ROTATIONS_PER_METER;
 
     config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
@@ -85,17 +104,10 @@ public class ElevatorIOTalonFX implements ElevatorIO {
     config.MotionMagic.MotionMagicCruiseVelocity = ElevatorConstants.CRUISE_VELOCITY_MPS;
     config.MotionMagic.MotionMagicAcceleration = ElevatorConstants.ACCELERATION_MPS2;
     config.MotionMagic.MotionMagicJerk = ElevatorConstants.JERK_MPS3;
+  }
 
-    // Backs up the clamp in ElevatorSubsystem. No reverse limit: the bottom is found by homing.
-    config.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    config.SoftwareLimitSwitch.ForwardSoftLimitThreshold = ElevatorConstants.MAX_HEIGHT_METERS;
-    config.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
-
-    // KNOWN GAP: if every try fails, tryUntilOk gives up quietly, with no alert.
-    tryUntilOk(
-        CONFIG_ATTEMPTS, () -> motor.getConfigurator().apply(config, CONFIG_TIMEOUT_SECONDS));
-    tryUntilOk(CONFIG_ATTEMPTS, () -> motor.setPosition(0.0, CONFIG_TIMEOUT_SECONDS));
-
+  /** How often the motor sends each reading, so the CAN bus carries only what is used. */
+  private void configureSignals() {
     BaseStatusSignal.setUpdateFrequencyForAll(
         FAST_SIGNAL_HZ,
         position,

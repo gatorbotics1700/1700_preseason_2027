@@ -45,6 +45,9 @@ public final class ElevatorModel {
   private static final double[] BLUE = {0.10, 0.30, 0.85, 1.0}; // carriage
 
   private static final double BUMPER_THICKNESS_METERS = 0.08;
+  // Bumpers stand a little taller than the chassis.
+  private static final double BUMPER_HEIGHT_FACTOR = 1.2;
+  private static final int UPRIGHT_DEGREES = 90;
   private static final double CARRIAGE_PLATE_THICKNESS_METERS = 0.02;
   // A shelf on the carriage makes its motion easy to see.
   private static final double SHELF_DEPTH_METERS = 0.24;
@@ -81,7 +84,7 @@ public final class ElevatorModel {
   private static Part bumpers() {
     double length = ElevatorConstants.CHASSIS_LENGTH_METERS;
     double width = ElevatorConstants.CHASSIS_WIDTH_METERS;
-    double height = ElevatorConstants.CHASSIS_HEIGHT_METERS * 1.2;
+    double height = ElevatorConstants.CHASSIS_HEIGHT_METERS * BUMPER_HEIGHT_FACTOR;
     double centerZ =
         ElevatorConstants.CHASSIS_BOTTOM_Z_METERS + ElevatorConstants.CHASSIS_HEIGHT_METERS / 2;
     double thick = BUMPER_THICKNESS_METERS;
@@ -151,12 +154,13 @@ public final class ElevatorModel {
 
   /** AdvantageScope's robot config: the name, which way is up, and one entry per moving part. */
   private static byte[] configJson() throws IOException {
-    ObjectMapper json = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
+    ObjectMapper json = new ObjectMapper();
+    json.enable(SerializationFeature.INDENT_OUTPUT);
     ObjectNode config = json.createObjectNode();
     config.put("name", ROBOT_NAME);
     config.put("isFTC", false);
     upright(config.putArray("rotations"));
-    config.putArray("position").add(0).add(0).add(0);
+    atOrigin(config.putArray("position"));
     config.putArray("cameras");
     ArrayNode components = config.putArray("components");
     // Same order as ComponentPoses: stage 1, carriage.
@@ -164,7 +168,7 @@ public final class ElevatorModel {
     for (int i = 0; i < movingParts; i++) {
       ObjectNode component = components.addObject();
       upright(component.putArray("zeroedRotations"));
-      component.putArray("zeroedPosition").add(0).add(0).add(0);
+      atOrigin(component.putArray("zeroedPosition"));
     }
     String text = json.writeValueAsString(config) + "\n";
     return text.getBytes(StandardCharsets.UTF_8);
@@ -172,6 +176,15 @@ public final class ElevatorModel {
 
   /** Turns the model 90 degrees about x, because glTF is y-up and AdvantageScope is z-up. */
   private static void upright(ArrayNode rotations) {
-    rotations.addObject().put("axis", "x").put("degrees", 90);
+    ObjectNode turn = rotations.addObject();
+    turn.put("axis", "x");
+    turn.put("degrees", UPRIGHT_DEGREES);
+  }
+
+  /** Fills a position with 0, 0, 0: the model sits where it was drawn. */
+  private static void atOrigin(ArrayNode position) {
+    position.add(0);
+    position.add(0);
+    position.add(0);
   }
 }

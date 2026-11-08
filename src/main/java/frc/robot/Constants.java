@@ -820,10 +820,12 @@ public final class Constants {
     /** Wired normally-open with the roboRIO pull-up, so the DIO reads false when pressed. */
     public static final boolean LIMIT_SWITCH_PRESSED_VALUE = false;
 
+    // TUNED, NOT DERIVED (2026-11-07): placeholder until the build team measures the real elevator.
     public static final double STATOR_CURRENT_LIMIT_AMPS = 80.0;
     public static final double SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
 
     // ---- Drivetrain of the mechanism ----
+    // TUNED, NOT DERIVED (2026-11-07): placeholder until the build team measures the real elevator.
     public static final double GEAR_RATIO = 6.0; // motor rotations per drum rotation
     public static final double DRUM_PITCH_DIAMETER_METERS = 0.04463; // 22T #25 sprocket
 
@@ -838,6 +840,7 @@ public final class Constants {
     public static final double STAGE_1_MASS_KG = 3.0;
 
     // ---- Travel and setpoints (carriage height, meters) ----
+    // TUNED, NOT DERIVED (2026-11-07): placeholder until the build team measures the real elevator.
     public static final double MIN_HEIGHT_METERS = 0.0;
     public static final double MAX_HEIGHT_METERS = 1.20;
     public static final double STOW_HEIGHT_METERS = 0.0;
@@ -847,7 +850,8 @@ public final class Constants {
     public static final double POSITION_TOLERANCE_METERS = 0.01;
 
     // ---- Homing ----
-    public static final double HOMING_VOLTS = -1.5; // negative is down
+    // TUNED, NOT DERIVED (2026-11-07). Negative is down.
+    public static final double HOMING_VOLTS = -1.5;
     // 200 x 20 ms = 4 s, so a broken switch can't stall the motor against the hard stop.
     public static final int HOMING_TIMEOUT_LOOPS = 200;
 
@@ -857,11 +861,13 @@ public final class Constants {
 
     // ---- Landing on the bottom hard stop ----
     // Motion Magic stops this far up, then a gentle push lands the carriage without slamming.
+    // TUNED, NOT DERIVED (2026-11-07).
     public static final double LANDING_HEIGHT_METERS = 0.03;
     public static final double LANDING_VOLTS = -0.5;
 
     // ---- Closed loop (Phoenix Slot0, mechanism units = meters) ----
     // kG, kV, kA come from the motor model and masses; ElevatorPhysicsTest checks them.
+    // kP, kD, kS and the profile below: TUNED, NOT DERIVED (2026-11-07), tune on the robot.
     public static final double KP = 60.0; // V per meter of error
     public static final double KI = 0.0;
     public static final double KD = 1.0; // V per m/s of error
@@ -876,6 +882,7 @@ public final class Constants {
 
     // ---- Geometry (robot frame: +x forward, +y left, +z up, origin on the floor) ----
     // Also sizes the 3D model, rebuilt by the tests in src/test/java/frc/robot/view3d/.
+    // TUNED, NOT DERIVED (2026-11-07): placeholder until the build team measures the real elevator.
     public static final double ELEVATOR_X_METERS = 0.10;
     public static final double BASE_BOTTOM_Z_METERS = 0.08;
     public static final double BASE_HEIGHT_METERS = 0.90;

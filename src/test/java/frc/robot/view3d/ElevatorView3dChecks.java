@@ -34,14 +34,17 @@ public final class ElevatorView3dChecks {
     private static final String POSITION = "/Mech/Elevator/IO/PositionMeters";
     private static final String POSES = "/RealOutputs/Mech/Elevator/ComponentPoses";
 
+    /** The check's name in the report. */
     public String name() {
       return "3D view: elevator poses match its height";
     }
 
+    /** The log keys this check needs. */
     public String[] requiredKeys() {
       return new String[] {POSITION, POSES};
     }
 
+    /** Looks through the log and reports what it finds. */
     public void check(LogFile log, Report report) {
       int wrong = 0;
       List<PosesSample> samples = log.poses(POSES);
