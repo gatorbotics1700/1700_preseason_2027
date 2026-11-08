@@ -28,12 +28,12 @@ public class GlbTest {
 
     Box bounds = Glb.readBounds(file);
 
-    assertEquals(-0.5, bounds.minX, TOLERANCE_METERS);
-    assertEquals(-0.25, bounds.minY, TOLERANCE_METERS);
-    assertEquals(0.0, bounds.minZ, TOLERANCE_METERS);
-    assertEquals(0.5, bounds.maxX, TOLERANCE_METERS);
-    assertEquals(0.25, bounds.maxY, TOLERANCE_METERS);
-    assertEquals(1.1, bounds.maxZ, TOLERANCE_METERS);
+    assertEquals(-0.5, bounds.minXMeters, TOLERANCE_METERS);
+    assertEquals(-0.25, bounds.minYMeters, TOLERANCE_METERS);
+    assertEquals(0.0, bounds.minZMeters, TOLERANCE_METERS);
+    assertEquals(0.5, bounds.maxXMeters, TOLERANCE_METERS);
+    assertEquals(0.25, bounds.maxYMeters, TOLERANCE_METERS);
+    assertEquals(1.1, bounds.maxZMeters, TOLERANCE_METERS);
   }
 
   /** The same parts always give the same bytes, so model files only change when sizes do. */

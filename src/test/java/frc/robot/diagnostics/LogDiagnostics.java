@@ -20,6 +20,11 @@ import java.util.List;
  */
 public final class LogDiagnostics {
 
+  // Exit codes: Gradle reports anything but 0 as a failure.
+  private static final int EXIT_OK = 0;
+  private static final int EXIT_PROBLEMS_FOUND = 1;
+  private static final int EXIT_NO_LOG = 2;
+
   private LogDiagnostics() {}
 
   /** Every check for every mechanism. A new mechanism adds its checks file here. */
@@ -43,7 +48,7 @@ public final class LogDiagnostics {
   public static void main(String[] args) throws IOException {
     if (args.length < 1) {
       System.out.println("Give a log: ./gradlew diagnoseLog -Plog=path/to/file.wpilog");
-      System.exit(2);
+      System.exit(EXIT_NO_LOG);
     }
     LogFile log = LogFile.read(findLog(Path.of(args[0])));
     if (args.length > 1) {
@@ -52,7 +57,10 @@ public final class LogDiagnostics {
     Report report = diagnose(log, allChecks());
     System.out.println("Log: " + log.getPath() + " (" + log.keys().size() + " keys)");
     System.out.print(report.toText());
-    System.exit(report.getErrorCount() > 0 ? 1 : 0);
+    if (report.getErrorCount() > 0) {
+      System.exit(EXIT_PROBLEMS_FOUND);
+    }
+    System.exit(EXIT_OK);
   }
 
   /** The log itself, or the newest .wpilog in a folder. */

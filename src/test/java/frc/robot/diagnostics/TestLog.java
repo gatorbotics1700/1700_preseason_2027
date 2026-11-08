@@ -80,6 +80,7 @@ public class TestLog {
     return log;
   }
 
+  /** Seconds to the microseconds a log stores. */
   private static long toMicroseconds(double timeSeconds) {
     return Math.round(timeSeconds * MICROSECONDS_PER_SECOND);
   }

@@ -51,7 +51,11 @@ public class SimSmoke {
   public SimSmoke(RobotContainer robotContainer) {
     this.robotContainer = robotContainer;
     String requested = System.getenv(AUTO_ENV);
-    autoName = requested == null || requested.isBlank() ? DEFAULT_AUTO : requested;
+    if (requested == null || requested.isBlank()) {
+      autoName = DEFAULT_AUTO;
+    } else {
+      autoName = requested;
+    }
   }
 
   /** True when this is a sim smoke run: in the simulator, with a log folder set. */

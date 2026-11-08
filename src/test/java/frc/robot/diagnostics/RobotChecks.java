@@ -25,14 +25,17 @@ public final class RobotChecks {
 
   /** Every "...Connected" value stays true; never connecting is a warning (some sim devices). */
   static class DevicesStayConnected implements LogCheck {
+    /** The check's name in the report. */
     public String name() {
       return "Robot: devices stay connected";
     }
 
+    /** The log keys this check needs. */
     public String[] requiredKeys() {
       return new String[] {};
     }
 
+    /** Looks through the log and reports what it finds. */
     public void check(LogFile log, Report report) {
       for (String key : log.keys()) {
         if (key.endsWith("Connected") && !log.booleans(key).isEmpty()) {
@@ -64,14 +67,17 @@ public final class RobotChecks {
     private static final Pattern DEVICE_ERROR =
         Pattern.compile("(talon fx|cancoder|pigeon 2) (\\d+) \\(\"[^\"]*\"\\) (.+)");
 
+    /** The check's name in the report. */
     public String name() {
       return "Robot: CAN devices respond";
     }
 
+    /** The log keys this check needs. */
     public String[] requiredKeys() {
       return new String[] {};
     }
 
+    /** Looks through the log and reports what it finds. */
     public void check(LogFile log, Report report) {
       Map<String, Integer> counts = new HashMap<>();
       Matcher matcher = DEVICE_ERROR.matcher(log.consoleText());
@@ -99,14 +105,17 @@ public final class RobotChecks {
     private static final double ROBOT_HALF_SIZE_METERS = 0.43;
     private static final double MIN_CLEARANCE_METERS = 0.30;
 
+    /** The check's name in the report. */
     public String name() {
       return "Robot (sim): starts on open floor";
     }
 
+    /** The log keys this check needs. */
     public String[] requiredKeys() {
       return new String[] {SimSmokeKeys.AUTO, ROBOT_POSE};
     }
 
+    /** Looks through the log and reports what it finds. */
     public void check(LogFile log, Report report) {
       Pose2d start = log.pose2ds(ROBOT_POSE).get(0).value;
       double nearestWall =

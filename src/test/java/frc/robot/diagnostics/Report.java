@@ -19,6 +19,7 @@ public class Report {
     public final Level level;
     public final String message;
 
+    /** A finding from one check. */
     Finding(String checkName, Level level, String message) {
       this.checkName = checkName;
       this.level = level;
@@ -104,9 +105,9 @@ public class Report {
   public String toText() {
     StringBuilder text = new StringBuilder();
     for (String line : lines) {
-      text.append(line).append('\n');
+      text.append(line + "\n");
     }
-    text.append(errorCount).append(" errors, ").append(warningCount).append(" warnings\n");
+    text.append(errorCount + " errors, " + warningCount + " warnings\n");
     return text.toString();
   }
 }
