@@ -35,37 +35,14 @@
               "controller": {
                 "sources": [
                   {
-                    "type": "robot",
-                    "logKey": "/RealOutputs/Drive/Odometry/Robot",
-                    "logType": "Pose2d",
-                    "visible": true,
-                    "options": {
-                      "model": "Gatorbotics Elevator Bot"
-                    }
-                  },
-                  {
-                    "type": "component",
-                    "logKey": "/RealOutputs/Mech/Elevator/ComponentPoses",
-                    "logType": "Pose3d[]",
-                    "visible": true,
-                    "options": {}
-                  },
-                  {
                     "type": "ghost",
-                    "logKey": "/RealOutputs/Drive/Odometry/Robot",
+                    "logKey": "/RealOutputs/Odometry/Robot",
                     "logType": "Pose2d",
                     "visible": true,
                     "options": {
-                      "model": "Gatorbotics Elevator Bot",
+                      "model": "2026 KitBot",
                       "color": "#00ff00"
                     }
-                  },
-                  {
-                    "type": "component",
-                    "logKey": "/RealOutputs/Mech/Elevator/ComponentPosesGoal",
-                    "logType": "Pose3d[]",
-                    "visible": true,
-                    "options": {}
                   }
                 ],
                 "game": "FRC:2026 Field"

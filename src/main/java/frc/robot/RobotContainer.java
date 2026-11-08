@@ -84,8 +84,6 @@ public class RobotContainer {
   private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
   private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   private final TurretSubsystem turretSubsystem = new TurretSubsystem();
-  // Built once: it is a subsystem, so the scheduler runs its periodic() every loop on its own.
-  private final HubTrackerSubsystem hubTracker = new HubTrackerSubsystem();
 
   // Controllers
   private CommandXboxController controller = null; // port 0
@@ -1141,6 +1139,8 @@ public class RobotContainer {
   }
 
   public void periodic() {
+    HubTrackerSubsystem hubTracker = new HubTrackerSubsystem();
+
     robotContainerLogs();
 
     // multiStepAutoChooser.updateChooserOptions();

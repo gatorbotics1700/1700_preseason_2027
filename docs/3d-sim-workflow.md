@@ -39,7 +39,6 @@ in front.
 
 | What | Elevator file |
 |---|---|
-| Requirements, each with its test | `docs/elevator-requirements.md` |
 | Stand-in hardware for unit tests | `subsystems/mech/ElevatorIOSim.java` |
 | Physics simulator | `subsystems/mech/ElevatorIOSimPhysics.java` |
 | Poses for the 3D view | `ElevatorSubsystem.componentPoses()` |
@@ -93,12 +92,13 @@ moving part, in the same order as ComponentPoses).
   sits at "zero". Keep the size and clearance tests from `ElevatorModelTest`, so the code's
   constants and the CAD can't drift apart.
 
-## Step D: the AdvantageScope layout
+## Step D: an AdvantageScope layout
 
-The team layout is `src/main/deploy/AdvantageScope-Layout.json`. In its 3D Field tab, add your
-robot model, then a "component" source reading `/RealOutputs/Mech/<Name>/ComponentPoses`. A
-component attaches to the robot listed just before it. Extend `AdvantageScopeLayoutTest` to
-check it.
+Give the mechanism its own layout file, and leave the team layout
+(`src/main/deploy/AdvantageScope-Layout.json`) alone. The elevator's is
+`src/main/deploy/AdvantageScope-Layout-Elevator.json`: one 3D Field tab with the robot model, then a
+"component" source reading `/RealOutputs/Mech/<Name>/ComponentPoses`. A component attaches to the
+robot listed just before it. Check it with a test like `AdvantageScopeLayoutTest`.
 
 ## Step E: a demo auto and sim smoke
 
@@ -130,7 +130,8 @@ current limits? does the 3D pose agree with the position?
 Once:
 
 1. **AdvantageScope > Use Custom Assets Folder...** and pick the `ascope_assets` folder.
-2. **File > Import Layout...** and pick `src/main/deploy/AdvantageScope-Layout.json`.
+2. **File > Import Layout...** and pick the mechanism's layout, for example
+   `src/main/deploy/AdvantageScope-Layout-Elevator.json`.
 
 Live: start `WPILib: Simulate Robot Code` (Sim GUI), then in AdvantageScope **File > Connect to
 Simulator > NetworkTables 4 (AdvantageKit)**. Plain "NetworkTables 4" puts `/AdvantageKit` in front

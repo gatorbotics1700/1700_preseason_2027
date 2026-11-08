@@ -21,7 +21,8 @@ import java.util.List;
 public final class View3dChecks {
 
   /** The team's AdvantageScope layout, which the 3D view tab reads its keys from. */
-  public static final Path LAYOUT = Path.of("src", "main", "deploy", "AdvantageScope-Layout.json");
+  public static final Path LAYOUT =
+      Path.of("src", "main", "deploy", "AdvantageScope-Layout-Elevator.json");
 
   // AdvantageScope's number for a 3D field tab in a layout file.
   static final int FIELD_3D_TAB = 3;
