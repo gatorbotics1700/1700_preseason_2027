@@ -2,6 +2,7 @@ package frc.robot.diagnostics;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.util.datalog.DataLogIterator;
 import edu.wpi.first.util.datalog.DataLogReader;
 import edu.wpi.first.util.datalog.DataLogRecord;
 import edu.wpi.first.util.datalog.DataLogRecord.StartRecordData;
@@ -27,6 +28,7 @@ public class LogFile {
     public final double timeSeconds;
     public final double value;
 
+    /** A number logged at a time. */
     NumberSample(double timeSeconds, double value) {
       this.timeSeconds = timeSeconds;
       this.value = value;
@@ -38,6 +40,7 @@ public class LogFile {
     public final double timeSeconds;
     public final boolean value;
 
+    /** A true/false logged at a time. */
     BooleanSample(double timeSeconds, boolean value) {
       this.timeSeconds = timeSeconds;
       this.value = value;
@@ -49,6 +52,7 @@ public class LogFile {
     public final double timeSeconds;
     public final String value;
 
+    /** A text logged at a time. */
     TextSample(double timeSeconds, String value) {
       this.timeSeconds = timeSeconds;
       this.value = value;
@@ -60,6 +64,7 @@ public class LogFile {
     public final double timeSeconds;
     public final Pose3d[] value;
 
+    /** A pose list logged at a time. */
     PosesSample(double timeSeconds, Pose3d[] value) {
       this.timeSeconds = timeSeconds;
       this.value = value;
@@ -71,6 +76,7 @@ public class LogFile {
     public final double timeSeconds;
     public final Pose2d value;
 
+    /** A 2D pose logged at a time. */
     Pose2dSample(double timeSeconds, Pose2d value) {
       this.timeSeconds = timeSeconds;
       this.value = value;
@@ -94,6 +100,7 @@ public class LogFile {
   // Console text from outside the log, added with addConsoleText().
   private final StringBuilder extraConsoleText = new StringBuilder();
 
+  /** An empty log; read() fills it. */
   private LogFile(Path path) {
     this.path = path;
   }
@@ -106,7 +113,8 @@ public class LogFile {
     }
     LogFile log = new LogFile(path);
     // forEachRemaining, not for-each: WPILib's iterator skips a short last record.
-    reader.iterator().forEachRemaining(record -> log.addRecord(record));
+    DataLogIterator records = reader.iterator();
+    records.forEachRemaining(record -> log.addRecord(record));
     return log;
   }
 
@@ -126,29 +134,63 @@ public class LogFile {
     double timeSeconds = record.getTimestamp() / MICROSECONDS_PER_SECOND;
     String type = key.type;
     if (type.equals("double") || type.equals("float") || type.equals("int64")) {
-      double value = readNumber(type, record);
-      numbers
-          .computeIfAbsent(key.name, name -> new ArrayList<>())
-          .add(new NumberSample(timeSeconds, value));
+      storeNumber(key.name, new NumberSample(timeSeconds, readNumber(type, record)));
     } else if (type.equals("boolean")) {
-      booleans
-          .computeIfAbsent(key.name, name -> new ArrayList<>())
-          .add(new BooleanSample(timeSeconds, record.getBoolean()));
+      storeBoolean(key.name, new BooleanSample(timeSeconds, record.getBoolean()));
     } else if (type.equals("string")) {
-      texts
-          .computeIfAbsent(key.name, name -> new ArrayList<>())
-          .add(new TextSample(timeSeconds, record.getString()));
+      storeText(key.name, new TextSample(timeSeconds, record.getString()));
     } else if (type.equals("struct:Pose2d")) {
-      Pose2d value = StructBuffer.create(Pose2d.struct).read(ByteBuffer.wrap(record.getRaw()));
-      pose2ds
-          .computeIfAbsent(key.name, name -> new ArrayList<>())
-          .add(new Pose2dSample(timeSeconds, value));
+      storePose2d(key.name, new Pose2dSample(timeSeconds, readPose2d(record)));
     } else if (type.equals("struct:Pose3d[]") || type.equals("struct:Pose3d")) {
-      Pose3d[] value = readPoses(record);
-      poses
-          .computeIfAbsent(key.name, name -> new ArrayList<>())
-          .add(new PosesSample(timeSeconds, value));
+      storePoses(key.name, new PosesSample(timeSeconds, readPoses(record)));
     }
+  }
+
+  /** Adds a number to its key's list, starting the list the first time. */
+  private void storeNumber(String key, NumberSample sample) {
+    if (!numbers.containsKey(key)) {
+      numbers.put(key, new ArrayList<>());
+    }
+    numbers.get(key).add(sample);
+  }
+
+  /** Adds a true/false to its key's list, starting the list the first time. */
+  private void storeBoolean(String key, BooleanSample sample) {
+    if (!booleans.containsKey(key)) {
+      booleans.put(key, new ArrayList<>());
+    }
+    booleans.get(key).add(sample);
+  }
+
+  /** Adds text to its key's list, starting the list the first time. */
+  private void storeText(String key, TextSample sample) {
+    if (!texts.containsKey(key)) {
+      texts.put(key, new ArrayList<>());
+    }
+    texts.get(key).add(sample);
+  }
+
+  /** Adds a 2D pose to its key's list, starting the list the first time. */
+  private void storePose2d(String key, Pose2dSample sample) {
+    if (!pose2ds.containsKey(key)) {
+      pose2ds.put(key, new ArrayList<>());
+    }
+    pose2ds.get(key).add(sample);
+  }
+
+  /** Adds a pose list to its key's list, starting the list the first time. */
+  private void storePoses(String key, PosesSample sample) {
+    if (!poses.containsKey(key)) {
+      poses.put(key, new ArrayList<>());
+    }
+    poses.get(key).add(sample);
+  }
+
+  /** Reads one Pose2d, with the same code the robot uses to write it. */
+  private static Pose2d readPose2d(DataLogRecord record) {
+    StructBuffer<Pose2d> buffer = StructBuffer.create(Pose2d.struct);
+    ByteBuffer bytes = ByteBuffer.wrap(record.getRaw());
+    return buffer.read(bytes);
   }
 
   /** Reads a number record of any number type as a double. */

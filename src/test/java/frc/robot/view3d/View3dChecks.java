@@ -42,14 +42,17 @@ public final class View3dChecks {
       this.layout = layout;
     }
 
+    /** The check's name in the report. */
     public String name() {
       return "3D view: " + layout.getFileName() + " keys are logged";
     }
 
+    /** The log keys this check needs. */
     public String[] requiredKeys() {
       return new String[] {SimSmokeKeys.AUTO};
     }
 
+    /** Looks through the log and reports what it finds. */
     public void check(LogFile log, Report report) {
       try {
         for (JsonNode source : field3dSources(layout)) {
@@ -68,10 +71,13 @@ public final class View3dChecks {
   public static List<JsonNode> field3dSources(Path layout) throws IOException {
     JsonNode root = new ObjectMapper().readTree(layout.toFile());
     for (JsonNode hub : root.get("hubs")) {
-      for (JsonNode tab : hub.get("state").get("tabs").get("tabs")) {
+      JsonNode state = hub.get("state");
+      JsonNode tabGroup = state.get("tabs");
+      for (JsonNode tab : tabGroup.get("tabs")) {
         if (tab.get("type").asInt() == FIELD_3D_TAB) {
           List<JsonNode> sources = new ArrayList<>();
-          for (JsonNode source : tab.get("controller").get("sources")) {
+          JsonNode controller = tab.get("controller");
+          for (JsonNode source : controller.get("sources")) {
             sources.add(source);
           }
           return sources;
