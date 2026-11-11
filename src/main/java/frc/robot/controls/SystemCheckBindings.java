@@ -21,8 +21,8 @@ import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.mech.HoodSubsystem;
 import frc.robot.subsystems.mech.HopperFloorSubsystem;
 import frc.robot.subsystems.mech.IntakeSubsystem;
-import frc.robot.subsystems.mech.ShooterSubsystem;
 import frc.robot.subsystems.mech.TurretSubsystem;
+import frc.robot.subsystems.mech.shooter.ShooterSubsystem;
 import frc.robot.util.CommandSimMacXboxController;
 import java.util.function.Supplier;
 
