@@ -10,11 +10,11 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class ElevatorSubsystem extends SubsystemBase {
   // TODO put constants in constants.java file
-  private static final int MOTOR_ID = 0; // TODO: Verify CAN ID
   private static final double GEAR_RATIO = 5.0;
   private static final double DRUM_CIRCUMFERENCE =
       0.1; // TODO: Replace with actual drum circumference
@@ -24,7 +24,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   // TODO: Verify motor direction.
   private static final InvertedValue MOTOR_DIRECTION = InvertedValue.CounterClockwise_Positive;
 
-  private final TalonFX elevatorMotor = new TalonFX(MOTOR_ID);
+  private final TalonFX elevatorMotor = new TalonFX(Constants.ElevatorConstants.ELEVATOR_MOTOR_ID);
 
   private final DigitalInput topLimitSwitch = new DigitalInput(8);
 
