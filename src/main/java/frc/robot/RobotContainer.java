@@ -20,17 +20,20 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.TunerConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.commands.drive.DriveCommands;
+import frc.robot.commands.mech.ElevatorCommand;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
 import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
+import frc.robot.subsystems.mech.ElevatorSubsystem;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
@@ -45,6 +48,7 @@ public class RobotContainer {
   // Subsystems
   private final Drive drive;
   private final Vision vision;
+  private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
 
   // Controllers
   private CommandXboxController controller = null; // port 0
@@ -196,6 +200,18 @@ public class RobotContainer {
             .onFalse(DriveCommands.stopDriveCommand(drive));
       }
     }
+
+    controller
+        .x()
+        .onTrue(
+            new InstantCommand(
+                () ->
+                    CommandScheduler.getInstance()
+                        .schedule(
+                            new ElevatorCommand(
+                                0, elevatorSubsystem))) // TODO: include value of rotations in
+            // constants file
+            );
   }
 
   public Command getAutonomousCommand() {
