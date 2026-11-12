@@ -13,8 +13,7 @@ public class WristCommand extends Command {
   @Override
   public void execute() {}
 
-  // we need a command to stop wrist, pivot the wrist, and rotate the
-  // rist/Users/vivienguo/Desktop/season_Simulation_2027/src/main/java/frc/robot/subsystems/mech/ElevatorSubsystem.java
+  // we need a command to stop wrist, pivot the wrist, and rotate the rist
   // public static Command stopWrist(WristSubsystem wrist){
 
   // }
