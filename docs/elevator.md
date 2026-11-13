@@ -2,7 +2,9 @@
 
 A working two-stage elevator with a 3D view in AdvantageScope. It proves out a faster way to build
 mechanisms: test them in the simulator and preview them in 3D before the real robot exists. It
-follows `docs/3d-sim-workflow.md` step by step, so use it as the example for your mechanism.
+follows `docs/3d-sim-workflow.md` step by step, so use it as the example for your mechanism. For
+pictures of how its classes connect, and how it fits the sim tools, open
+`docs/sim-toolbox-and-elevator.html` in a web browser.
 
 No robot has an elevator yet: `ElevatorConstants.ENABLED_ON_REAL_ROBOT = false`.
 
