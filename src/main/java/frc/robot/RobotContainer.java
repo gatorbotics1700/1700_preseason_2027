@@ -35,6 +35,7 @@ import frc.robot.subsystems.drive.ModuleIO;
 import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.mech.ElevatorSubsystem;
+import frc.robot.subsystems.mech.WristSubsystem;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
@@ -54,6 +55,7 @@ public class RobotContainer {
   private final Drive drive;
   private final Vision vision;
   private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
+  private final WristSubsystem wristSubsystem = new WristSubsystem();
 
   // Controllers
   private CommandXboxController controller = null; // port 0
@@ -219,6 +221,18 @@ public class RobotContainer {
                                   0, elevatorSubsystem))) // TODO: include value of rotations in
               // constants file
               );
+
+      controller
+          .leftTrigger()
+          .onTrue(new InstantCommand(() -> wristSubsystem.setVoltage(5.0, 5.0)));
+
+      controller
+          .rightTrigger()
+          .onTrue(new InstantCommand(() -> wristSubsystem.setVoltage(5.0, -5.0)));
+
+      // controller
+      //     .rightTrigger()
+
     }
   }
 
