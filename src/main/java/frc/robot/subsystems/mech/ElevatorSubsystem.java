@@ -123,9 +123,9 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     SmartDashboard.putBoolean("Elevator/Homed", isHomed);
 
-    Logger.recordOutput("Commands/topLimitSwitch", isAtBottomLimit());
+    Logger.recordOutput("Commands/isAtTopLimitSwitch", isAtTopLimit());
 
-    Logger.recordOutput("Commands/bottomLimitSwitch", isAtTopLimit());
+    Logger.recordOutput("Commands/isAtBottomLimitSwitch", isAtBottomLimit());
   }
 
 
