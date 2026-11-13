@@ -62,12 +62,14 @@ public class CoralShooterCommand extends Command {
   // Returns true when the command should end.
   @Override
   public boolean isFinished() {
+    //TODO from Vivien: make this variable a double
     private long elapsedTime = System.currentTimeMillis() - startTime;
     if (elapsedTime > 5000 && voltage > 0) {
       System.out.println("finished intaking because 5 seconds have passed");
       coralShooterSubsystem.setMotorVoltage(0);
       return true; 
     }
+    //TODO from Vivien: your command doesn't know what your limit switch is! instead, use the method that you wrote
     if (limitSwitch.get() && voltage > 0) {
       System.out.println("limit switch triggered");
       coralShooterSubsystem.setMotorVoltage(0);
@@ -93,11 +95,11 @@ public class CoralShooterCommand extends Command {
       // set the motor voltage to 0, and return true
     // otherwise, we want to return false
 
-    /* TODO: calculate how much time has passed and store it in a variable */
+    /* calculate how much time has passed and store it in a variable */
       // you have the start time and can get the current time
       // this value is stored in milliseconds
 
-    /* TODO: write the logic for when to end the command */
+    /* write the logic for when to end the command */
     
     
       // refer to the descriptions above to write this part

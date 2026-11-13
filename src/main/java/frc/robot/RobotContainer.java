@@ -57,10 +57,13 @@ public class RobotContainer {
     // How to set up an Xbox Controller button:
       // controllerName.buttonName().onTrue(new CommandToRun(parameters));
         // ex: codriver.rightBumper().onTrue(new ClimberCommand(climberSubsystem, Constants.CLIMBING_SPEED));
+        //TODO from Vivien: good! just make sure your buttons are lowercase
+        //ex. codriver.a().onTrue(bla bla bla)
         codriver.A().onTrue(new CoralShooterCommand(coralShooterSubsystem, Constants.l4ShootingVoltage));
         codriver.B().onTrue(new CoralShooterCommand(coralShooterSubsystem, Constants.troughShootingVoltage));
         codriver.X().onTrue(new CoralShooterCommand(coralShooterSubsystem, Constants.intakeVoltage));
         codriver.Y().onTrue(new CoralShooterCommand(coralShooterSubsystem, Constants.Stop));
+        //TODO from Vivien: what number of voltage do we want a motor to run at if we don't want it to move? hm..
 
     /* TODO: Assign buttons A, B, X, and Y on the Xbox Controller */
   }

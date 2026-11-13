@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
+//TODO from Vivien: nice!
 public class CoralShooterSubsystem extends SubsystemBase {
   // You need to have two TalonFX motors (left and right) and a DigitalInput limit switch
   /* TODO: declare your motors and limit switch here */
@@ -25,7 +26,8 @@ public class CoralShooterSubsystem extends SubsystemBase {
   public CoralShooterSubsystem() {
     // To instantiate your motor, you want to create a new TalonFX object
       // Make sure to include both the CAN ID and the CANBus name from Constants.java
-    /* TODO: instantiate your motors here */
+    /* instantiate your motors here */
+    //TODO from Vivien: good but just make sure your constants here match the actual name in Constants.java
     rightMotor = new TalonFX(Constants.SHOOTER_RIGHT_MOTOR_CAN_ID, Constants.MECH_CANBUS_NAME);
     leftMotor = new TalonFX(Constants.SHOOTER_LEFT_MOTOR_CAN_ID, Constants.MECH_CANBUS_NAME);
     
@@ -33,12 +35,13 @@ public class CoralShooterSubsystem extends SubsystemBase {
 
     // This part of the code is making it so if we give the motors the same voltage, they'll go in opposite directions
       // Since the wheels have to spin the same direction but the motors are mounted on opposite sides
-    /* TODO: put your right motor name here and uncomment the next few lines */
-         rightMotor.getConfigurator().apply()new TalonFXConfiguration().withMotorOutput()new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive);
+    /* put your right motor name here and uncomment the next few lines */
+         rightMotor.getConfigurator().apply(new TalonFXConfiguration().withMotorOutput(new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive)));
 
     // You must also instantiate your limit switch by creating a new DigitalInput object
       // Make sure to use the limit switch constant in Constants.java
-    /* TODO: instantiate your limit switch here */
+    /* instantiate your limit switch here */
+    //TODO from Vivien: same thing with the constant
         limitSwitch = new DigitalInput(Constants.SHOOTER_LIMIT_SWITCH);
   }
 
@@ -58,6 +61,7 @@ public class CoralShooterSubsystem extends SubsystemBase {
    * You can use the DigitalInput method get()
   
    */
+  //TODO from Vivien: there's just smth weird going on with curly brackets here see if you can spot it :)
 }public void getLimitSwitchValue() {
    return limitSwitch.get();
 
