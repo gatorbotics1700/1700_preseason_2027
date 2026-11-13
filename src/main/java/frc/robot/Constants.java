@@ -36,9 +36,7 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -50,9 +48,7 @@ import edu.wpi.first.units.measure.LinearVelocity;
 import edu.wpi.first.units.measure.MomentOfInertia;
 import edu.wpi.first.units.measure.Voltage;
 import edu.wpi.first.wpilibj.RobotBase;
-import frc.robot.util.Calculations;
 import frc.robot.util.RobotConfigLoader;
-import frc.robot.util.shooting.ShotParameters;
 
 /**
  * This class defines the runtime mode used by AdvantageKit and loads robot-specific configuration
@@ -551,257 +547,24 @@ public final class Constants {
     public static final double TARGET_ANGLE_SCALAR = 1.28054;
   }
 
-  public static final class DriveToFuelConstants {
-    public static final double BLIND_SPOT_DEADBAND = 0.5; // TODO change
-    public static final double MAX_IDLE_MILLISECONDS =
-        2000; // TODO change based off real world maybe?
-    public static final double ROTATING_SPEED_RADIANS_PER_SECOND =
-        2.5; // TODO change based off real life
-  }
-
-  public static final class HoodConstants {
-    public static final int HOOD_MOTOR_CAN_ID = 17;
-    public static final int HOOD_LIMIT_SWITCH_PORT = 9;
-
-    // retracted position is the max hood angle, because we measure from vertical
-    public static final Rotation2d RETRACTED_POSITION =
-        new Rotation2d(Math.toRadians(RobotConfigLoader.getInt("mech.hood_retracted_degrees")));
-    public static final Rotation2d MIN_ANGLE =
-        new Rotation2d(Math.toRadians(RobotConfigLoader.getInt("mech.hood_min_angle_degrees")));
-
-    public static final double HOOD_POSITION_DEADBAND_DEGREES = 1;
-
-    /** Voltage applied when running toward retract limit (tune sign for your mechanism). */
-    public static final double HOMING_SPEED = 0.3;
-
-    // GEAR RATIOS
-    public static final double HOOD_SHAFT_REVS_PER_MECH_REV =
-        RobotConfigLoader.getDouble("mech.hood_shaft_revs_per_mech_rev");
-    public static final double HOOD_GEAR_RATIO =
-        RobotConfigLoader.getDouble("mech.hood_gear_ratio");
-  }
-
-  public static final class HopperFloorConstants {
-    public static final int HOPPER_MOTOR_CAN_ID = 35;
-    public static final double HOPPER_FLOOR_SPEED = -0.15; // TODO: tune this value
-  }
-
-  public static final class IntakeConstants {
-    public static final int LEFT_INTAKE_MOTOR_CAN_ID = 8;
-    public static final int RIGHT_INTAKE_MOTOR_CAN_ID = 11;
-    public static final int INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID = 9;
-    public static final int INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID = 10;
-    public static final int RETRACTED_LIMIT_SWITCH_PORT = 3;
-    public static final int DEPLOYED_LIMIT_SWITCH_PORT = 4;
-
-    public static final int DEPLOY_GEARBOX_RATIO = 5;
-    public static final double DEPLOY_PULLEY_ONE_GEAR_RATIO = 42.0 / 18.0;
-    public static final double DEPLOY_PULLEY_TWO_GEAR_RATIO = 42.0 / 18.0;
-
-    public static final double EXTENDED_ANGLE_DEGREES = 95;
-    public static final double RETRACTED_ANGLE_DEGREES = 0;
-    public static final double HALF_EXTENDED_ANGLE_DEGREES = 45;
-
-    public static final Rotation2d EXTENDED_POSITION =
-        new Rotation2d(Math.toRadians(EXTENDED_ANGLE_DEGREES));
-    public static final Rotation2d HALF_EXTENDED_POSITION =
-        new Rotation2d(Math.toRadians(HALF_EXTENDED_ANGLE_DEGREES));
-    public static final Rotation2d RETRACTED_POSITION =
-        new Rotation2d(Math.toRadians(RETRACTED_ANGLE_DEGREES));
-
-    public static final double HOMING_SPEED = -0.4; // TODO tune
-    public static final double RETRACTING_SPEED = -0.4; // TODO: tune
-    public static final double INTAKING_SPEED = -0.4; // TODO: tune
-    public static final double OUTTAKING_SPEED = 0.2; // TODO tune
-
-    public static final double POSITION_DEADBAND_DEGREES = 3;
-
-    public static final double ROBOT_TO_INTAKE_YAW_DEGREES = 180;
-    public static final double DEPLOYED_CURRENT_LIMIT = 10.0; // amps
-  }
-
-  public static final class ShooterConstants {
-    public static final int LEFT_FLYWHEEL_MOTOR_CAN_ID = 29;
-    public static final int RIGHT_FLYWHEEL_MOTOR_CAN_ID = 30;
-    public static final int TRANSITION_MOTOR_CAN_ID = 16;
-    public static final int LEFT_TRANSITION_MOTOR_CAN_ID = 18;
-    public static final int RIGHT_TRANSITION_MOTOR_CAN_ID = 19;
-
-    public static final double TRANSITION_SPEED = 0.2;
-
-    // 0.4
-
-    /**
-     * Stator current limit for transition rollers (A). Limits torque when a ball is jammed so the
-     * motors do not overheat; tune if normal indexing trips the limit.
-     */
-    public static final double TRANSITION_STATOR_CURRENT_LIMIT_AMPS = 35.0;
-
-    public static final double FLYWHEEL_SPEED_DEADBAND = 2;
-
-    /** Rotor speed (rps) below which StopShooting ends after coasting the flywheel. */
-    public static final double FLYWHEEL_COAST_STOPPED_RPS = 4.0;
-
-    public static final double FLYWHEEL_GEAR_RATIO = 24.0 / 18.0;
-    public static final double FLYWHEEL_SLIP = 0.255; // TODO: tune?
-    public static final double FLYWHEEL_RADIUS_METERS = 0.0508;
-
-    public static final Translation3d BOT_TO_SHOOTER = new Translation3d(0.127, 0, 0.429);
-
-    // public static final ShotParameters RED_RIGHT =
-    //     new ShotParameters(
-    //         new Pose2d(14.17, 1.25, new Rotation2d(Math.toRadians(129))),
-    //         new Rotation2d(Math.toRadians(64.4)),
-    //         62.2);
-    // public static final ShotParameters BLUE_LEFT =
-    //     new ShotParameters(
-    //         Calculations.mirrorPoseAcrossAlliance(RED_RIGHT.pose),
-    //         new Rotation2d(Math.toRadians(64.4)),
-    //         62.2);
-    // public static final ShotParameters RED_LEFT =
-    //     new ShotParameters(
-    //         Calculations.mirrorPoseAcrossXAxis(RED_RIGHT.pose),
-    //         new Rotation2d(Math.toRadians(64.4)),
-    //         62.2);
-    // public static final ShotParameters BLUE_RIGHT =
-    //     new ShotParameters(
-    //         Calculations.mirrorPoseAcrossXAxis(BLUE_LEFT.pose),
-    //         new Rotation2d(Math.toRadians(64.4)),
-    //         62.2);
-    // // 1M means 1M away from being pressed up against hub
-    public static final ShotParameters BLUE_SHOOT_1M =
-        new ShotParameters(
-            new Pose2d(2.6, 4.034, new Rotation2d(0)), new Rotation2d(Math.toRadians(60)), 48);
-    public static final ShotParameters RED_SHOOT_1M =
-        new ShotParameters(
-            // 13.9 4.034
-            Calculations.mirrorPoseAcrossAlliance(BLUE_SHOOT_1M.pose),
-            new Rotation2d(Math.toRadians(60)),
-            48);
-    public static final ShotParameters BLUE_SHOOT_2M =
-        new ShotParameters(
-            new Pose2d(1.6, 4.034, new Rotation2d(0)), new Rotation2d(Math.toRadians(57)), 55);
-    public static final ShotParameters RED_SHOOT_2M =
-        new ShotParameters(
-            Calculations.mirrorPoseAcrossAlliance(BLUE_SHOOT_2M.pose),
-            new Rotation2d(Math.toRadians(57)),
-            55);
-    public static final ShotParameters BLUE_AGAINST_HUB =
-        new ShotParameters(
-            new Pose2d(3.6, 4.034, new Rotation2d(0)), new Rotation2d(Math.toRadians(72)), 50);
-    public static final ShotParameters RED_AGAINST_HUB =
-        new ShotParameters(
-            Calculations.mirrorPoseAcrossAlliance(BLUE_AGAINST_HUB.pose),
-            new Rotation2d(Math.toRadians(72)),
-            50);
-    public static final ShotParameters BLUE_SHOOT_LEFT =
-        new ShotParameters(
-            new Pose2d(2.504, 6.156, new Rotation2d(-45)), new Rotation2d(Math.toRadians(57)), 55);
-    public static final ShotParameters RED_SHOOT_RIGHT =
-        new ShotParameters(
-            Calculations.mirrorPoseAcrossAlliance(BLUE_SHOOT_LEFT.pose),
-            new Rotation2d(Math.toRadians(57)),
-            55);
-    public static final ShotParameters BLUE_SHOOT_RIGHT =
-        new ShotParameters(
-            Calculations.mirrorPoseAcrossXAxis(BLUE_SHOOT_LEFT.pose),
-            new Rotation2d(Math.toRadians(57)),
-            55);
-    public static final ShotParameters RED_SHOOT_LEFT =
-        new ShotParameters(
-            Calculations.mirrorPoseAcrossXAxis(RED_SHOOT_RIGHT.pose),
-            new Rotation2d(Math.toRadians(57)),
-            55);
-    public static final ShotParameters[] STATIONARY_SHOT_ARRAY = {
-      //   RED_LEFT,
-      //   RED_RIGHT,
-      //   BLUE_LEFT,
-      //   BLUE_RIGHT,
-      BLUE_SHOOT_1M,
-      RED_SHOOT_1M,
-      BLUE_SHOOT_2M,
-      RED_SHOOT_2M,
-      BLUE_AGAINST_HUB,
-      RED_AGAINST_HUB,
-      BLUE_SHOOT_LEFT,
-      RED_SHOOT_LEFT,
-      BLUE_SHOOT_RIGHT,
-      RED_SHOOT_RIGHT
-    };
-  }
-
   /** REV PDH / CTRE PDP CAN ID and logging. */
   public static final class PowerConstants {
     /** CAN ID of the Power Distribution Hub (default REV PDH is 1). */
     public static final int PDH_CAN_ID = 1;
   }
 
-  public static final class TurretConstants {
-    public static final int TURRET_MOTOR_CAN_ID =
-        100; // TODO was 15 making it a bad number so the turret does not move
-    public static final int TURRET_BORE_ENCODER_PORT = 12; // TODO was 1 before
-
-    public static final double TURRET_DEADBAND = 0.75;
-
-    public static final double TURRET_ENCODER_OFFSET = 0.54;
-    public static final double TURRET_HOMING_ANGLE = 0.0;
-    public static final double MIN_TURRET_ANGLE = -285;
-    public static final double MAX_TURRET_ANGLE = 105;
-  }
-
   public static final class FieldCoordinates {
-    public static final Translation3d BLUE_HUB =
-        new Translation3d(
-            4.625594, 4.034663, 1.83); // z value is the very top of the hub (to make sure we aren't
-    // trying to phase through walls)
-    // hub
+    public static final Translation2d FIELD_CENTER = new Translation2d(8.27094, 4.034663);
+    public static final Translation3d BLUE_HUB = new Translation3d(4.625594, 4.034663, 1.83);
     public static final Translation3d RED_HUB = new Translation3d(11.915394, 4.034663, 1.80);
-    public static final Translation3d BLUE_LEFT_FUNNELING = new Translation3d(2.482, 1.511, 0);
-    public static final Translation3d BLUE_RIGHT_FUNNELING = new Translation3d(2.482, 6.653, 0);
-    public static final Translation3d RED_LEFT_FUNNELING = new Translation3d(14.858, 6.653, 0);
-    public static final Translation3d RED_RIGHT_FUNNELING = new Translation3d(14.858, 1.511, 0);
-
-    public static final Translation2d FIELD_CENTER = new Translation2d(8.270494, 4.034663);
-    public static final double BLUE_BUMP_AND_TRENCH_X = 4.626;
-    public static final double RED_BUMP_AND_TRENCH_X = 11.915;
-
-    // Tower climb positions (extracted from PathPlanner paths)
-    // Blue tower is on the left side of the field (low X), Red tower is on the right (high X)
-    public static final Pose2d BLUE_TOWER_LEFT =
-        new Pose2d(1.177, 4.697, Rotation2d.fromDegrees(180));
-    public static final Pose2d BLUE_TOWER_RIGHT =
-        new Pose2d(1.025, 2.86, Rotation2d.fromDegrees(180));
-    public static final Pose2d RED_TOWER_LEFT =
-        new Pose2d(15.336, 3.446, Rotation2d.fromDegrees(0));
-    public static final Pose2d RED_TOWER_RIGHT =
-        new Pose2d(15.488, 5.179, Rotation2d.fromDegrees(180));
   }
 
-  public static final class ShotCalculatorConditions {
-    // VALUES YOU WILL WANT TO CHANGE:
-    public static final double SHOT_DEADBAND =
-        0.30; // smallest calculated error we are okay shooting with
-    // shot height measures the highest point of the arc in meters, max should be ceiling height
-    // minus a bit, and min should be just over the target height
-    public static final double MIN_SHOT_HEIGHT = 2; // 1 for MSLL
-    public static final double MV_MAX_SHOT_HEIGHT = 5; // 3.35; // 2 meters for MSLL
-    public static final double COMP_MAX_SHOT_HEIGHT = 5;
-    public static final double MAX_SHOT_SPEED =
-        90
-            * ShooterConstants.FLYWHEEL_GEAR_RATIO
-            * 2
-            * Math.PI
-            * ShooterConstants.FLYWHEEL_RADIUS_METERS
-            * ShooterConstants.FLYWHEEL_SLIP;
-    // in mps, so calculate using flywheel rps * 2 * Math.PI * flywheel radius * flywheel slip
+  public static final class ElevatorConstants {
+    public static final int ELEVATOR_MOTOR_ID = 11;
+  }
 
-    public static final double VELO_INCREMENT = 0.25; // mps
-    public static final double RANGE_INCREMENT = 0.25; // m
-    public static final double MAX_COMPONENT_VELO = 1.5 + VELO_INCREMENT; // mps
-    public static final double RANGE_FUDGE = 0;
-    public static final double MAX_RANGE =
-        8; // m //TODO calculate furthest distance we would ever want to shoot from
-    // kraken x60 max velocity is ~100 rps
-
+  public static final class WristConstants {
+    public static final int RIGHT_WRIST_MOTOR_ID = 8;
+    public static final int LEFT_WRIST_MOTOR_ID = 9;
   }
 }

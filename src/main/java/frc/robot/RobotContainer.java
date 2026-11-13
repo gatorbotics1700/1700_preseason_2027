@@ -199,19 +199,19 @@ public class RobotContainer {
                     () -> modifyJoystickAxis(-controller.getRightX()))) // Changed to raw values
             .onFalse(DriveCommands.stopDriveCommand(drive));
       }
-    }
 
-    controller
-        .x()
-        .onTrue(
-            new InstantCommand(
-                () ->
-                    CommandScheduler.getInstance()
-                        .schedule(
-                            new ElevatorCommand(
-                                0, elevatorSubsystem))) // TODO: include value of rotations in
-            // constants file
-            );
+      controller
+          .x()
+          .onTrue(
+              new InstantCommand(
+                  () ->
+                      CommandScheduler.getInstance()
+                          .schedule(
+                              new ElevatorCommand(
+                                  0, elevatorSubsystem))) // TODO: include value of rotations in
+              // constants file
+              );
+    }
   }
 
   public Command getAutonomousCommand() {

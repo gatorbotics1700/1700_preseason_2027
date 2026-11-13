@@ -37,22 +37,21 @@ public class WristSubsystem extends SubsystemBase {
   private final LoggedNetworkNumber wristkD = new LoggedNetworkNumber("", 0.001);
 
   public WristSubsystem() {
-    rightWristMotor = new TalonFX(0, Constants.TunerConstants.driveCANBus);
-    leftWristMotor = new TalonFX(0, Constants.TunerConstants.driveCANBus);
+    rightWristMotor = new TalonFX(8, Constants.TunerConstants.driveCANBus);
+    leftWristMotor = new TalonFX(9, Constants.TunerConstants.driveCANBus);
     // TODO find IDs
     // TODO find what we want the current limits to actally be
 
     // TODO: Create motor configurations
-    double currentLimit = 0;
     leftTalonFXConfigs =
         new TalonFXConfiguration()
             .withMotorOutput(
-                new MotorOutputConfigs().withInverted(InvertedValue.CounterClockwise_Positive));
+                new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
 
     rightTalonFXConfigs =
         new TalonFXConfiguration()
             .withMotorOutput(
-                new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
+                new MotorOutputConfigs().withInverted(InvertedValue.CounterClockwise_Positive));
     leftCurrentLimitConfigs = leftTalonFXConfigs.CurrentLimits;
     leftCurrentLimitConfigs.StatorCurrentLimit = 70;
     leftCurrentLimitConfigs.StatorCurrentLimitEnable = true;

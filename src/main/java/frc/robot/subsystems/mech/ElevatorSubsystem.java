@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
+import frc.robot.Constants;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 // Selin's grain of salt is that we should be using inches throughout this subsystem
@@ -20,7 +21,6 @@ import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 // merge when things work
 public class ElevatorSubsystem extends SubsystemBase {
   // TODO put constants in constants.java file
-  private static final int MOTOR_ID = 0; // TODO: Verify CAN ID
   private static final double GEAR_RATIO = 5.0;
   private static final double DRUM_CIRCUMFERENCE =
       0.1; // TODO: Replace with actual drum circumference
@@ -34,7 +34,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private static final double ZEROED_SPEED = 0;
   public static final double HEIGHT_TO_REVS = 57.5; // divide height by this to get revs
 
-  private final TalonFX elevatorMotor = new TalonFX(MOTOR_ID);
+  private final TalonFX elevatorMotor = new TalonFX(Constants.ElevatorConstants.ELEVATOR_MOTOR_ID);
 
   private final DigitalInput topLimitSwitch = new DigitalInput(8);
 
