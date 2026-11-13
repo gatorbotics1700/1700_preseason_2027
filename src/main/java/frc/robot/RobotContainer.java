@@ -16,7 +16,6 @@ package frc.robot;
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -47,10 +46,6 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 public class RobotContainer {
-  // Limit Switches
-  private DigitalInput topLimitSwitch;
-  private DigitalInput bottomLimitSwitch;
-
   // Subsystems
   private final Drive drive;
   private final Vision vision;
@@ -72,9 +67,6 @@ public class RobotContainer {
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-
-    topLimitSwitch = new DigitalInput(0);
-    bottomLimitSwitch = new DigitalInput(2);
 
     // Set up robot depending on mode
     switch (Constants.currentMode) {
@@ -294,14 +286,6 @@ public class RobotContainer {
     return value;
   }
 
-  public boolean isTopLimitSwitchTriggered() {
-    return topLimitSwitch.get();
-  }
-
-  public boolean isBottomLimitSwitchTriggered() {
-    return bottomLimitSwitch.get();
-  }
-
   public void robotContainerLogs() {
     // Log command scheduler status
     Logger.recordOutput("Commands/SchedulerActive", true);
@@ -325,8 +309,6 @@ public class RobotContainer {
 
   public void periodic() {
     robotContainerLogs();
-    Logger.recordOutput("Commands/topLimitSwitch", isTopLimitSwitchTriggered());
-    Logger.recordOutput("Commands/bottomLimitSwitch", isBottomLimitSwitchTriggered());
 
     // multiStepAutoChooser.updateChooserOptions();
 
