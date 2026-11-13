@@ -26,7 +26,7 @@ public class ElevatorCommand extends Command {
 
   @Override
   public boolean isFinished() {
-    return elevatorSubsystem.isHomed() && elevatorSubsystem.atDesiredPosition(rotations, ERROR);
+    return elevatorSubsystem.getIsHomed() && elevatorSubsystem.atDesiredPosition(rotations, ERROR);
   }
 
   @Override
