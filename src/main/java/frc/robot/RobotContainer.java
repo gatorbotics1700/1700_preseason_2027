@@ -202,14 +202,16 @@ public class RobotContainer {
             .onFalse(DriveCommands.stopDriveCommand(drive));
       }
 
-      controller
+      controller_two
           .leftTrigger()
-          .onTrue(new InstantCommand(() -> wristSubsystem.setVoltage(5.0, 5.0)));
+          .onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(5.0, 5.0)));
 
-      controller
+      controller_two
           .rightTrigger()
-          .onTrue(new InstantCommand(() -> wristSubsystem.setVoltage(5.0, -5.0)));
-
+          .onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(5.0, -5.0)));
+      controller_two
+          .a()
+          .onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(0, 0)));
       // controller
       //     .rightTrigger()
 
