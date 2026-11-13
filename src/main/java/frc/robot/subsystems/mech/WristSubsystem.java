@@ -6,7 +6,6 @@
 package frc.robot.subsystems.mech;
 
 import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-// TODO imports (including motor controllers/encoders)
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
@@ -15,6 +14,7 @@ import edu.wpi.first.math.controller.PIDController; // pid (converts position to
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class WristSubsystem extends SubsystemBase {
@@ -37,12 +37,14 @@ public class WristSubsystem extends SubsystemBase {
   private final LoggedNetworkNumber wristkD = new LoggedNetworkNumber("", 0.001);
 
   public WristSubsystem() {
-    rightWristMotor = new TalonFX(8, Constants.TunerConstants.driveCANBus);
-    leftWristMotor = new TalonFX(9, Constants.TunerConstants.driveCANBus);
-    // TODO find IDs
+    rightWristMotor =
+        new TalonFX(
+            Constants.WristConstants.RIGHT_WRIST_MOTOR_ID, Constants.TunerConstants.driveCANBus);
+    leftWristMotor =
+        new TalonFX(
+            Constants.WristConstants.LEFT_WRIST_MOTOR_ID, Constants.TunerConstants.driveCANBus);
     // TODO find what we want the current limits to actally be
 
-    // TODO: Create motor configurations
     leftTalonFXConfigs =
         new TalonFXConfiguration()
             .withMotorOutput(
@@ -68,17 +70,28 @@ public class WristSubsystem extends SubsystemBase {
     // TODO ki, kp, and kd should be tunables
     currentPivotPosition = Rotation2d.fromDegrees(0);
     currentRotationPosition = Rotation2d.fromDegrees(0);
-
-    // TODO: Ask build about inversions of motors
   }
 
-  public void periodic() {}
+  public void periodic() {
+    Logger.recordOutput("Mech/Wrist/RightMotorVoltage", getRightMotorVoltage());
+    Logger.recordOutput("Mech/Wrist/LeftMotorVoltage", getLeftMotorVoltage());
+  }
 
   // TODO other useful methods
 
   public void setVoltage(double rightMotorVoltage, double leftMotorVoltage) { // set two voltages
+    System.out.println(
+        "RIGHT MOTOR VOLTAGE" + rightMotorVoltage + "LEFT MOTOR VOLTAGE" + leftMotorVoltage);
     rightWristMotor.setVoltage(rightMotorVoltage);
     leftWristMotor.setVoltage(leftMotorVoltage);
+  }
+
+  public double getRightMotorVoltage() {
+    return rightWristMotor.getMotorVoltage().getValueAsDouble();
+  }
+
+  public double getLeftMotorVoltage() {
+    return leftWristMotor.getMotorVoltage().getValueAsDouble();
   }
 
   public void setRotation(Rotation2d desiredPosition) {
