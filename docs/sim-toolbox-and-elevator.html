@@ -1,0 +1,860 @@
+<!doctype html>
+<!--
+  ============================================================================
+  READING THIS AS CODE? Open it in a web browser instead (Chrome works well).
+  This file is a page with diagrams, and it is much easier to read that way.
+
+  How: in VS Code, right-click this file > "Reveal in Finder" (Mac) or
+  "Reveal in File Explorer" (Windows), then double-click it.
+  Or drag the file into a Chrome window.
+
+  To change the page, edit this file. The text and the pictures are both here.
+  ============================================================================
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sim Toolbox and Elevator Guide</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column. Two bands (toolbox, elevator), each a run of
+   "one question, one picture" sections. Green = new, amber = changed, grey = already there. */
+:root {
+  --bg: #f5f8f5;
+  --surface: #ffffff;
+  --fg: #16201a;
+  --muted: #55645a;
+  --line: #c6d1c9;
+  --box: #edf1ee;
+  --zone: #fafcfa;
+  --new: #1b7f45;
+  --new-bg: #dcf2e3;
+  --chg: #946200;
+  --chg-bg: #fcefc6;
+  --gone: #b0412d;
+  --gone-bg: #fbe2dc;
+  --font-display: "Space Grotesk", "Avenir Next", "Segoe UI", sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1511; --surface: #171f1a; --fg: #e5ede7; --muted: #9baba0; --line: #39463d;
+    --box: #212b25; --zone: #131a15; --new: #62d28d; --new-bg: #153322;
+    --chg: #e4b545; --chg-bg: #382c0b; --gone: #f18d78; --gone-bg: #3a1c16;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1511; --surface: #171f1a; --fg: #e5ede7; --muted: #9baba0; --line: #39463d;
+  --box: #212b25; --zone: #131a15; --new: #62d28d; --new-bg: #153322;
+  --chg: #e4b545; --chg-bg: #382c0b; --gone: #f18d78; --gone-bg: #3a1c16;
+  color-scheme: dark;
+}
+
+:root { color-scheme: light; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.55;
+}
+.wrap {
+  max-width: 940px;
+  margin: 0 auto;
+  padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 56px;
+}
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(30px, 5vw, 44px); font-weight: 700; letter-spacing: -0.01em; }
+h2 { font-size: 28px; font-weight: 700; }
+h3 { font-size: 20px; font-weight: 600; }
+p { margin: 0; max-width: 68ch; }
+code, .mono { font-family: var(--font-mono); font-size: 0.88em; }
+.eyebrow {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--muted);
+}
+.lede { font-size: 18px; color: var(--muted); }
+.stack { display: flex; flex-direction: column; gap: 14px; }
+.section { display: flex; flex-direction: column; gap: 16px; }
+.band { display: flex; flex-direction: column; gap: 44px; }
+.band-head {
+  display: flex; flex-direction: column; gap: 10px;
+  padding-top: 28px; border-top: 3px solid var(--fg);
+}
+
+/* legend */
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 14px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.sw { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--line); background: var(--box); }
+.sw.new { background: var(--new-bg); border-color: var(--new); }
+.sw.chg { background: var(--chg-bg); border-color: var(--chg); }
+.sw.gone { background: var(--gone-bg); border-color: var(--gone); border-style: dashed; }
+
+/* branch stack */
+.branches { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; }
+.branch {
+  flex: 1 1 170px; min-width: 0;
+  background: var(--box); border: 1.5px solid var(--line); border-radius: 10px;
+  padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; position: relative;
+}
+.branch b { font-family: var(--font-mono); font-size: 13px; }
+.branch small { color: var(--muted); font-size: 13px; line-height: 1.4; }
+.branch.on { background: var(--new-bg); border-color: var(--new); }
+.branch .pr { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.04em; }
+.branch a.pr { color: var(--new); text-decoration: underline; text-underline-offset: 3px; }
+.branch a.pr:focus-visible { outline: 2px solid var(--new); outline-offset: 2px; }
+.branches .arrow { align-self: center; color: var(--muted); font-size: 20px; flex: 0 0 auto; }
+@media (max-width: 640px) { .branches .arrow { display: none; } }
+
+/* figures */
+figure { margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.dia {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+  overflow-x: auto; padding: 12px;
+}
+.dia svg { display: block; width: 100%; min-width: 700px; height: auto; color: var(--muted); }
+figcaption { font-size: 14px; color: var(--muted); max-width: 72ch; }
+svg text { font-family: var(--font-body); }
+svg .t { font-size: 13px; font-weight: 600; fill: var(--fg); }
+svg .tm { font-family: var(--font-mono); font-size: 12px; font-weight: 600; fill: var(--fg); }
+svg .s { font-size: 11.5px; fill: var(--muted); }
+svg .l { font-size: 11.5px; fill: var(--muted); font-style: italic; }
+svg .zt { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; fill: var(--muted); }
+svg .zone { fill: var(--zone); stroke: var(--line); stroke-width: 1; stroke-dasharray: 5 4; }
+svg .b { fill: var(--box); stroke: var(--line); stroke-width: 1.5; }
+svg .b.new { fill: var(--new-bg); stroke: var(--new); }
+svg .b.chg { fill: var(--chg-bg); stroke: var(--chg); }
+svg .b.gone { fill: var(--gone-bg); stroke: var(--gone); stroke-dasharray: 5 4; }
+svg .b.ghost { fill: none; stroke-dasharray: 5 4; }
+svg .b.slot { fill: none; stroke: var(--new); stroke-dasharray: 5 4; }
+svg .a { fill: none; stroke: currentColor; stroke-width: 1.5; }
+svg .a.dash { stroke-dasharray: 5 4; }
+svg .ah { fill: currentColor; }
+
+/* before / after switch */
+.switch { display: inline-flex; flex-wrap: wrap; border: 1.5px solid var(--line); border-radius: 999px; padding: 3px; background: var(--surface); align-self: flex-start; }
+.switch button {
+  white-space: nowrap;
+  font: 600 14px var(--font-body); color: var(--muted); background: transparent;
+  border: 0; border-radius: 999px; padding: 7px 16px; cursor: pointer;
+}
+.switch button[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.switch button:focus-visible { outline: 2px solid var(--new); outline-offset: 2px; }
+[data-view="v1"] [data-show]:not([data-show~="v1"]),
+[data-view="v2"] [data-show]:not([data-show~="v2"]),
+[data-view="v3"] [data-show]:not([data-show~="v3"]) { display: none; }
+#fig-arch[data-view="v1"] svg .b.chg { fill: var(--box); stroke: var(--line); }
+
+/* cards and grids */
+.grid { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.card {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; min-width: 0;
+}
+.card h4 { margin: 0; font: 600 16px var(--font-display); }
+.card p { font-size: 14px; color: var(--muted); }
+.card .q { font-size: 14px; color: var(--fg); font-weight: 500; }
+.card .who { font-size: 12px; font-weight: 600; letter-spacing: 0.07em; text-transform: uppercase; color: var(--new); }
+.card .mono { font-size: 13px; font-weight: 600; overflow-wrap: anywhere; }
+
+/* steps */
+ol.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); counter-reset: s; }
+ol.steps li {
+  counter-increment: s; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 10px; padding: 12px 14px; font-size: 14px; min-width: 0;
+}
+ol.steps li::before {
+  content: counter(s); display: block; font: 700 20px var(--font-display); color: var(--new); margin-bottom: 4px;
+}
+ol.steps li b { display: block; font-size: 14px; }
+ol.steps li span { color: var(--muted); }
+
+/* plug-in map */
+.plug { display: flex; flex-direction: column; gap: 8px; }
+.plug-row { display: grid; grid-template-columns: 1fr 28px 1fr; align-items: stretch; gap: 8px; }
+.plug-row > div { border-radius: 8px; padding: 10px 12px; font-size: 14px; min-width: 0; border: 1.5px solid var(--line); background: var(--box); }
+.plug-row > div.new { background: var(--new-bg); border-color: var(--new); }
+.plug-row > div.chg { background: var(--chg-bg); border-color: var(--chg); }
+.plug-row .mono { font-weight: 600; overflow-wrap: anywhere; }
+.plug-row small { display: block; color: var(--muted); font-size: 13px; }
+.plug-row .to { border: 0; background: none; padding: 0; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 18px; }
+.plug-head { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.plug-row.head > div { border: 0; background: none; padding: 0 2px; }
+
+/* tables */
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 560px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr:last-child td { border-bottom: 0; }
+th { font-size: 12px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.pill { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; border: 1.5px solid var(--line); white-space: nowrap; }
+.pill.stay { background: var(--box); }
+.pill.swap { background: var(--chg-bg); border-color: var(--chg); color: var(--chg); }
+.pill.del { background: var(--gone-bg); border-color: var(--gone); color: var(--gone); }
+.pill.add { background: var(--new-bg); border-color: var(--new); color: var(--new); }
+
+/* state chain */
+.chain { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 14px; }
+.chain .st { background: var(--surface); border: 1.5px solid var(--line); border-radius: 999px; padding: 6px 14px; font-weight: 600; }
+.chain .st.ok { background: var(--new-bg); border-color: var(--new); }
+.chain .ar { color: var(--muted); font-size: 13px; }
+.note { border-left: 3px solid var(--chg); padding: 4px 0 4px 14px; font-size: 15px; }
+ul.plain { margin: 0; padding-left: 20px; max-width: 68ch; display: flex; flex-direction: column; gap: 6px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header class="stack">
+    <div class="eyebrow">Team 1700 robot code - PR Sim Toolbox and PR Elevator Prototype</div>
+    <h1>The sim toolbox, and the elevator that uses it</h1>
+    <p class="lede">Two branches added a lot of code. This page shows how the new pieces are shaped, how they sit on top of the code that was already there, and what runs on a real robot compared with the simulator.</p>
+    <div class="legend" aria-label="Color key">
+      <span><i class="sw"></i> already there, not touched</span>
+      <span><i class="sw new"></i> new</span>
+      <span><i class="sw chg"></i> changed</span>
+      <span><i class="sw gone"></i> goes away later</span>
+    </div>
+    <div class="branches">
+      <div class="branch"><span class="pr">Base</span><b>main</b><small>The robot code as it was.</small></div>
+      <span class="arrow" aria-hidden="true">&#8594;</span>
+      <div class="branch"><a class="pr" href="https://github.com/gatorbotics1700/1700_preseason_2027/pull/6">PR Main Fixes</a><b>main-fixes</b><small>Four small bug fixes.</small></div>
+      <span class="arrow" aria-hidden="true">&#8594;</span>
+      <div class="branch on"><a class="pr" href="https://github.com/gatorbotics1700/1700_preseason_2027/pull/7">PR Sim Toolbox</a><b>sim-framework</b><small>The toolbox: smoke test, log checks, 3D helpers.</small></div>
+      <span class="arrow" aria-hidden="true">&#8594;</span>
+      <div class="branch on"><a class="pr" href="https://github.com/gatorbotics1700/1700_preseason_2027/pull/8">PR Elevator Prototype</a><b>elevator-prototype</b><small>The first mechanism built with the toolbox.</small></div>
+    </div>
+    <p>Each branch is built on the one before it, so they merge left to right. The PR names link to GitHub.</p>
+  </header>
+
+  <!-- ======================= TOOLBOX ======================= -->
+  <section class="band" id="toolbox">
+    <div class="band-head">
+      <div class="eyebrow">Part 1 - PR Sim Toolbox - branch sim-framework</div>
+      <h2>The toolbox</h2>
+      <p>It runs the whole robot in the simulator by itself, reads the log, and tells you what went wrong. The same checks also read a log from a real match.</p>
+    </div>
+
+    <div class="section" data-view="v2" id="fig-arch">
+      <h3>What was there, and what was added on top</h3>
+      <div class="switch" role="group" aria-label="Show before or after">
+        <button type="button" id="arch-before" aria-pressed="false" data-set="v1">Before (main)</button>
+        <button type="button" id="arch-after" aria-pressed="true" data-set="v2">After (PR Sim Toolbox)</button>
+      </div>
+      <figure>
+        <div class="dia">
+          <svg viewBox="0 0 880 446" role="img" aria-label="The robot code before and after the toolbox. The toolbox adds SimSmoke and two helpers to the robot code, a sim log file, and two test-side folders that read logs and build 3D models.">
+            <defs><marker id="ahA" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path class="ah" d="M0 0 L9 4 L0 8 Z"/></marker></defs>
+
+            <rect class="zone" x="20" y="16" width="840" height="200" rx="10"/>
+            <text class="zt" x="36" y="38">SRC/MAIN - ROBOT CODE. THIS IS WHAT GOES ONTO THE ROBOT</text>
+
+            <rect class="b chg" x="40" y="52" width="220" height="56" rx="8"/>
+            <text class="tm" x="54" y="76">Robot.java</text>
+            <text class="s" data-show="v1" x="54" y="95">starts the log, runs the loop</text>
+            <text class="s" data-show="v2" x="54" y="95">changed: 3 small hooks added</text>
+
+            <rect class="b" x="330" y="52" width="220" height="56" rx="8"/>
+            <text class="tm" x="344" y="76">RobotContainer.java</text>
+            <text class="s" x="344" y="95">builds every subsystem</text>
+
+            <rect class="b" x="620" y="52" width="220" height="56" rx="8"/>
+            <text class="t" x="634" y="76">Subsystems</text>
+            <text class="s" x="634" y="95">drive, vision, mechanisms</text>
+
+            <path class="a" d="M260 80 H328" marker-end="url(#ahA)"/>
+            <path class="a" d="M550 80 H618" marker-end="url(#ahA)"/>
+
+            <g data-show="v2">
+              <rect class="b new" x="40" y="140" width="220" height="56" rx="8"/>
+              <text class="tm" x="54" y="164">util/SimSmoke.java</text>
+              <text class="s" x="54" y="183">plays the driver in a smoke test</text>
+              <path class="a dash" d="M150 108 V138" marker-end="url(#ahA)"/>
+              <text class="l" x="160" y="128">smoke test only</text>
+
+              <rect class="b new" x="620" y="140" width="220" height="56" rx="8"/>
+              <text class="tm" x="634" y="164">TunableGains, LoopTimer</text>
+              <text class="s" x="634" y="183">shared helpers for mechanisms</text>
+              <path class="a dash" d="M730 108 V138" marker-end="url(#ahA)"/>
+              <text class="l" x="740" y="128">may use</text>
+            </g>
+
+            <path class="a" d="M150 216 V248" marker-end="url(#ahA)"/>
+            <text class="l" x="160" y="237">on the real robot</text>
+            <path class="a" d="M440 216 V248" marker-end="url(#ahA)"/>
+            <text class="l" x="450" y="237">in the simulator</text>
+
+            <rect class="b" x="40" y="250" width="220" height="50" rx="8"/>
+            <text class="t" x="54" y="271">Match log</text>
+            <text class="s" x="54" y="289">saved on the robot</text>
+
+            <g data-show="v1">
+              <rect class="b ghost" x="330" y="250" width="220" height="50" rx="8"/>
+              <text class="t" x="344" y="271">Live view only</text>
+              <text class="s" x="344" y="289">no log file to check afterwards</text>
+            </g>
+            <g data-show="v2">
+              <rect class="b new" x="330" y="250" width="220" height="50" rx="8"/>
+              <text class="t" x="344" y="271">Sim log</text>
+              <text class="s" x="344" y="289">logs/sim_smoke/ (smoke test)</text>
+            </g>
+
+            <rect class="zone" x="20" y="330" width="840" height="100" rx="10"/>
+            <text class="zt" x="844" y="352" text-anchor="end">SRC/TEST - TEST CODE. LAPTOP ONLY, NEVER ON THE ROBOT</text>
+
+            <g data-show="v2">
+              <rect class="b new" x="40" y="362" width="220" height="56" rx="8"/>
+              <text class="tm" x="54" y="386">diagnostics/</text>
+              <text class="s" x="54" y="405">reads a log, runs the checks</text>
+
+              <rect class="b new" x="330" y="362" width="220" height="56" rx="8"/>
+              <text class="tm" x="344" y="386">view3d/</text>
+              <text class="s" x="344" y="405">3D models, layout checks</text>
+
+              <path class="a" d="M150 300 V360" marker-end="url(#ahA)"/>
+              <text class="l" x="142" y="322" text-anchor="end">Diagnose log file</text>
+              <path class="a" d="M440 300 V316 H200 V360" marker-end="url(#ahA)"/>
+              <text class="l" x="320" y="311" text-anchor="middle">checked for you</text>
+              <path class="a" d="M330 390 H262" marker-end="url(#ahA)"/>
+            </g>
+
+            <rect class="b chg" x="620" y="362" width="220" height="56" rx="8"/>
+            <text class="t" x="634" y="386">Unit tests</text>
+            <text class="s" data-show="v1" x="634" y="405">built, but not run</text>
+            <text class="s" data-show="v2" x="634" y="405">changed: now they run</text>
+          </svg>
+        </div>
+        <figcaption>Flip the switch to see the same picture on <code>main</code>. Nothing grey was rewritten. The toolbox sits beside the old code and hooks in at one place, <code>Robot.java</code>.</figcaption>
+      </figure>
+      <ul class="plain">
+        <li><b>The checks live in the test folder, not on the robot.</b> They read log files. They never run in the 20 ms loop, so they cannot slow the robot down.</li>
+        <li><b><code>SimSmoke</code> is in the robot code because it has to run inside the robot program</b>, to pick the auto and press enable. It only wakes up when a smoke test asks for it.</li>
+      </ul>
+    </div>
+
+    <div class="section">
+      <h3>Three layers of checking</h3>
+      <div class="grid">
+        <div class="card"><span class="who">Seconds</span><h4>Unit tests</h4><p class="q">Is this one piece right?</p><p>Task: Gatorbotics: Run code tests. Changed in PR Sim Toolbox: the tests now run.</p></div>
+        <div class="card"><span class="who">About 10 seconds</span><h4>Smoke test sim</h4><p class="q">Do all the pieces work together?</p><p>Task: Gatorbotics: Smoke test sim. The whole robot runs one auto, then its log is checked.</p></div>
+        <div class="card"><span class="who">After the fact</span><h4>Diagnose log file</h4><p class="q">What went wrong on the robot, and when?</p><p>Task: Gatorbotics: Diagnose log file. Works on any log, even a real match.</p></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>What happens in a smoke test</h3>
+      <ol class="steps">
+        <li><b>Start</b><span>Gradle starts the simulator with no window.</span></li>
+        <li><b>Hook in</b><span><code>Robot.java</code> builds <code>SimSmoke</code> and also writes a log file.</span></li>
+        <li><b>Pick the auto</b><span>After 1 s, <code>SimSmoke</code> picks the auto on the dashboard, like a driver.</span></li>
+        <li><b>Enable</b><span>It enables autonomous. Every loop is logged.</span></li>
+        <li><b>Finish</b><span>The auto ends. It closes the log and exits.</span></li>
+        <li><b>Check</b><span><code>LogDiagnostics</code> runs every check and prints PASS or FAIL.</span></li>
+      </ol>
+      <p>Waiting is counted in robot loops, not clock time. If the auto never starts or never ends, it gives up and fails.</p>
+    </div>
+
+    <div class="section">
+      <h3>Real robot or simulator: both end at the same checks</h3>
+      <figure>
+        <div class="dia">
+          <svg viewBox="0 0 880 236" role="img" aria-label="A real robot makes a match log. A smoke test on a laptop makes a sim log. Both logs go to the same LogDiagnostics checks and produce a report.">
+            <defs><marker id="ahB" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path class="ah" d="M0 0 L9 4 L0 8 Z"/></marker></defs>
+
+            <text class="zt" x="20" y="18">ON THE REAL ROBOT</text>
+            <rect class="b" x="20" y="28" width="230" height="56" rx="8"/>
+            <text class="t" x="34" y="52">Robot code runs</text>
+            <text class="s" x="34" y="71">SimSmoke is never built</text>
+            <path class="a" d="M250 56 H298" marker-end="url(#ahB)"/>
+            <rect class="b" x="300" y="28" width="170" height="56" rx="8"/>
+            <text class="t" x="314" y="52">Match log</text>
+            <text class="s" x="314" y="71">saved on the robot</text>
+
+            <text class="zt" x="20" y="146">ON A LAPTOP: SMOKE TEST SIM</text>
+            <rect class="b new" x="20" y="156" width="230" height="56" rx="8"/>
+            <text class="t" x="34" y="180">The same robot code runs</text>
+            <text class="s" x="34" y="199">SimSmoke plays the driver</text>
+            <path class="a" d="M250 184 H298" marker-end="url(#ahB)"/>
+            <rect class="b new" x="300" y="156" width="170" height="56" rx="8"/>
+            <text class="t" x="314" y="180">Sim log</text>
+            <text class="s" x="314" y="199">logs/sim_smoke/</text>
+
+            <path class="a" d="M470 56 H520 V110 H568" marker-end="url(#ahB)"/>
+            <text class="l" x="480" y="46">you download it</text>
+            <path class="a" d="M470 184 H520 V130 H568" marker-end="url(#ahB)"/>
+            <text class="l" x="480" y="204">automatic</text>
+
+            <rect class="b new" x="570" y="88" width="170" height="64" rx="8"/>
+            <text class="tm" x="584" y="112">LogDiagnostics</text>
+            <text class="s" x="584" y="130">one list of checks</text>
+            <text class="s" x="584" y="144">for both kinds of log</text>
+            <path class="a" d="M740 120 H768" marker-end="url(#ahB)"/>
+            <rect class="b new" x="770" y="92" width="90" height="56" rx="8"/>
+            <text class="t" x="784" y="116">Report</text>
+            <text class="s" x="784" y="135">PASS / FAIL</text>
+          </svg>
+        </div>
+        <figcaption>A problem you can find in a match log, you can also catch in the simulator before the match. A check that only makes sense in the simulator skips itself on a match log.</figcaption>
+      </figure>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Piece</th><th>Real robot</th><th>Simulate by hand</th><th>Smoke test sim</th></tr></thead>
+          <tbody>
+            <tr><td><code>Robot.java</code>, <code>RobotContainer</code>, subsystems</td><td>run</td><td>run</td><td>run</td></tr>
+            <tr><td><code>SimSmoke</code></td><td>never built</td><td>never built</td><td>built: picks the auto, enables, exits</td></tr>
+            <tr><td>Log file</td><td>saved on the robot</td><td>none, live view only</td><td><code>logs/sim_smoke/</code></td></tr>
+            <tr><td><code>TunableGains</code>, <code>LoopTimer</code></td><td>run inside a mechanism that uses them (so far, the elevator)</td><td>the same</td><td>the same</td></tr>
+            <tr><td><code>diagnostics/</code>, <code>view3d/</code></td><td>not on the robot at all</td><td>not used</td><td>run on the laptop after the sim exits</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>The classes inside the log checks</h3>
+      <figure>
+        <div class="dia">
+          <svg viewBox="0 0 880 300" role="img" aria-label="LogDiagnostics reads a LogFile, runs each LogCheck, and fills in a Report. Three files hold checks: RobotChecks, PositionChecks and View3dChecks. TestLog makes small fake logs for unit tests.">
+            <defs><marker id="ahC" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path class="ah" d="M0 0 L9 4 L0 8 Z"/></marker></defs>
+
+            <rect class="b new" x="20" y="24" width="190" height="56" rx="8"/>
+            <text class="tm" x="34" y="48">LogFile</text>
+            <text class="s" x="34" y="67">"what was this at this time?"</text>
+
+            <rect class="b new" x="345" y="24" width="190" height="56" rx="8"/>
+            <text class="tm" x="359" y="48">LogDiagnostics</text>
+            <text class="s" x="359" y="67">runs every check on one log</text>
+
+            <rect class="b new" x="670" y="24" width="190" height="56" rx="8"/>
+            <text class="tm" x="684" y="48">Report</text>
+            <text class="s" x="684" y="67">PASS, FAIL, WARN or SKIP</text>
+
+            <path class="a" d="M345 52 H212" marker-end="url(#ahC)"/>
+            <text class="l" x="278" y="44" text-anchor="middle">reads</text>
+            <path class="a" d="M535 52 H668" marker-end="url(#ahC)"/>
+            <text class="l" x="602" y="44" text-anchor="middle">fills in</text>
+
+            <path class="a" d="M440 80 V126" marker-end="url(#ahC)"/>
+            <text class="l" x="450" y="108">runs each</text>
+
+            <rect class="b new" x="345" y="128" width="190" height="56" rx="8"/>
+            <text class="tm" x="359" y="152">LogCheck (interface)</text>
+            <text class="s" x="359" y="171">one check, one problem</text>
+
+            <path class="a" d="M115 228 V206 H765 V228"/>
+            <path class="a" d="M440 228 V186" marker-end="url(#ahC)"/>
+
+            <rect class="b new" x="20" y="228" width="190" height="56" rx="8"/>
+            <text class="tm" x="34" y="252">RobotChecks</text>
+            <text class="s" x="34" y="271">devices connected, CAN ok</text>
+
+            <rect class="b new" x="345" y="228" width="190" height="56" rx="8"/>
+            <text class="tm" x="359" y="252">PositionChecks</text>
+            <text class="s" x="359" y="271">homes, arrives, stays in limits</text>
+
+            <rect class="b new" x="670" y="228" width="190" height="56" rx="8"/>
+            <text class="tm" x="684" y="252">View3dChecks</text>
+            <text class="s" x="684" y="271">layout keys are really logged</text>
+
+            <rect class="b new" x="20" y="128" width="190" height="56" rx="8"/>
+            <text class="tm" x="34" y="152">TestLog</text>
+            <text class="s" x="34" y="171">a tiny fake log for unit tests</text>
+            <path class="a dash" d="M115 128 V82" marker-end="url(#ahC)"/>
+            <text class="l" x="125" y="110">makes one</text>
+          </svg>
+        </div>
+        <figcaption>The bottom row holds the checks. Each check is one small class that follows the <code>LogCheck</code> interface (a list of methods a class promises to have). <code>PositionChecks</code> is the reusable set: a mechanism fills in one <code>Settings</code> object with its log keys and limits, and gets four checks.</figcaption>
+      </figure>
+      <p class="note">A check lists the log keys it needs. If the log does not have them, the report says SKIP, not FAIL. That is how one list of checks works on every log.</p>
+    </div>
+  </section>
+
+  <!-- ======================= ELEVATOR ======================= -->
+  <section class="band" id="elevator">
+    <div class="band-head">
+      <div class="eyebrow">Part 2 - PR Elevator Prototype - branch elevator-prototype</div>
+      <h2>The elevator</h2>
+      <p>One mechanism built the new way from start to finish, as the example the other mechanisms copy. No robot has an elevator yet, so it is switched off on the real robot.</p>
+    </div>
+
+    <div class="section" data-view="v3" id="fig-io">
+      <h3>The mechanism pattern, and how the elevator fills it in</h3>
+      <p>The elevator is a brand-new mechanism. It does not replace anything. It follows a pattern that was already on <code>main</code>, and adds the pieces the toolbox made possible. Step through the three tabs to watch the same picture grow.</p>
+      <div class="switch" role="group" aria-label="Pick a stage">
+        <button type="button" id="io-v1" aria-pressed="false" data-set="v1">1. On main</button>
+        <button type="button" id="io-v2" aria-pressed="false" data-set="v2">2. PR Sim Toolbox</button>
+        <button type="button" id="io-v3" aria-pressed="true" data-set="v3">3. PR Elevator Prototype</button>
+      </div>
+      <figure>
+        <div class="dia">
+          <svg viewBox="0 0 880 424" role="img" aria-label="The mechanism pattern in three stages. On main: commands, a subsystem that only decides, an IO interface, and three versions of it. The toolbox adds shared helpers and a recipe for a physics version. The elevator fills in every box with its own class.">
+            <defs><marker id="ahE" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path class="ah" d="M0 0 L9 4 L0 8 Z"/></marker></defs>
+
+            <!-- shared helpers: appear with the toolbox -->
+            <g data-show="v2">
+              <rect class="b new" x="300" y="16" width="220" height="50" rx="8"/>
+              <text class="tm" x="314" y="37">TunableGains, LoopTimer</text>
+              <text class="s" x="314" y="55">new shared helpers</text>
+              <path class="a dash" d="M410 104 V68" marker-end="url(#ahE)"/>
+              <text class="l" x="420" y="90">a mechanism may use</text>
+            </g>
+            <g data-show="v3">
+              <rect class="b" x="300" y="16" width="220" height="50" rx="8"/>
+              <text class="tm" x="314" y="37">TunableGains, LoopTimer</text>
+              <text class="s" x="314" y="55">from PR Sim Toolbox</text>
+              <path class="a" d="M410 104 V68" marker-end="url(#ahE)"/>
+              <text class="l" x="420" y="90">uses</text>
+            </g>
+
+            <!-- row 1 -->
+            <rect class="b" data-show="v1 v2" x="20" y="104" width="200" height="56" rx="8"/>
+            <rect class="b new" data-show="v3" x="20" y="104" width="200" height="56" rx="8"/>
+            <text class="tm" data-show="v1 v2" x="34" y="128">XCommands</text>
+            <text class="tm" data-show="v3" x="34" y="128">ElevatorCommands</text>
+            <text class="s" data-show="v1 v2" x="34" y="147">actions for buttons and autos</text>
+            <text class="s" data-show="v3" x="34" y="147">home, go to a height, demo</text>
+            <path class="a" d="M220 132 H298" marker-end="url(#ahE)"/>
+
+            <rect class="b" data-show="v1 v2" x="300" y="104" width="220" height="56" rx="8"/>
+            <rect class="b new" data-show="v3" x="300" y="104" width="220" height="56" rx="8"/>
+            <text class="tm" data-show="v1 v2" x="314" y="128">XSubsystem</text>
+            <text class="tm" data-show="v3" x="314" y="128">ElevatorSubsystem</text>
+            <text class="s" x="314" y="147">decisions only, no motor code</text>
+            <path class="a" d="M520 132 H618" marker-end="url(#ahE)"/>
+            <text class="l" x="569" y="124" text-anchor="middle">only through</text>
+
+            <rect class="b" data-show="v1 v2" x="620" y="104" width="240" height="56" rx="8"/>
+            <rect class="b new" data-show="v3" x="620" y="104" width="240" height="56" rx="8"/>
+            <text class="tm" data-show="v1 v2" x="634" y="128">XIO (interface)</text>
+            <text class="tm" data-show="v3" x="634" y="128">ElevatorIO (interface)</text>
+            <text class="s" x="634" y="147">the list of things hardware can do</text>
+
+            <!-- the versions follow the interface -->
+            <path class="a" d="M125 220 V192 H755 V220"/>
+            <path class="a" d="M440 220 V192"/>
+            <path class="a" d="M740 192 V162" marker-end="url(#ahE)"/>
+            <text class="l" x="750" y="182">follow the interface</text>
+
+            <!-- row 2 -->
+            <rect class="b" data-show="v1 v2" x="20" y="220" width="210" height="68" rx="8"/>
+            <rect class="b new" data-show="v3" x="20" y="220" width="210" height="68" rx="8"/>
+            <text class="tm" data-show="v1 v2" x="34" y="244">XIOTalonFX</text>
+            <text class="tm" data-show="v3" x="34" y="244">ElevatorIOTalonFX</text>
+            <text class="s" data-show="v1 v2" x="34" y="262">the real motor code</text>
+            <text class="s" data-show="v3" x="34" y="262">the real motor and switch</text>
+            <text class="l" x="34" y="278">used on: a real robot</text>
+
+            <rect class="b" data-show="v1 v2" x="335" y="220" width="210" height="68" rx="8"/>
+            <rect class="b new" data-show="v3" x="335" y="220" width="210" height="68" rx="8"/>
+            <text class="tm" data-show="v1 v2" x="349" y="244">XIOSim</text>
+            <text class="tm" data-show="v3" x="349" y="244">ElevatorIOSim</text>
+            <text class="s" x="349" y="262">remembers what it was told</text>
+            <text class="l" data-show="v1 v2" x="349" y="278">used in: unit tests, simulator</text>
+            <text class="l" data-show="v3" x="349" y="278">used in: unit tests</text>
+
+            <rect class="b" data-show="v1 v2" x="650" y="220" width="210" height="68" rx="8"/>
+            <rect class="b new" data-show="v3" x="650" y="220" width="210" height="68" rx="8"/>
+            <text class="tm" data-show="v1 v2" x="664" y="244">new XIO() {}</text>
+            <text class="tm" data-show="v3" x="664" y="244">new ElevatorIO() {}</text>
+            <text class="s" x="664" y="262">does nothing</text>
+            <text class="l" x="664" y="278">used when: switched off, replay</text>
+
+            <!-- row 3: the physics version -->
+            <g data-show="v2">
+              <path class="a dash" d="M125 340 V290" marker-end="url(#ahE)"/>
+              <text class="l" x="135" y="320">would extend: runs the same motor code</text>
+              <rect class="b slot" x="20" y="340" width="260" height="68" rx="8"/>
+              <text class="tm" x="34" y="364">XIOSimPhysics</text>
+              <text class="s" x="34" y="382">a recipe in the docs, nothing built yet</text>
+              <text class="l" x="34" y="398">would be used in: the simulator</text>
+            </g>
+            <g data-show="v3">
+              <path class="a" d="M125 340 V290" marker-end="url(#ahE)"/>
+              <text class="l" x="135" y="320">extends: runs the same motor code</text>
+              <rect class="b new" x="20" y="340" width="260" height="68" rx="8"/>
+              <text class="tm" x="34" y="364">ElevatorIOSimPhysics</text>
+              <text class="s" x="34" y="382">motor code + physics model</text>
+              <text class="l" x="34" y="398">used in: the simulator</text>
+            </g>
+          </svg>
+        </div>
+        <figcaption data-show="v1"><b>On main.</b> X stands for a mechanism's name. The starter template in <code>subsystems/template/</code> has exactly this shape, and the drive and the vision use the same idea with their own simulator versions. The hood, intake, shooter, turret and hopper do not follow it yet on main: their motor code is still inside the subsystem, so a test cannot swap the motor out. The drive moves in the simulator. No mechanism does.</figcaption>
+        <figcaption data-show="v2"><b>PR Sim Toolbox.</b> No mechanism changes. The toolbox adds two shared helpers, and writes down a recipe for a fourth version: a physics simulator that runs the real motor code. The dashed green box is that recipe. No mechanism had built one yet.</figcaption>
+        <figcaption data-show="v3"><b>PR Elevator Prototype.</b> The elevator fills in every box with its own class, including the first physics version. Green boxes are the elevator's new files. Because the simulator version extends the real one, a wrong motor setting shows up on a laptop first.</figcaption>
+      </figure>
+    </div>
+
+    <div class="section">
+      <h3>Which version runs where</h3>
+      <div class="grid">
+        <div class="card"><span class="who">Real robot</span><span class="mono">ElevatorIOTalonFX</span><p>When <code>ENABLED_ON_REAL_ROBOT</code> is true. Today it is false, so the robot gets the do-nothing version.</p></div>
+        <div class="card"><span class="who">Simulator and smoke test</span><span class="mono">ElevatorIOSimPhysics</span><p>Real motor code, with a physics model answering for the motor and the switch.</p></div>
+        <div class="card"><span class="who">Unit tests</span><span class="mono">ElevatorIOSim</span><p>The test sets every reading itself, so tests run instantly.</p></div>
+        <div class="card"><span class="who">Off, or replaying a log</span><span class="mono">new ElevatorIO() {}</span><p>Every method does nothing. No fake CAN ID needed.</p></div>
+      </div>
+      <p><code>RobotContainer</code> picks one when the robot starts. The day a robot has an elevator: put the real CAN ID and DIO port in the config file, replace the guessed numbers with measured ones, and set <code>ENABLED_ON_REAL_ROBOT = true</code>. No class changes.</p>
+    </div>
+
+    <div class="section">
+      <h3>Inside: the same code, a different thing answering</h3>
+      <figure>
+        <div class="dia">
+          <svg viewBox="0 0 880 236" role="img" aria-label="ElevatorSubsystem and the TalonFX motor code are the same on the real robot and in the simulator. On the robot a real motor answers. In the simulator a pretend motor trades voltage and position with a physics model every 5 milliseconds.">
+            <defs><marker id="ahF" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path class="ah" d="M0 0 L9 4 L0 8 Z"/></marker></defs>
+            <rect class="zone" x="10" y="62" width="412" height="112" rx="10"/>
+            <text class="zt" x="24" y="82">THE SAME IN BOTH</text>
+            <rect class="b new" x="24" y="94" width="170" height="64" rx="8"/>
+            <text class="tm" x="38" y="120">ElevatorSubsystem</text>
+            <text class="s" x="38" y="140">decisions</text>
+            <path class="a" d="M194 126 H226" marker-end="url(#ahF)"/>
+            <rect class="b new" x="228" y="94" width="180" height="64" rx="8"/>
+            <text class="tm" x="242" y="120">ElevatorIOTalonFX</text>
+            <text class="s" x="242" y="140">Motion Magic, limits, gains</text>
+
+            <path class="a" d="M408 126 H450 V46 H488" marker-end="url(#ahF)"/>
+            <text class="l" x="442" y="40" text-anchor="end">real robot</text>
+            <path class="a" d="M408 126 H450 V186 H488" marker-end="url(#ahF)"/>
+            <text class="l" x="442" y="200" text-anchor="end">simulator</text>
+
+            <rect class="b" x="490" y="18" width="200" height="56" rx="8"/>
+            <text class="t" x="504" y="42">Real motor and switch</text>
+            <text class="s" x="504" y="61">they answer for themselves</text>
+
+            <rect class="b new" x="490" y="158" width="150" height="56" rx="8"/>
+            <text class="t" x="504" y="182">Pretend motor</text>
+            <text class="s" x="504" y="201">from Phoenix</text>
+
+            <path class="a" d="M640 176 H708" marker-end="url(#ahF)"/>
+            <text class="l" x="675" y="168" text-anchor="middle">volts</text>
+            <path class="a" d="M710 198 H642" marker-end="url(#ahF)"/>
+            <text class="l" x="675" y="216" text-anchor="middle">position</text>
+
+            <rect class="b new" x="710" y="150" width="160" height="72" rx="8"/>
+            <text class="t" x="724" y="174">Physics model</text>
+            <text class="s" x="724" y="192">mass, gravity, gearing</text>
+            <text class="s" x="724" y="208">steps every 5 ms</text>
+          </svg>
+        </div>
+        <figcaption>In the simulator, the physics model takes the voltage the motor code asked for, works out how a real carriage would move, and writes the new position and the limit switch back. It cannot show jams, binding, chain stretch or real current under load.</figcaption>
+      </figure>
+    </div>
+
+    <div class="section">
+      <h3>What the elevator does</h3>
+      <div class="chain" aria-label="Elevator states in order">
+        <span class="st">Not homed</span><span class="ar">home &#8594;</span>
+        <span class="st">Homing</span><span class="ar">switch pressed &#8594;</span>
+        <span class="st ok">Homed</span><span class="ar">go to a height &#8594;</span>
+        <span class="st">Moving</span><span class="ar">within 1 cm &#8594;</span>
+        <span class="st ok">At goal</span>
+      </div>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Alert on the Driver Station</th><th>When</th></tr></thead>
+          <tbody>
+            <tr><td>Motor disconnected</td><td>the motor stops answering</td></tr>
+            <tr><td>Homing failed</td><td>4 s (200 loops) with no switch press</td></tr>
+            <tr><td>Told to move but not there</td><td>2 s (100 loops) away from the goal</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>It will not move to a height until it is homed. Going to the bottom, it slows to a gentle push and then turns the motor off, so it does not hold current against the hard stop.</p>
+    </div>
+
+    <div class="section">
+      <h3>Where the elevator plugs into the toolbox</h3>
+      <p>This ties the two branches together. The elevator adds its own files. The toolbox itself changes by one line.</p>
+      <div class="plug">
+        <div class="plug-row head"><div class="plug-head">The elevator adds (PR Elevator Prototype)</div><div class="to"></div><div class="plug-head">It plugs into (PR Sim Toolbox)</div></div>
+        <div class="plug-row"><div class="new"><span class="mono">ElevatorChecks</span><small>fills in Settings, adds 2 checks of its own</small></div><div class="to" aria-hidden="true">&#8594;</div><div><span class="mono">PositionChecks</span><small>four standard checks for free</small></div></div>
+        <div class="plug-row"><div class="new"><span class="mono">ElevatorChecks.all()</span><small>the list of elevator checks</small></div><div class="to" aria-hidden="true">&#8594;</div><div class="chg"><span class="mono">LogDiagnostics.allChecks()</span><small>changed: one added line</small></div></div>
+        <div class="plug-row"><div class="new"><span class="mono">ElevatorModel</span><small>boxes sized by ElevatorConstants</small></div><div class="to" aria-hidden="true">&#8594;</div><div><span class="mono">Glb, ModelFiles</span><small>write the 3D files, keep them in sync</small></div></div>
+        <div class="plug-row"><div class="new"><span class="mono">AdvantageScope-Layout-Elevator.json</span><small>its own layout</small></div><div class="to" aria-hidden="true">&#8594;</div><div><span class="mono">View3dChecks</span><small>every key the layout reads is logged</small></div></div>
+        <div class="plug-row"><div class="new"><span class="mono">"Elevator Demo" auto</span><small>homes, then visits every height</small></div><div class="to" aria-hidden="true">&#8594;</div><div><span class="mono">Smoke test sim</span><small>runs it and checks the log</small></div></div>
+        <div class="plug-row"><div class="new"><span class="mono">ElevatorSubsystem</span><small>gains, homing timeout, not-arrived alert</small></div><div class="to" aria-hidden="true">&#8594;</div><div><span class="mono">TunableGains, LoopTimer</span><small>shared helpers</small></div></div>
+      </div>
+      <p>Three shared files also changed: <code>RobotContainer.java</code> (builds the elevator, adds its buttons and the demo auto), <code>Constants.java</code> (new <code>ElevatorConstants</code>), and <code>config_alecto.properties</code> (two wiring keys).</p>
+    </div>
+
+    <div class="section" data-view="v2" id="fig-cad">
+      <h3>How we develop and check a mechanism: on main, in the prototype, and with real CAD</h3>
+      <p>The same picture in three stages. Each stage adds a way to see what the mechanism is doing.</p>
+      <div class="switch" role="group" aria-label="Pick a stage">
+        <button type="button" id="cad-v1" aria-pressed="false" data-set="v1">1. On main</button>
+        <button type="button" id="cad-v2" aria-pressed="true" data-set="v2">2. PR Elevator Prototype</button>
+        <button type="button" id="cad-v3" aria-pressed="false" data-set="v3">3. Future: real CAD</button>
+      </div>
+      <figure>
+        <div class="dia">
+          <svg viewBox="0 0 880 312" role="img" aria-label="How a mechanism is developed and checked in three stages. On main: the real robot logs numbers and we read plots in AdvantageScope. In the prototype: a physics simulator also produces the data, poses are logged, and AdvantageScope shows a 3D view using a model generated from the code. In the future: the same, with the model exported from CAD.">
+            <defs><marker id="ahM" markerWidth="9" markerHeight="8" refX="8" refY="4" orient="auto"><path class="ah" d="M0 0 L9 4 L0 8 Z"/></marker></defs>
+
+            <text class="zt" x="20" y="32">WHERE THE MECHANISM RUNS</text>
+            <text class="zt" x="330" y="32">WHAT IT LOGS</text>
+            <rect class="zone" x="624" y="12" width="236" height="178" rx="10"/>
+            <text class="zt" x="640" y="32">ADVANTAGESCOPE</text>
+
+            <!-- real robot: always there -->
+            <rect class="b" x="20" y="44" width="230" height="56" rx="8"/>
+            <text class="t" x="34" y="68">The real robot</text>
+            <text class="s" data-show="v1" x="34" y="87">the only place it really moves</text>
+            <text class="s" data-show="v2 v3" x="34" y="87">once the mechanism is built</text>
+
+            <!-- simulator -->
+            <g data-show="v1">
+              <rect class="b ghost" x="20" y="120" width="230" height="56" rx="8"/>
+              <text class="t" x="34" y="144">The simulator</text>
+              <text class="s" x="34" y="163">nothing moves the mechanism</text>
+            </g>
+            <g data-show="v2">
+              <rect class="b new" x="20" y="120" width="230" height="56" rx="8"/>
+              <text class="t" x="34" y="144">The simulator, with physics</text>
+              <text class="s" x="34" y="163">it moves on a laptop, robot or not</text>
+            </g>
+            <g data-show="v3">
+              <rect class="b" x="20" y="120" width="230" height="56" rx="8"/>
+              <text class="t" x="34" y="144">The simulator, with physics</text>
+              <text class="s" x="34" y="163">it moves on a laptop, robot or not</text>
+            </g>
+
+            <!-- logged numbers: always there -->
+            <path class="a" d="M250 72 H328" marker-end="url(#ahM)"/>
+            <rect class="b" x="330" y="44" width="210" height="56" rx="8"/>
+            <text class="t" x="344" y="68">Numbers</text>
+            <text class="s" x="344" y="87">currents, positions, volts</text>
+            <path class="a" d="M540 72 H638" marker-end="url(#ahM)"/>
+            <rect class="b" x="640" y="44" width="204" height="56" rx="8"/>
+            <text class="t" x="654" y="68">Plots</text>
+            <text class="s" x="654" y="87">line graphs of the numbers</text>
+
+            <!-- logged poses and the 3D view -->
+            <g data-show="v1">
+              <rect class="b ghost" x="330" y="120" width="210" height="56" rx="8"/>
+              <text class="t" x="344" y="144">Poses of moving parts</text>
+              <text class="s" x="344" y="163">none logged</text>
+              <rect class="b ghost" x="640" y="120" width="204" height="56" rx="8"/>
+              <text class="t" x="654" y="144">3D view</text>
+              <text class="s" x="654" y="163">no mechanism to show</text>
+            </g>
+            <g data-show="v2 v3">
+              <path class="a" d="M250 148 H328" marker-end="url(#ahM)"/>
+              <path class="a" d="M289 72 V148"/>
+              <path class="a" d="M540 148 H638" marker-end="url(#ahM)"/>
+            </g>
+            <g data-show="v2">
+              <rect class="b new" x="330" y="120" width="210" height="56" rx="8"/>
+              <text class="t" x="344" y="144">Poses of moving parts</text>
+              <text class="s" x="344" y="163">where each part is, every loop</text>
+              <rect class="b new" x="640" y="120" width="204" height="56" rx="8"/>
+              <text class="t" x="654" y="144">3D view</text>
+              <text class="s" x="654" y="163">watch the mechanism move</text>
+            </g>
+            <g data-show="v3">
+              <rect class="b" x="330" y="120" width="210" height="56" rx="8"/>
+              <text class="t" x="344" y="144">Poses of moving parts</text>
+              <text class="s" x="344" y="163">where each part is, every loop</text>
+              <rect class="b" x="640" y="120" width="204" height="56" rx="8"/>
+              <text class="t" x="654" y="144">3D view</text>
+              <text class="s" x="654" y="163">the real design, moving</text>
+            </g>
+
+            <!-- where the 3D model comes from -->
+            <text class="zt" x="20" y="226">WHERE THE 3D MODEL COMES FROM</text>
+            <g data-show="v1">
+              <rect class="b ghost" x="20" y="238" width="230" height="56" rx="8"/>
+              <text class="t" x="34" y="262">Nowhere yet</text>
+              <text class="s" x="34" y="281">no model of our mechanisms</text>
+            </g>
+            <g data-show="v2">
+              <rect class="b new" x="20" y="238" width="230" height="56" rx="8"/>
+              <text class="tm" x="34" y="262">ElevatorConstants</text>
+              <text class="s" x="34" y="281">sizes typed in the code</text>
+              <path class="a" d="M250 266 H328" marker-end="url(#ahM)"/>
+              <rect class="b gone" x="330" y="238" width="210" height="56" rx="8"/>
+              <text class="t" x="344" y="262">A test builds boxes</text>
+              <text class="s" x="344" y="281">a stand-in until CAD exists</text>
+              <path class="a" d="M540 266 H638" marker-end="url(#ahM)"/>
+              <rect class="b new" x="640" y="238" width="204" height="56" rx="8"/>
+              <text class="t" x="654" y="262">Model files</text>
+              <text class="s" x="654" y="281">ascope_assets/, generated</text>
+              <path class="a" d="M742 238 V178" marker-end="url(#ahM)"/>
+            </g>
+            <g data-show="v3">
+              <rect class="b new" x="20" y="238" width="230" height="56" rx="8"/>
+              <text class="t" x="34" y="262">Onshape CAD</text>
+              <text class="s" x="34" y="281">from the build team</text>
+              <path class="a" d="M250 266 H328" marker-end="url(#ahM)"/>
+              <rect class="b new" x="330" y="238" width="210" height="56" rx="8"/>
+              <text class="t" x="344" y="262">Export .glb files</text>
+              <text class="s" x="344" y="281">one file per moving part</text>
+              <path class="a" d="M540 266 H638" marker-end="url(#ahM)"/>
+              <rect class="b chg" x="640" y="238" width="204" height="56" rx="8"/>
+              <text class="t" x="654" y="262">Model files</text>
+              <text class="s" x="654" y="281">same folder, now from CAD</text>
+              <path class="a" d="M742 238 V178" marker-end="url(#ahM)"/>
+            </g>
+          </svg>
+        </div>
+        <figcaption data-show="v1"><b>On main.</b> A mechanism only really moves on the real robot. It logs numbers, and we check it by reading plots in AdvantageScope (the team layout has plot tabs for PDH, mechanism and drivetrain currents). In the simulator nothing moves the mechanism. The layout has a 3D field tab, but it can only show the robot as one stock model, with no mechanism parts.</figcaption>
+        <figcaption data-show="v2"><b>PR Elevator Prototype.</b> The plots are still there. Two things are added. A physics simulator moves the elevator on a laptop, so the same data exists before any robot does. And the elevator logs where each moving part is, so AdvantageScope can show it in 3D. There is no CAD yet, so a test builds a stand-in model out of boxes from the sizes in the code (the dashed red box goes away later).</figcaption>
+        <figcaption data-show="v3"><b>Future: real CAD.</b> Everything above the bottom row stays the same: the simulator, the logged numbers and poses, the plots and the 3D view. Only the source of the model changes. The files come from the build team's CAD, and the tests then check that the sizes in the code agree with it.</figcaption>
+      </figure>
+
+      <p><b>What changes when real CAD arrives</b></p>
+      <div class="tablewrap">
+        <table>
+          <thead><tr><th>Piece</th><th>With real CAD</th><th>Why</th></tr></thead>
+          <tbody>
+            <tr><td><code>componentPoses()</code> and its logging</td><td><span class="pill stay">stays</span></td><td>The robot code does not care where the picture came from.</td></tr>
+            <tr><td>Elevator layout file, <code>View3dChecks</code>, <code>AdvantageScopeLayoutTest</code></td><td><span class="pill stay">stays</span></td><td>They are about log keys, not shapes.</td></tr>
+            <tr><td>The three <code>.glb</code> files</td><td><span class="pill swap">replaced</span></td><td>Onshape exports, with the same file names.</td></tr>
+            <tr><td><code>config.json</code></td><td><span class="pill add">hand-written</span></td><td>Its <code>zeroedPosition</code> and <code>zeroedRotations</code> line each part up. CAD parts rarely sit at the same origin as our boxes.</td></tr>
+            <tr><td><code>ElevatorModel</code> box-building methods</td><td><span class="pill del">deleted</span></td><td>Keep its <code>FOLDER</code>, <code>LAYOUT</code> and <code>ROBOT_NAME</code>, which other files read.</td></tr>
+            <tr><td><code>modelFilesAreUpToDate</code>, <code>noOtherFilesInModelFolder</code></td><td><span class="pill del">deleted first</span></td><td>The first rewrites any file that differs from the generated boxes, so it would overwrite the CAD files. The second fails on any file the generator did not make.</td></tr>
+            <tr><td>Size tests in <code>ElevatorModelTest</code></td><td><span class="pill stay">stay</span></td><td>New meaning: the constants must match the CAD.</td></tr>
+            <tr><td>Physics numbers (mass, gearing, travel)</td><td><span class="pill stay">still measured</span></td><td>They come from the build team. CAD gives sizes and can give masses.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="note">Two things to check on the first CAD export. First, the size tests read the raw size of the shapes in a file and ignore any move or turn stored inside it, so compare one size by hand before trusting them. Second, export each moving part with the elevator all the way down, because a logged pose means "how far this part has risen".</p>
+    </div>
+
+    <div class="section">
+      <h3>One set of numbers, used everywhere</h3>
+      <p><code>ElevatorConstants</code> types every number once. The real motor settings, the physics model, the 3D boxes and the log checks all read from it. Change a travel limit once and all four follow. Most of the numbers are guesses today, marked <code>TUNED, NOT DERIVED</code>, until the build team measures a real elevator.</p>
+    </div>
+  </section>
+
+  <footer class="stack">
+    <p class="eyebrow">About this page</p>
+    <p>This file is the one place this is written down: <code>docs/sim-toolbox-and-elevator.html</code> on branch <code>elevator-prototype</code>. To read it, open the file in a web browser. To change it, edit the file. The text and the pictures are both in it. It describes the branches as of 12 November 2026.</p>
+  </footer>
+</div>
+
+<script>
+// Before / after switches: each button sets data-view on its section.
+document.querySelectorAll('.switch').forEach(function (group) {
+  var section = group.closest('[data-view]');
+  group.querySelectorAll('button').forEach(function (button) {
+    button.addEventListener('click', function () {
+      section.setAttribute('data-view', button.getAttribute('data-set'));
+      group.querySelectorAll('button').forEach(function (other) {
+        other.setAttribute('aria-pressed', other === button ? 'true' : 'false');
+      });
+    });
+  });
+});
+</script>
+</body>
+</html>

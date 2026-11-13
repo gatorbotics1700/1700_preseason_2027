@@ -803,4 +803,101 @@ public final class Constants {
     // kraken x60 max velocity is ~100 rps
 
   }
+
+  /**
+   * Two-stage cascade elevator. Positions are carriage height in meters above the bottom hard stop.
+   */
+  public static final class ElevatorConstants {
+    // ---- Hardware ----
+    /** No current robot has an elevator; set true on the one that does. Sim always has one. */
+    public static final boolean ENABLED_ON_REAL_ROBOT = false;
+
+    // Wiring comes from the robot's config file.
+    public static final int MOTOR_CAN_ID = RobotConfigLoader.getInt("mech.elevator_motor_can_id");
+    public static final int BOTTOM_LIMIT_SWITCH_DIO =
+        RobotConfigLoader.getInt("mech.elevator_bottom_limit_dio");
+
+    /** Wired normally-open with the roboRIO pull-up, so the DIO reads false when pressed. */
+    public static final boolean LIMIT_SWITCH_PRESSED_VALUE = false;
+
+    // TUNED, NOT DERIVED (2026-11-07): placeholder until the build team measures the real elevator.
+    public static final double STATOR_CURRENT_LIMIT_AMPS = 80.0;
+    public static final double SUPPLY_CURRENT_LIMIT_AMPS = 40.0;
+
+    // ---- Drivetrain of the mechanism ----
+    // TUNED, NOT DERIVED (2026-11-07): placeholder until the build team measures the real elevator.
+    public static final double GEAR_RATIO = 6.0; // motor rotations per drum rotation
+    public static final double DRUM_PITCH_DIAMETER_METERS = 0.04463; // 22T #25 sprocket
+
+    /** Cascade rigging: the carriage moves this many times as far as the first stage. */
+    public static final double RIGGING_RATIO = 2.0;
+
+    /** Motor rotor rotations per meter of carriage travel. */
+    public static final double ROTOR_ROTATIONS_PER_METER =
+        GEAR_RATIO / (Math.PI * DRUM_PITCH_DIAMETER_METERS * RIGGING_RATIO);
+
+    public static final double CARRIAGE_MASS_KG = 5.0;
+    public static final double STAGE_1_MASS_KG = 3.0;
+
+    // ---- Travel and setpoints (carriage height, meters) ----
+    // TUNED, NOT DERIVED (2026-11-07): placeholder until the build team measures the real elevator.
+    public static final double MIN_HEIGHT_METERS = 0.0;
+    public static final double MAX_HEIGHT_METERS = 1.20;
+    public static final double STOW_HEIGHT_METERS = 0.0;
+    public static final double LOW_HEIGHT_METERS = 0.40;
+    public static final double MID_HEIGHT_METERS = 0.80;
+    public static final double HIGH_HEIGHT_METERS = 1.15;
+    public static final double POSITION_TOLERANCE_METERS = 0.01;
+
+    // ---- Homing ----
+    // TUNED, NOT DERIVED (2026-11-07). Negative is down.
+    public static final double HOMING_VOLTS = -1.5;
+    // 200 x 20 ms = 4 s, so a broken switch can't stall the motor against the hard stop.
+    public static final int HOMING_TIMEOUT_LOOPS = 200;
+
+    // ---- Alerts ----
+    // 100 x 20 ms = 2 s. TUNED, NOT DERIVED (2026-11-07).
+    public static final int NOT_ARRIVED_TIMEOUT_LOOPS = 100;
+
+    // ---- Landing on the bottom hard stop ----
+    // Motion Magic stops this far up, then a gentle push lands the carriage without slamming.
+    // TUNED, NOT DERIVED (2026-11-07).
+    public static final double LANDING_HEIGHT_METERS = 0.03;
+    public static final double LANDING_VOLTS = -0.5;
+
+    // ---- Closed loop (Phoenix Slot0, mechanism units = meters) ----
+    // kG, kV, kA come from the motor model and masses; ElevatorPhysicsTest checks them.
+    // kP, kD, kS and the profile below: TUNED, NOT DERIVED (2026-11-07), tune on the robot.
+    public static final double KP = 60.0; // V per meter of error
+    public static final double KI = 0.0;
+    public static final double KD = 1.0; // V per m/s of error
+    public static final double KS = 0.05; // V
+    public static final double KG = 0.80; // V to hold against gravity
+    public static final double KV = 2.55; // V per m/s
+    public static final double KA = 0.07; // V per m/s^2
+
+    public static final double CRUISE_VELOCITY_MPS = 2.5;
+    public static final double ACCELERATION_MPS2 = 8.0;
+    public static final double JERK_MPS3 = 80.0;
+
+    // ---- Geometry (robot frame: +x forward, +y left, +z up, origin on the floor) ----
+    // Also sizes the 3D model, rebuilt by the tests in src/test/java/frc/robot/view3d/.
+    // TUNED, NOT DERIVED (2026-11-07): placeholder until the build team measures the real elevator.
+    public static final double ELEVATOR_X_METERS = 0.10;
+    public static final double BASE_BOTTOM_Z_METERS = 0.08;
+    public static final double BASE_HEIGHT_METERS = 0.90;
+    public static final double BASE_RAIL_SPACING_METERS = 0.50; // outer rail centers, along y
+    public static final double STAGE_1_BOTTOM_Z_METERS = 0.10;
+    public static final double STAGE_1_HEIGHT_METERS = 0.88;
+    public static final double STAGE_1_RAIL_SPACING_METERS = 0.44;
+    public static final double CARRIAGE_BOTTOM_Z_METERS = 0.12;
+    public static final double CARRIAGE_HEIGHT_METERS = 0.25;
+    public static final double CARRIAGE_WIDTH_METERS = 0.38;
+    public static final double RAIL_TUBE_X_METERS = 0.0508; // 2x1 tube, 2in along x
+    public static final double RAIL_TUBE_Y_METERS = 0.0254; // 1in along y
+    public static final double CHASSIS_LENGTH_METERS = 0.70;
+    public static final double CHASSIS_WIDTH_METERS = 0.70;
+    public static final double CHASSIS_HEIGHT_METERS = 0.10;
+    public static final double CHASSIS_BOTTOM_Z_METERS = 0.03;
+  }
 }

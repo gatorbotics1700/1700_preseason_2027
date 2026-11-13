@@ -32,6 +32,7 @@ public final class LogDiagnostics {
     List<LogCheck> checks = new ArrayList<>();
     checks.addAll(RobotChecks.all());
     checks.addAll(View3dChecks.all());
+    checks.addAll(ElevatorChecks.all());
     return checks;
   }
 
