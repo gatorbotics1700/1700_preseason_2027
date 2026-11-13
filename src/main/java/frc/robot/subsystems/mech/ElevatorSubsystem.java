@@ -1,7 +1,5 @@
 package frc.robot.subsystems.mech;
 
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
-
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
@@ -9,13 +7,13 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.ElevatorConstants;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
-// Selin's grain of salt is that we should be using inches throughout this subsystem 
+// Selin's grain of salt is that we should be using inches throughout this subsystem
 // make the move position into a command and a stop command in one file
 // figure out what the hell homing is on
 // remove elevator constants cuz merge conflicts
@@ -29,9 +27,12 @@ public class ElevatorSubsystem extends SubsystemBase {
   private static final double MIN_HEIGHT = 0.0;
   private static final double MAX_HEIGHT = 1.5; // TODO: Replace with actual maximum height
   private static final double POSITION_TOLERANCE = 0.02;
-  private static final double currentHeight = 0.0; // TODO: Replace with actual current height logic/ homing things when the time is nigh
+  private static final double currentHeight =
+      0.0; // TODO: Replace with actual current height logic/ homing things when the time is nigh
   // TODO: Verify motor direction.
   private static final InvertedValue MOTOR_DIRECTION = InvertedValue.CounterClockwise_Positive;
+  private static final double ZEROED_SPEED = 0;
+  public static final double HEIGHT_TO_REVS = 57.5; // divide height by this to get revs
 
   private final TalonFX elevatorMotor = new TalonFX(MOTOR_ID);
 
@@ -135,6 +136,10 @@ public class ElevatorSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Elevator/MotorRotations", getCurrentPosition());
 
     SmartDashboard.putBoolean("Elevator/Homed", isHomed);
+
+    Logger.recordOutput("Commands/topLimitSwitch", isAtBottomLimit());
+
+    Logger.recordOutput("Commands/bottomLimitSwitch", isAtTopLimit());
   }
 
   private double metersToMotorPosition(double meters) {
@@ -142,11 +147,11 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   private double heightToRevs(double height) { // height is in inches, returns revs of the motor
-    return height / ElevatorConstants.HEIGHT_TO_REVS;
+    return height / HEIGHT_TO_REVS;
   }
 
   private double revsToHeight(double revs) { // revs of the motor, returns height in inches
-    return revs * ElevatorConstants.HEIGHT_TO_REVS;
+    return revs * HEIGHT_TO_REVS;
   }
 
   private void goToHeight(double currentHeight, double desiredHeight) { // height is in inches
@@ -158,7 +163,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     return (rotations / GEAR_RATIO) * DRUM_CIRCUMFERENCE; // position is unclear- just watch out for
   }
 
-  public void moveToPosition(double currentHeight, double desiredHeight){ // height is in inches
+  public void moveToPosition(double currentHeight, double desiredHeight) { // height is in inches
     if (!isHomed) {
       stop();
       return;
@@ -184,8 +189,10 @@ public class ElevatorSubsystem extends SubsystemBase {
     elevatorMotor.setControl(motionMagicRequest.withPosition(revs));
   }
 
-  public void setDesiredPosition(double rotations) { // This method makes me sad. why is the input revs when we can just use height?
-    moveToPosition((rotations),currentHeight);
+  public void setDesiredPosition(
+      double rotations) { // This method makes me sad. why is the input revs when we can just use
+    // height?
+    moveToPosition((rotations), currentHeight);
   }
 
   public void moveElevator(double speed) {
@@ -218,16 +225,10 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   // TODO log values of the limit switches, desired position, anything that would be helpful.
   public void zeroElevator() {
-
-    if (!isAtBottomLimit()) {
-      return;
-    }
-
     elevatorMotor.stopMotor();
-    elevatorMotor.setPosition(0.0);
+    elevatorMotor.setPosition(0);
 
     targetPosition = MIN_HEIGHT;
-    isHomed = true;
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
@@ -235,7 +236,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     elevatorMotor.getConfigurator().apply(motorConfig.SoftwareLimitSwitch);
   }
 
-  public boolean isHomed() {
+  public boolean getIsHomed() {
     return isHomed;
   }
 
@@ -265,7 +266,9 @@ public class ElevatorSubsystem extends SubsystemBase {
     return !bottomLimitSwitch.get();
   }
 
-  public boolean isAtTopLimit() { // double check how this is wired, if it is normally closed or normally open. If it is normally closed, then this will be true when pressed.
+  public boolean
+      isAtTopLimit() { // double check how this is wired, if it is normally closed or normally open.
+    // If it is normally closed, then this will be true when pressed.
     return !topLimitSwitch.get();
   }
 

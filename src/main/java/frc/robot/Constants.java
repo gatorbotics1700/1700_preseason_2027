@@ -34,7 +34,6 @@ import com.ctre.phoenix6.swerve.SwerveModuleConstants.DriveMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerFeedbackType;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstantsFactory;
-
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -803,10 +802,6 @@ public final class Constants {
     public static final double MAX_RANGE =
         8; // m //TODO calculate furthest distance we would ever want to shoot from
     // kraken x60 max velocity is ~100 rps
-
-  }
-  public static final class ElevatorConstants {
-    public static final double HEIGHT_TO_REVS = 57.5; //divide height by this to get revs
 
   }
 }
