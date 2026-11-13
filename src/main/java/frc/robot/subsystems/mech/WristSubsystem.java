@@ -99,6 +99,16 @@ public class WristSubsystem extends SubsystemBase {
     setVoltage(voltage, voltage); // fliping it on the z-axis
   }
 
+  public double getRightWristVoltage() {
+    return rightWristMotor.getMotorVoltage().getValueAsDouble();
+  }
+
+  public double getLeftWristVoltage() {
+    return leftWristMotor.getMotorVoltage().getValueAsDouble();
+  }
+  
+
+
   public Rotation2d getPivot() { // TODO write method to get position
     return new Rotation2d();
     // TODO write degrees to revs method
