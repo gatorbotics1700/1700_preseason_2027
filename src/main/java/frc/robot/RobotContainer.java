@@ -203,18 +203,6 @@ public class RobotContainer {
       }
 
       controller
-          .x()
-          .onTrue(
-              new InstantCommand(
-                  () ->
-                      CommandScheduler.getInstance()
-                          .schedule(
-                              new ElevatorCommand(
-                                  0, elevatorSubsystem))) // TODO: include value of rotations in
-              // constants file
-              );
-
-      controller
           .leftTrigger()
           .onTrue(new InstantCommand(() -> wristSubsystem.setVoltage(5.0, 5.0)));
 

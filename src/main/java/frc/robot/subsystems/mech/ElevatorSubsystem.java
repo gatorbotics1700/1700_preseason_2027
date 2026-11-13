@@ -1,5 +1,8 @@
 package frc.robot.subsystems.mech;
 
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
+
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
@@ -7,33 +10,15 @@ import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
+
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import org.littletonrobotics.junction.Logger;
 import frc.robot.Constants;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
-// Selin's grain of salt is that we should be using inches throughout this subsystem
-// make the move position into a command and a stop command in one file
-// figure out what the hell homing is on
-// remove elevator constants cuz merge conflicts
-// merge when things work
+// TODO: make the elevator constant clearer by detailing the multiplications that happen
 public class ElevatorSubsystem extends SubsystemBase {
-  // TODO put constants in constants.java file
-  private static final double GEAR_RATIO = 5.0;
-  private static final double DRUM_CIRCUMFERENCE =
-      0.1; // TODO: Replace with actual drum circumference
-  private static final double MIN_HEIGHT = 0.0;
-  private static final double MAX_HEIGHT = 1.5; // TODO: Replace with actual maximum height
-  private static final double POSITION_TOLERANCE = 0.02;
-  private static final double currentHeight =
-      0.0; // TODO: Replace with actual current height logic/ homing things when the time is nigh
-  // TODO: Verify motor direction.
-  private static final InvertedValue MOTOR_DIRECTION = InvertedValue.CounterClockwise_Positive;
-  private static final double ZEROED_SPEED = 0;
-  public static final double HEIGHT_TO_REVS = 57.5; // divide height by this to get revs
-
+  
   private final TalonFX elevatorMotor = new TalonFX(Constants.ElevatorConstants.ELEVATOR_MOTOR_ID);
 
   private final DigitalInput topLimitSwitch = new DigitalInput(8);
@@ -71,7 +56,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public ElevatorSubsystem() {
 
-    motorConfig.MotorOutput.Inverted = MOTOR_DIRECTION;
+    motorConfig.MotorOutput.Inverted = Constants.ElevatorConstants.MOTOR_DIRECTION;
     motorConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     Slot0Configs slot0 = motorConfig.Slot0;
@@ -91,7 +76,8 @@ public class ElevatorSubsystem extends SubsystemBase {
     motorConfig.MotionMagic.MotionMagicExpo_kV = 0.16;
     motorConfig.MotionMagic.MotionMagicExpo_kA = 0.2;
 
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = metersToMotorPosition(MIN_HEIGHT);
+    //TODO: figure out soft limit threshold logic
+    //motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = metersToMotorPosition(Constants.ElevatorConstants.MIN_HEIGHT);
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
@@ -142,25 +128,18 @@ public class ElevatorSubsystem extends SubsystemBase {
     Logger.recordOutput("Commands/bottomLimitSwitch", isAtTopLimit());
   }
 
-  private double metersToMotorPosition(double meters) {
-    return (meters / DRUM_CIRCUMFERENCE) * GEAR_RATIO; // TODO what is drum circumfrence?
-  }
 
   private double heightToRevs(double height) { // height is in inches, returns revs of the motor
-    return height / HEIGHT_TO_REVS;
+    return height / Constants.ElevatorConstants.HEIGHT_TO_REVS;
   }
 
   private double revsToHeight(double revs) { // revs of the motor, returns height in inches
-    return revs * HEIGHT_TO_REVS;
+    return revs * Constants.ElevatorConstants.HEIGHT_TO_REVS;
   }
 
   private void goToHeight(double currentHeight, double desiredHeight) { // height is in inches
     double revs = heightToRevs(desiredHeight - currentHeight);
     elevatorMotor.setControl(motionMagicRequest.withPosition(revs));
-  }
-
-  private double motorPositionToMeters(double rotations) {
-    return (rotations / GEAR_RATIO) * DRUM_CIRCUMFERENCE; // position is unclear- just watch out for
   }
 
   public void moveToPosition(double currentHeight, double desiredHeight) { // height is in inches
@@ -169,10 +148,10 @@ public class ElevatorSubsystem extends SubsystemBase {
       return;
     }
 
-    if (MIN_HEIGHT > desiredHeight) {
-      desiredHeight = MIN_HEIGHT;
-    } else if (desiredHeight > MAX_HEIGHT) {
-      desiredHeight = MAX_HEIGHT;
+    if (Constants.ElevatorConstants.MIN_HEIGHT > desiredHeight) {
+      desiredHeight = Constants.ElevatorConstants.MIN_HEIGHT;
+    } else if (desiredHeight > Constants.ElevatorConstants.MAX_HEIGHT) {
+      desiredHeight = Constants.ElevatorConstants.MAX_HEIGHT;
     }
 
     if (isAtTopLimit() && desiredHeight > getElevatorPosition()) {
@@ -187,12 +166,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     double revs = heightToRevs(desiredHeight - currentHeight);
     elevatorMotor.setControl(motionMagicRequest.withPosition(revs));
-  }
-
-  public void setDesiredPosition(
-      double rotations) { // This method makes me sad. why is the input revs when we can just use
-    // height?
-    moveToPosition((rotations), currentHeight);
   }
 
   public void moveElevator(double speed) {
@@ -211,15 +184,19 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     if (isHomed) {
-      if (getElevatorPosition() >= MAX_HEIGHT && speed > 0) {
+      if (getElevatorPosition() >= Constants.ElevatorConstants.MAX_HEIGHT && speed > 0) {
         speed = 0;
       }
 
-      if (getElevatorPosition() <= MIN_HEIGHT && speed < 0) {
+      if (getElevatorPosition() <= Constants.ElevatorConstants.MIN_HEIGHT && speed < 0) {
         speed = 0;
       }
     }
 
+    elevatorMotor.set(speed);
+  }
+
+  public void HomeElevator(double speed) {
     elevatorMotor.set(speed);
   }
 
@@ -228,7 +205,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     elevatorMotor.stopMotor();
     elevatorMotor.setPosition(0);
 
-    targetPosition = MIN_HEIGHT;
+    targetPosition = Constants.ElevatorConstants.MIN_HEIGHT;
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
@@ -258,7 +235,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public boolean isAtTargetPosition() {
-    return isHomed && Math.abs(getElevatorPosition() - targetPosition) <= POSITION_TOLERANCE;
+    return isHomed && Math.abs(getElevatorPosition() - targetPosition) <= Constants.ElevatorConstants.POSITION_TOLERANCE;
   }
 
   // check with build to see whether pressed is true or false

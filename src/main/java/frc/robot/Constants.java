@@ -26,6 +26,7 @@ import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.Pigeon2Configuration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.StaticFeedforwardSignValue;
 import com.ctre.phoenix6.swerve.SwerveDrivetrainConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
@@ -561,6 +562,15 @@ public final class Constants {
 
   public static final class ElevatorConstants {
     public static final int ELEVATOR_MOTOR_ID = 11;
+    public static final int ELEVATOR_HOMING_SPEED = -2;
+    public static final double GEAR_RATIO = 5.0;
+    public static final double MIN_HEIGHT = 0.0;
+    public static final double MAX_HEIGHT = 1.5; // TODO: Replace with actual maximum height
+    public static final double POSITION_TOLERANCE = 0.02;
+ // TODO: Replace with actual current height logic/ homing things when the time is nigh
+    // TODO: Verify motor direction.
+    public static final InvertedValue MOTOR_DIRECTION = InvertedValue.CounterClockwise_Positive;
+    public static final double HEIGHT_TO_REVS = 57.5; // divide height by this to get revs
   }
 
   public static final class WristConstants {
