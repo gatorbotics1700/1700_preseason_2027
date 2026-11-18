@@ -166,32 +166,19 @@ public class ElevatorSubsystem extends SubsystemBase {
     elevatorMotor.setControl(motionMagicRequest.withPosition(revs));
   }
 
-  public void moveElevator(double speed) {
+  public void moveElevator(double voltage) {
+    //TODO make min and max voltage(the 12 rn) a constant
+    voltage = Math.max(-12.0, Math.min(12.0, voltage));
 
-    speed = Math.max(-1.0, Math.min(1.0, speed));
-    if (!isHomed && speed > 0) {
-      speed = 0;
+    if (((isHomed && getElevatorPosition() >= Constants.ElevatorConstants.MAX_HEIGHT) || isAtTopLimit()) && voltage >0){
+      voltage = 0;
     }
 
-    if (isAtTopLimit() && speed > 0) {
-      speed = 0;
+    if (((isHomed && getElevatorPosition() <= Constants.ElevatorConstants.MIN_HEIGHT) || isAtBottomLimit()) && voltage <0){
+      voltage = 0;
     }
 
-    if (isAtBottomLimit() && speed < 0) {
-      speed = 0;
-    }
-
-    if (isHomed) {
-      if (getElevatorPosition() >= Constants.ElevatorConstants.MAX_HEIGHT && speed > 0) {
-        speed = 0;
-      }
-
-      if (getElevatorPosition() <= Constants.ElevatorConstants.MIN_HEIGHT && speed < 0) {
-        speed = 0;
-      }
-    }
-
-    elevatorMotor.set(speed);
+    elevatorMotor.setVoltage(voltage);
   }
 
   public void HomeElevator(double speed) {
@@ -255,6 +242,10 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public void stop() {
     elevatorMotor.stopMotor();
+  }
+
+  public void stopMotorVoltage() {
+    elevatorMotor.setVoltage(0);
   }
 
   private void updatePID() {

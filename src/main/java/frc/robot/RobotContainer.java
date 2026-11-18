@@ -161,7 +161,9 @@ public class RobotContainer {
     // DriveCommands.feedforwardCharacterization(drive));
   }
 
-  public void configureButtonBindings() {
+  //driver buttons = wrist
+
+  public void configureDriverButtonBindings() {
     CommandScheduler.getInstance().getActiveButtonLoop().clear();
 
     if (DriverStation.isJoystickConnected(0)) {
@@ -200,19 +202,42 @@ public class RobotContainer {
             .onFalse(DriveCommands.stopDriveCommand(drive));
       }
 
-      controller_two
+      controller
           .leftTrigger()
           .onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(5.0, 5.0)));
-
-      controller_two
+      controller
           .rightTrigger()
           .onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(5.0, -5.0)));
-      controller_two.a().onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(0, 0)));
-      // controller
-      //     .rightTrigger()
-      controller_two.a().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(2)));
+      controller
+          .a().onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(0, 0)));
 
-      controller_two.b().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(-2)));
+        }
+  }
+
+  //codriver buttons = elevator
+
+  public void configureCodriverButtonBindings() {
+    CommandScheduler.getInstance().getActiveButtonLoop().clear();
+
+    if (DriverStation.isJoystickConnected(1)) {
+      if (Constants.currentMode == Constants.Mode.SIM
+          && System.getProperty("os.name").contains("Mac")) {
+        controller_two = new CommandSimMacXboxController(1);
+      } else {
+        controller_two = new CommandXboxController(1);
+      }
+
+      controller_two
+          .leftTrigger().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(2)));
+
+      controller_two
+          .rightTrigger().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(-2)));
+      
+      controller_two
+          .a().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.stop()));
+
+      controller_two
+          .b().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.stopMotorVoltage()));
     }
   }
 
@@ -292,7 +317,8 @@ public class RobotContainer {
   }
 
   public void teleopInit() {
-    configureButtonBindings();
+    configureDriverButtonBindings();
+    configureCodriverButtonBindings();
   }
 
   public void periodic() {
