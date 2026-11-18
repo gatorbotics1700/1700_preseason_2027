@@ -1,7 +1,5 @@
-/* TODO (general todos)
- * figure out our units for position and adjust the data type accordingly
- * position and speed control
- */
+// TODO intended to start pitch at loc 0
+
 
 package frc.robot.subsystems.mech;
 
@@ -18,103 +16,37 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 public class WristSubsystem extends SubsystemBase {
-  // The differential wrist (might help to look at a picture online) consists of two motors.
-  // If they spin in the same direction, the wrist moves up and down. If they spin in opposite
-  // directions, the wrist rotates.
-  private TalonFX rightWristMotor;
-  private TalonFX leftWristMotor;
-  private PIDController pid;
-  private Rotation2d currentRotationPosition; // we plan to use degrees as our unit
-  private Rotation2d currentPivotPosition; // we plan to use degrees as our unit
+  // roll and pitch PID (data type is PIDController)
+  // motors!
+  // encoders(make them pitch an roll encoders)
+  // variables for pitch and roll positions(used to contain real position of the wrist)datatype Rotation2d
 
-  private final TalonFXConfiguration leftTalonFXConfigs;
-  private final TalonFXConfiguration rightTalonFXConfigs;
-  private static CurrentLimitsConfigs leftCurrentLimitConfigs;
-  private static CurrentLimitsConfigs rightCurrentLimitConfigs;
-
-  private final LoggedNetworkNumber wristkP = new LoggedNetworkNumber("", 0.1);
-  private final LoggedNetworkNumber wristkI = new LoggedNetworkNumber("", 0.01);
-  private final LoggedNetworkNumber wristkD = new LoggedNetworkNumber("", 0.001);
 
   public WristSubsystem() {
-    rightWristMotor =
-        new TalonFX(
-            Constants.WristConstants.RIGHT_WRIST_MOTOR_ID, Constants.TunerConstants.driveCANBus);
-    leftWristMotor =
-        new TalonFX(
-            Constants.WristConstants.LEFT_WRIST_MOTOR_ID, Constants.TunerConstants.driveCANBus);
-    // TODO find what we want the current limits to actally be
+    //motor configs(check w/ build with motor inversions)
 
-    leftTalonFXConfigs =
-        new TalonFXConfiguration()
-            .withMotorOutput(
-                new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
-
-    rightTalonFXConfigs =
-        new TalonFXConfiguration()
-            .withMotorOutput(
-                new MotorOutputConfigs().withInverted(InvertedValue.CounterClockwise_Positive));
-    leftCurrentLimitConfigs = leftTalonFXConfigs.CurrentLimits;
-    leftCurrentLimitConfigs.StatorCurrentLimit = 70;
-    leftCurrentLimitConfigs.StatorCurrentLimitEnable = true;
-
-    rightCurrentLimitConfigs = rightTalonFXConfigs.CurrentLimits;
-    rightCurrentLimitConfigs.StatorCurrentLimit = 70;
-    rightCurrentLimitConfigs.StatorCurrentLimitEnable = true;
-
-    leftWristMotor.getConfigurator().apply(leftTalonFXConfigs);
-    rightWristMotor.getConfigurator().apply(rightTalonFXConfigs);
-
-    // TODO: Configure PID gains, current limits, other safety things, etc
-    pid = new PIDController(0.1, 0.01, 0.001); // Placeholder PID gains, created and set PID
-    // TODO ki, kp, and kd should be tunables
-    currentPivotPosition = Rotation2d.fromDegrees(0);
-    currentRotationPosition = Rotation2d.fromDegrees(0);
   }
 
+  @Override
   public void periodic() {
-    Logger.recordOutput("Mech/Wrist/RightMotorVoltage", getRightMotorVoltage());
-    Logger.recordOutput("Mech/Wrist/LeftMotorVoltage", getLeftMotorVoltage());
+   /* pitchPos = Rotation2d.fromDegrees(pitchEncoder.getPosition().getValueAsADouble)
+   do the same for roll */
+
   }
 
-  // TODO other useful methods
-
-  public void setVoltage(double rightMotorVoltage, double leftMotorVoltage) { // set two voltages
-    System.out.println(
-        "RIGHT MOTOR VOLTAGE" + rightMotorVoltage + "LEFT MOTOR VOLTAGE" + leftMotorVoltage);
-    rightWristMotor.setVoltage(rightMotorVoltage);
-    leftWristMotor.setVoltage(leftMotorVoltage);
+  public void setPostion(Rotation2d pitchPos, double rollPos) {
+    //pitchVoltage(pitchPID.calculate(pitchPos)), rollVoltage, leftVoltage, rightVoltage
+    //safetyPrecautions
+    //call setVoltage
   }
 
-  public double getRightMotorVoltage() {
-    return rightWristMotor.getMotorVoltage().getValueAsDouble();
+  public void setZero () {
+    // set pitch and roll encoders to 0
   }
 
-  public double getLeftMotorVoltage() {
-    return leftWristMotor.getMotorVoltage().getValueAsDouble();
-  }
+  public void setVoltage(double leftVoltage, double rightVoltage) {
 
-  public void setRotation(Rotation2d desiredPosition) {
-    double voltage =
-        pid.calculate(
-            currentRotationPosition.getDegrees(),
-            desiredPosition
-                .getDegrees()); // calculate voltage based on current and desired position
-    setVoltage(-voltage, voltage); // rotates (NOT flip over)
   }
+  
 
-  public void setPivot(Rotation2d desiredPosition) {
-    double voltage =
-        pid.calculate(
-            currentPivotPosition.getDegrees(),
-            desiredPosition
-                .getDegrees()); // calculate voltage based on current and desired position
-    setVoltage(voltage, voltage); // fliping it on the z-axis
-  }
-
-  public Rotation2d getPivot() { // TODO write method to get position
-    return new Rotation2d();
-    // TODO write degrees to revs method
-  }
-  // to find required gear ratio for motors we need to do trial and error :(
 }

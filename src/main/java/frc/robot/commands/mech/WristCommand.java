@@ -5,15 +5,9 @@ import edu.wpi.first.wpilibj2.command.Command;
 // TODO imports
 
 public class WristCommand extends Command {
-  public WristCommand() {}
+  
 
-  @Override
-  public void initialize() {}
-
-  @Override
-  public void execute() {}
-
-  // we need a command to stop wrist, pivot the wrist, and rotate the rist
+  // we need a command to stop wrist, pivot the wrist, and rotate the wrist
   // public static Command stopWrist(WristSubsystem wrist){
 
   // }
@@ -26,8 +20,4 @@ public class WristCommand extends Command {
 
   // }
 
-  @Override
-  public boolean isFinished() {
-    return true;
-  }
 }
