@@ -20,13 +20,11 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.TunerConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.commands.drive.DriveCommands;
-import frc.robot.commands.mech.ElevatorCommand;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -209,12 +207,12 @@ public class RobotContainer {
       controller_two
           .rightTrigger()
           .onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(5.0, -5.0)));
-      controller_two
-          .a()
-          .onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(0, 0)));
+      controller_two.a().onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(0, 0)));
       // controller
       //     .rightTrigger()
+      controller_two.a().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(2)));
 
+      controller_two.b().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(-2)));
     }
   }
 

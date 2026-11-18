@@ -17,31 +17,30 @@ public class ElevatorCommand extends Command {
     this.elevatorSubsystem = new ElevatorSubsystem();
   }
 
-  public Command HomeElevatorCommand(){
+  public Command HomeElevatorCommand() {
     return new InstantCommand(
-        () -> {
-          elevatorSubsystem.HomeElevator(Constants.ElevatorConstants.ELEVATOR_HOMING_SPEED);
-        },
-        elevatorSubsystem
-    ).until(() -> elevatorSubsystem.isAtBottomLimit());
-
+            () -> {
+              elevatorSubsystem.HomeElevator(Constants.ElevatorConstants.ELEVATOR_HOMING_SPEED);
+            },
+            elevatorSubsystem)
+        .until(() -> elevatorSubsystem.isAtBottomLimit());
   }
-  public Command StopElevatorCommand(){
+
+  public Command StopElevatorCommand() {
     return new InstantCommand(
         () -> {
           elevatorSubsystem.stop();
         },
-        elevatorSubsystem
-    );
+        elevatorSubsystem);
   }
 
-  public Command MoveElevatorCommand(double desiredHeight){
+  public Command MoveElevatorCommand(double desiredHeight) {
     return new InstantCommand(
-        () -> {
-          elevatorSubsystem.moveToPosition(elevatorSubsystem.getElevatorPosition(), desiredHeight);
-        },
-        elevatorSubsystem
-    ).until(() -> elevatorSubsystem.isAtTopLimit()|| elevatorSubsystem.isAtBottomLimit());
+            () -> {
+              elevatorSubsystem.moveToPosition(
+                  elevatorSubsystem.getElevatorPosition(), desiredHeight);
+            },
+            elevatorSubsystem)
+        .until(() -> elevatorSubsystem.isAtTopLimit() || elevatorSubsystem.isAtBottomLimit());
   }
-
 }
