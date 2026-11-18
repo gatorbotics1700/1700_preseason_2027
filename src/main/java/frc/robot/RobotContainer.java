@@ -161,7 +161,7 @@ public class RobotContainer {
     // DriveCommands.feedforwardCharacterization(drive));
   }
 
-  //driver buttons = wrist
+  // driver buttons = wrist
 
   public void configureDriverButtonBindings() {
     CommandScheduler.getInstance().getActiveButtonLoop().clear();
@@ -208,13 +208,11 @@ public class RobotContainer {
       controller
           .rightTrigger()
           .onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(5.0, -5.0)));
-      controller
-          .a().onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(0, 0)));
-
-        }
+      controller.a().onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(0, 0)));
+    }
   }
 
-  //codriver buttons = elevator
+  // codriver buttons = elevator
 
   public void configureCodriverButtonBindings() {
     CommandScheduler.getInstance().getActiveButtonLoop().clear();
@@ -228,16 +226,14 @@ public class RobotContainer {
       }
 
       controller_two
-          .leftTrigger().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(2)));
+          .leftTrigger()
+          .onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(6)));
 
       controller_two
-          .rightTrigger().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(-2)));
-      
-      controller_two
-          .a().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.stop()));
+          .rightTrigger()
+          .onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(-6)));
 
-      controller_two
-          .b().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.stopMotorVoltage()));
+      controller_two.a().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.stop()));
     }
   }
 

@@ -3,6 +3,7 @@ package frc.robot.subsystems.mech;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -109,6 +110,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     if (atBottom && motorVelocity < 0) {
       stop();
     }
+    // elevatorMotor.setVoltage(-2);
   }
 
   private void logElevatorMethods() {
@@ -167,14 +169,18 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public void moveElevator(double voltage) {
-    //TODO make min and max voltage(the 12 rn) a constant
+    // TODO make min and max voltage(the 12 rn) a constant
     voltage = Math.max(-12.0, Math.min(12.0, voltage));
 
-    if (((isHomed && getElevatorPosition() >= Constants.ElevatorConstants.MAX_HEIGHT) || isAtTopLimit()) && voltage >0){
+    if (((isHomed && getElevatorPosition() >= Constants.ElevatorConstants.MAX_HEIGHT)
+            || isAtTopLimit())
+        && voltage > 0) {
       voltage = 0;
     }
 
-    if (((isHomed && getElevatorPosition() <= Constants.ElevatorConstants.MIN_HEIGHT) || isAtBottomLimit()) && voltage <0){
+    if (((isHomed && getElevatorPosition() <= Constants.ElevatorConstants.MIN_HEIGHT)
+            || isAtBottomLimit())
+        && voltage < 0) {
       voltage = 0;
     }
 
@@ -186,7 +192,8 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public void setVoltage(double voltage) {
-    elevatorMotor.setVoltage(voltage);
+    VoltageOut m_request = new VoltageOut(0);
+    elevatorMotor.setControl(m_request.withOutput(voltage));
   }
 
   // TODO log values of the limit switches, desired position, anything that would be helpful.
