@@ -31,12 +31,15 @@ public class IntakeIOTalonFX implements IntakeIO {
   // 0 means no top-speed cap: the Expo gains alone shape the move.
   private static final double DEPLOY_CRUISE_VELOCITY_RPS = 0;
 
-  private final TalonFX leftDeployMotor =
+  // Not private: IntakeIOSimPhysics (same folder) feeds simulated readings into these motors and
+  // switches. Nothing else should touch them.
+  final TalonFX leftDeployMotor =
       new TalonFX(IntakeConstants.INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID, TunerConstants.mechCANBus);
-  private final TalonFX rightDeployMotor =
+  final TalonFX rightDeployMotor =
       new TalonFX(IntakeConstants.INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID, TunerConstants.mechCANBus);
 
-  // Both deploy motors share one settings sheet. The three below are sections of that sheet.
+  // All the settings for the deploy motors (both get the same ones). The three lines below are
+  // short names for parts of it: the gains, the Motion Magic settings and the current limit.
   private final TalonFXConfiguration deployConfigs = new TalonFXConfiguration();
   private final Slot0Configs deployGains = deployConfigs.Slot0;
   private final MotionMagicConfigs deployMotionMagic = deployConfigs.MotionMagic;
@@ -45,11 +48,12 @@ public class IntakeIOTalonFX implements IntakeIO {
   // One reusable "go to this position" request; the target is filled in each time it is sent.
   private final MotionMagicExpoVoltage deployRequest = new MotionMagicExpoVoltage(0);
 
-  // NOTE (2026-11-02), CHECK WITH BUILD TEAM: get() == true is treated as "pressed". roboRIO
-  // ports read true when nothing is connected, so check which way these sensors report.
-  private final DigitalInput retractedLimitSwitch =
+  // TODO NOTE FROM REFACTOR - get() == true is treated as "pressed". A roboRIO port with nothing
+  // plugged in also reads true, so a loose wire looks like a pressed switch. Check with the build
+  // team which way these switches report.
+  final DigitalInput retractedLimitSwitch =
       new DigitalInput(IntakeConstants.RETRACTED_LIMIT_SWITCH_PORT);
-  private final DigitalInput deployedLimitSwitch =
+  final DigitalInput deployedLimitSwitch =
       new DigitalInput(IntakeConstants.DEPLOYED_LIMIT_SWITCH_PORT);
 
   /** Sets up the rollers and the deploy arm motors. */
@@ -88,6 +92,8 @@ public class IntakeIOTalonFX implements IntakeIO {
     setUpDeployMotors();
   }
 
+  // TODO NOTE FROM REFACTOR - brake or coast is never set here, so the motors use whatever is
+  // saved on them (coast, out of the box). In coast, the arm may drift when stopped.
   /**
    * Sets the deploy motors' direction, current limit and top speed. The gains start at 0;
    * IntakeSubsystem sends the dashboard gains right after it is built.
@@ -101,9 +107,7 @@ public class IntakeIOTalonFX implements IntakeIO {
     applyDeployConfigs();
   }
 
-  /**
-   * Sends the deploy settings sheet to both deploy motors. This is slow, so only do it on change.
-   */
+  /** Sends the deploy settings to both deploy motors. This is slow, so only do it on change. */
   private void applyDeployConfigs() {
     leftDeployMotor.getConfigurator().apply(deployConfigs);
     rightDeployMotor.getConfigurator().apply(deployConfigs);
@@ -154,12 +158,9 @@ public class IntakeIOTalonFX implements IntakeIO {
     rightRollerMotor.set(speed);
   }
 
-  /**
-   * Applies a new roller current limit, only when it changed.
-   *
-   * <p>KNOWN QUIRK, kept on purpose so this move changes nothing: only the RIGHT roller gets the
-   * new limit. No test covers this, because tests use IntakeIOSim; check it on the robot.
-   */
+  // TODO NOTE FROM REFACTOR - only the RIGHT roller gets the new limit; the left one keeps 70 A.
+  // Kept on purpose so the refactor changes nothing.
+  /** Applies a new roller current limit, only when it changed. */
   @Override
   public void setRollerCurrentLimitAmps(double amps) {
     if (amps != rightRollerCurrentLimitConfigs.StatorCurrentLimit) {

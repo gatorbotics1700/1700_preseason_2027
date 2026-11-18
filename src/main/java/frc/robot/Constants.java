@@ -620,19 +620,53 @@ public final class Constants {
     // live here and not in the config files. IntakeIOTalonFX, IntakeIOSim and IntakeSubsystem
     // all read them from here.
 
-    // TODO (2026-11-02), PROBABLY AN ERROR, CHECK WITH TEAM: the rollers start at 70 A, then the
-    // dashboard default of 90 A replaces it after the first loop, on the right roller only. The
-    // left roller stays at 70 A. Which one is right?
+    // TODO NOTE FROM REFACTOR - probably an error: the rollers start at 70 A, then the dashboard
+    // default of 90 A replaces it after the first loop, on the right roller only. The left roller
+    // stays at 70 A. Which one is right?
     public static final double ROLLER_STATOR_CURRENT_LIMIT_AMPS = 70;
     public static final double ROLLER_DASHBOARD_CURRENT_LIMIT_AMPS = 90;
 
     public static final double DEPLOY_STATOR_CURRENT_LIMIT_AMPS = 40;
-    // KNOWN ISSUE (2026-11-01): the jam rule uses the same 40 A as the deploy motors' own limit
+    // TODO NOTE FROM REFACTOR - the jam rule uses the same 40 A as the deploy motors' own limit
     // above, so a jammed motor hovers around 40 A and may never reach it. See
     // IntakeSubsystemTest.currentAtJamThresholdStopsArm.
     public static final double DEPLOY_JAM_CURRENT_AMPS = 40;
 
+    // Physics simulator (IntakeIOSimPhysics) and 3D view. These never change how the real robot
+    // moves. (The real robot does use RETRACTED_ANGLE_ABOVE_LEVEL_DEGREES and the 3D view numbers
+    // below to log where the arm is, for AdvantageScope's 3D view.)
+
+    // Two motors (left and right) turn the deploy arm together.
+    public static final int DEPLOY_MOTOR_COUNT = 2;
+    // Motor turns per one turn of the arm: the gearbox times both pulley stages (about 27.2).
+    public static final double DEPLOY_TOTAL_GEAR_RATIO =
+        DEPLOY_GEARBOX_RATIO * DEPLOY_PULLEY_ONE_GEAR_RATIO * DEPLOY_PULLEY_TWO_GEAR_RATIO;
+
+    // TODO - PLACEHOLDER. All constants below have made up values. Replace with
+    // actual values when we have them from CAD
+    // Everything that swings: arm plates, rollers and roller motors. 4 kg is about 9 lb, a
+    // typical over-the-bumper slapdown intake.
+    public static final double ARM_MASS_KG = 4.0;
+
+    // Distance from the pivot to the arm's balance point (center of mass). 0.30 m is about 12 in.
+    public static final double ARM_PIVOT_TO_CENTER_OF_MASS_METERS = 0.30;
+
+    // Where the arm points when retracted, measured up from level ground. 90 means straight up,
+    // so deployed (95 degrees of travel later) is just below level, near the floor.
+    public static final double RETRACTED_ANGLE_ABOVE_LEVEL_DEGREES = 90;
+
+    // 3D view in AdvantageScope. Measured from the robot's center on the floor: +x is forward,
+    // +z is up. The intake is at the back of the robot, so its pivot has a negative x.
+    public static final double PIVOT_X_METERS = -0.30;
+    public static final double PIVOT_Z_METERS = 0.20;
+    // From the pivot to the far end of the arm, where the rollers are.
+    public static final double ARM_LENGTH_METERS = 0.40;
+
+    // TODO NOTE FROM REFACTOR - config_alecto.properties also has
+    // mech.robot_to_intake_yaw_degrees=180, but nothing reads it. This typed 180 is what Vision
+    // uses, so editing the config file changes nothing.
     public static final double ROBOT_TO_INTAKE_YAW_DEGREES = 180;
+    // TODO NOTE FROM REFACTOR - nothing uses this. Use it or delete it.
     public static final double DEPLOYED_CURRENT_LIMIT = 10.0; // amps
   }
 

@@ -28,9 +28,9 @@ Open the files side by side to see what a finished mechanism looks like.
 |---|---|
 | TemplateIO | IntakeIO: the same idea, with 4 motors and 2 limit switches |
 | TemplateIOTalonFX | IntakeIOTalonFX |
-| TemplateIOSim | IntakeIOSim |
+| TemplateIOSim | IntakeIOSim, used only by tests. The simulator uses IntakeIOSimPhysics instead: the real motor code on CTRE's simulated motors, plus arm physics. |
 | TemplateSubsystem | IntakeSubsystem: adds the deploy arm's position control, stop rules and homing |
-| TemplateSubsystemTest | IntakeRollerTest and IntakeSubsystemTest |
+| TemplateSubsystemTest | IntakeRollerTest and IntakeSubsystemTest (IntakePhysicsTest checks the physics model) |
 | Constants snippet below | IntakeConstants in Constants.java (search for `class IntakeConstants`) |
 | Config snippet below | the `mech.intake_*` lines in config_alecto.properties |
 
@@ -74,7 +74,8 @@ Add a nested class inside Constants.java, next to the others:
       public static final int MOTOR_CAN_ID =
           RobotConfigLoader.getInt("mech.<name>_motor_can_id");
 
-      // Design numbers, typed once. TUNED, NOT DERIVED (date): ask a mentor.
+      // Design numbers, typed once.
+      // TODO - PLACEHOLDER. Replace with your mechanism's limits; ask a mentor.
       public static final double STATOR_CURRENT_LIMIT_AMPS = 40;
       public static final double SUPPLY_CURRENT_LIMIT_AMPS = 30;
     }
@@ -112,6 +113,9 @@ The real intake version:
 - If the motor rejects its settings 5 times in a row, it gives up quietly,
   with no alert (the shared PhoenixUtil.tryUntilOk helper).
 - The sim motor does not move, so speed and current read 0 in the
-  simulator. Physics comes later (see mechanism-checklist.md).
+  simulator. Physics comes later (see mechanism-checklist.md, and
+  IntakeIOSimPhysics for a finished example).
 - No commands, no button bindings, and RobotContainer does not choose the
-  IO by mode yet. Ask a mentor before wiring it in.
+  IO by mode yet. The intake shows how: the real robot gets IntakeIOTalonFX,
+  the simulator gets IntakeIOSimPhysics, and replay gets the "does nothing"
+  `new IntakeIO() {}`. Ask a mentor before wiring it in.

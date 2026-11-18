@@ -19,7 +19,7 @@ Use it for every new mechanism, and for the mentors' "final good" versions that 
 - [ ] The subsystem takes the IO in its constructor and holds decisions only, with no motor classes in it.
 - [ ] RobotContainer, or a subsystem factory, picks real, simulated or disabled by mode, the way Drive is built.
 - [ ] Inputs go through Logger.processInputs so the mechanism can be replayed. Use the FPGA timestamp or loop counts, never System.currentTimeMillis or random numbers.
-- [ ] Worked example: the intake (IntakeIO, IntakeIOTalonFX, IntakeIOSim, IntakeSubsystem) on the intake-nidhi branch.
+- [ ] Worked example: the intake on the intake-nidhi branch (IntakeIO, IntakeIOTalonFX for the robot, IntakeIOSimPhysics for the simulator, IntakeIOSim for the tests, IntakeSubsystem).
 - [ ] Instance fields, not static ones, except `static final` for values that never change (like CAN IDs). Tests and the IO pattern build several copies of a mechanism (real, sim, do-nothing, a fresh one per test), and a static field makes them silently overwrite each other.
 
 ## 2. Unit and smoke tests
@@ -30,7 +30,7 @@ Use it for every new mechanism, and for the mentors' "final good" versions that 
 - [ ] Each alert is tested by feeding in a fake bad input. [test]
 - [ ] For position mechanisms, a test that nothing is commanded before homing. [test]
 - [ ] The tests run in CI. (The repo has no CI yet, so run WPILib: Test Robot Code before every review. Tests are not turned on in main's build.gradle yet; see "Tests" in CLAUDE.md.) Aim for the checks that would hurt if wrong, not a coverage number.
-- [ ] Tests use the sim IO: a fresh IO and subsystem per test, call periodic() directly, count loops, and never sleep. The intake's 19 tests run in about 0.06 s. [test]
+- [ ] Tests use the sim IO: a fresh IO and subsystem per test, call periodic() directly, count loops, and never sleep. The intake's IntakeSubsystemTest (19 tests) runs in about 0.06 s. [test]
 - [ ] Expected numbers are typed in the test, not read from constants, so an accidental change fails a test. [test]
 - [ ] Each new test was proven by breaking the code on purpose once and watching it fail. [checklist]
 
@@ -39,14 +39,14 @@ Use it for every new mechanism, and for the mentors' "final good" versions that 
 - [ ] Log keys follow one pattern, such as Mechanism/Name/Value.
 - [ ] Open a real or simulated log in AdvantageScope and confirm the values look right. [checklist]
 - [ ] The mechanism has a saved panel in the team's AdvantageScope layout.
-- [ ] Know the difference: log **playback** (AdvantageScope, Live Mode set to Logging, then Export Data) works today. True AdvantageKit **replay** also needs the simulator to write a WPILOG file in Robot.java, and RobotContainer to pick the do-nothing IO in replay mode.
+- [ ] Know the difference: log **playback** (AdvantageScope, Live Mode set to Logging, then Export Data) only shows what happened. True AdvantageKit **replay** re-runs the code on an old log. It needs Robot.java to write an AdvantageKit log in the simulator, and RobotContainer to pick the do-nothing IO in replay mode. Both are done on the intake-nidhi branch; see "Watching and replaying" in CLAUDE.md.
 
 ## 4. Checks and alerts
 
 **a. Is it connected and healthy?**
 - [ ] A Driver Station alert for every motor and sensor that drops off the bus. Not debounced for now, to keep it simple (the intake and the template match); add a short debounce if it flickers on the real robot. [alert, test]
 - [ ] Temperature and fault warnings: undervoltage, hardware faults, over-temperature. [alert]
-- [ ] Stator and supply current limits are set on every motor. No supply limits exist in the code today. [checklist]
+- [ ] Stator and supply current limits are set on every motor. No robot mechanism sets a supply limit today (only the unused template does). [checklist]
 - [ ] Robot-level, built once: a low battery warning in the pit, and CAN bus error counts. [alert]
 
 **b. Does it agree with itself?**
@@ -61,17 +61,17 @@ Use it for every new mechanism, and for the mentors' "final good" versions that 
 
 ## 5. Simulator
 - [ ] A simulated IO exists, with a physics model that fits the shape: WPILib's arm, elevator or flywheel simulation, or the real controller run in simulation.
-- [ ] The model's numbers (mass, length, gearing, limits, friction) are measured on the real mechanism, not copied from the constants the code uses. Otherwise the simulator only agrees with the code.
+- [ ] The model's numbers (mass, length, gearing, limits, friction) are measured on the real mechanism, not copied from the constants the code uses. Otherwise the simulator only agrees with the code. (The intake's are placeholders for now, marked TODO - PLACEHOLDER.)
 - [ ] Simulated sensors come from the simulated state: limit switches, hall effect, absolute encoder with its wraparound. That lets homing and stop logic run.
 - [ ] A scripted scenario runs on a laptop and prints a report: reaches the target in a reasonable time, homes from random starting positions, feeds only when ready.
 - [ ] Faults can be injected in simulation (unplug a motor or encoder) and the alert fires. [test]
 - [ ] A short note says what the simulator cannot show: jams, binding, real current under load.
-- [ ] Before physics exists, people know what to expect: the sim IO only remembers commands, so nothing moves and currents stay 0; unwired DIO switches read true (click them in the Sim GUI DIO panel); "not arrived" alerts will fire. [checklist]
+- [ ] Before physics exists (the intake has it now), people know what to expect: the sim IO only remembers commands, so nothing moves and currents stay 0; unwired DIO switches read true (click them in the Sim GUI DIO panel); "not arrived" alerts will fire. [checklist]
 - [ ] Simulator controls are written on the mechanism's page: which keyboard keys do what. Keyboard 0 starts with 4 buttons; raise the count in Keyboard 0 Settings for more. [checklist]
 
 **Pictures of the mechanism**
 - [ ] A 2D Mechanism2d drawing (for example a line that swings when the intake deploys). Needs only the angle or height the code already knows, no build-team numbers.
-- [ ] Optional, strongly suggested for a turret or hood: a 3D view in AdvantageScope. Log each moving part as a Pose3d and load the robot's CAD model from the build team, the way 6328 does. You then watch the turret turn or the hood tilt in 3D, live or in a log, which makes "which way is it pointing?" obvious.
+- [ ] Optional, strongly suggested for a turret or hood: a 3D view in AdvantageScope. Log each moving part as a Pose3d and load the robot's CAD model from the build team, the way 6328 does. You then watch the turret turn or the hood tilt in 3D, live or in a log, which makes "which way is it pointing?" obvious. The intake has a first box-model version (no CAD yet); see "Pictures of the mechanism" in CLAUDE.md.
 
 ## 6. Util libs
 - [ ] Use the shared helpers, and add to them instead of copying code: one alliance helper, alert and debounce helpers, tunable numbers, config apply with retry, SysId setup.
@@ -81,7 +81,7 @@ Use it for every new mechanism, and for the mentors' "final good" versions that 
 
 ## 7. Documentation
 - [ ] A one-page tuning note in the wiki: what each number means and how it was found. [checklist]
-- [ ] Any guessed number is marked TUNED, NOT DERIVED, with the date and robot.
+- [ ] Any guessed number is marked `TODO - PLACEHOLDER`, saying where the real number will come from.
 - [ ] Commands: one line on what each command does. States: what they are and how it moves between them.
 - [ ] How to run the simulator and the pit check, on the mechanism's page.
 - [ ] A short why-this-works note wherever the code works and nobody knows why.
@@ -147,7 +147,7 @@ Use it for every new mechanism, and for the mentors' "final good" versions that 
 
 ## Open questions (WIP)
 - How realistic does a simulator need to be: setpoints applied instantly (2910) or the real controller run in simulation?
-- What are the right current limits? No supply limits are set today.
+- What are the right current limits? No robot mechanism sets a supply limit today.
 - Does AdvantageKit already log CAN bus errors, or does that need adding?
 - What caused the motor brownout at CalGames?
 - When is a mechanism final good enough to seed the library, and who signs it off?

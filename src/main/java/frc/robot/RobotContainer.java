@@ -51,6 +51,9 @@ import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.mech.HoodSubsystem;
 import frc.robot.subsystems.mech.HopperFloorSubsystem;
 import frc.robot.subsystems.mech.HubTrackerSubsystem;
+import frc.robot.subsystems.mech.IntakeIO;
+import frc.robot.subsystems.mech.IntakeIOSimPhysics;
+import frc.robot.subsystems.mech.IntakeIOTalonFX;
 import frc.robot.subsystems.mech.IntakeSubsystem;
 import frc.robot.subsystems.mech.ShooterSubsystem;
 import frc.robot.subsystems.mech.TurretSubsystem;
@@ -73,7 +76,7 @@ public class RobotContainer {
 
   private final HoodSubsystem hoodSubsystem = new HoodSubsystem();
   private final HopperFloorSubsystem hopperFloorSubsystem = new HopperFloorSubsystem();
-  private final IntakeSubsystem intakeSubsystem = new IntakeSubsystem();
+  private final IntakeSubsystem intakeSubsystem;
   private final ShooterSubsystem shooterSubsystem = new ShooterSubsystem();
   private final TurretSubsystem turretSubsystem = new TurretSubsystem();
 
@@ -112,6 +115,7 @@ public class RobotContainer {
                     VisionConstants.CAMERA_0_NAME, VisionConstants.ROBOT_TO_CAMERA_0),
                 new VisionIOPhotonVision(
                     VisionConstants.CAMERA_1_NAME, VisionConstants.ROBOT_TO_CAMERA_1));
+        intakeSubsystem = new IntakeSubsystem(new IntakeIOTalonFX());
         break;
 
       case SIM:
@@ -135,6 +139,8 @@ public class RobotContainer {
                     VisionConstants.CAMERA_1_NAME,
                     VisionConstants.ROBOT_TO_CAMERA_1,
                     drive::getPose));
+        // The sim runs the real intake code on CTRE's simulated motors, with arm physics.
+        intakeSubsystem = new IntakeSubsystem(new IntakeIOSimPhysics());
         DriverStation.silenceJoystickConnectionWarning(true);
         break;
 
@@ -149,7 +155,8 @@ public class RobotContainer {
                 new ModuleIO() {},
                 (pose) -> {});
         vision = new Vision(drive);
-
+        // In replay, every input comes from the log, so the intake needs no hardware.
+        intakeSubsystem = new IntakeSubsystem(new IntakeIO() {});
         break;
     }
 

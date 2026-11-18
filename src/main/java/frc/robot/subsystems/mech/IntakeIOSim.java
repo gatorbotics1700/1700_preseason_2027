@@ -3,8 +3,9 @@ package frc.robot.subsystems.mech;
 import frc.robot.Constants.IntakeConstants;
 
 /**
- * Pretend intake hardware for tests and simulation. It has no motors: it just remembers what the
- * intake told it, so a test can check it right away, with no waiting.
+ * Pretend intake hardware for tests only. It has no motors: it just remembers what the intake told
+ * it, so a test can check it right away, with no waiting. The simulator uses IntakeIOSimPhysics
+ * instead, so the robot code never builds this class.
  *
  * <p>The arm does not move by itself here. A test moves it with {@link #moveArmToRotations} and
  * presses the switches with {@link #setRetractedSwitchPressed} and {@link
@@ -26,23 +27,20 @@ public class IntakeIOSim implements IntakeIO {
   private boolean retractedSwitchPressed = false;
   private boolean deployedSwitchPressed = false;
 
-  // Every motor starts connected. A test can unplug one to check the alerts.
-  private boolean leftRollerConnected = true;
-  private boolean rightRollerConnected = true;
+  // Every motor is connected. A test can unplug the left deploy motor to check its alert.
   private boolean leftDeployConnected = true;
-  private boolean rightDeployConnected = true;
 
   /** Reports whatever the test has set up. */
   @Override
   public void updateInputs(IntakeIOInputs inputs) {
-    inputs.leftRollerConnected = leftRollerConnected;
-    inputs.rightRollerConnected = rightRollerConnected;
+    inputs.leftRollerConnected = true;
+    inputs.rightRollerConnected = true;
     inputs.leftRollerCurrentAmps = 0.0;
     inputs.rightRollerCurrentAmps = 0.0;
     inputs.leftRollerCurrentLimitAmps = rollerCurrentLimitAmps;
 
     inputs.leftDeployConnected = leftDeployConnected;
-    inputs.rightDeployConnected = rightDeployConnected;
+    inputs.rightDeployConnected = true;
     inputs.leftDeployPositionRotations = deployPositionRotations;
     inputs.leftDeployVelocityRps = 0.0;
     inputs.leftDeployVoltageVolts = deployVoltageVolts;
@@ -60,7 +58,10 @@ public class IntakeIOSim implements IntakeIO {
     rollerSpeed = speed;
   }
 
-  /** Remembers the roller current limit. */
+  /**
+   * Remembers the roller current limit. Unlike the real robot, the new limit shows up in the inputs
+   * here, so a test cannot catch the real code's right-roller-only quirk.
+   */
   @Override
   public void setRollerCurrentLimitAmps(double amps) {
     rollerCurrentLimitAmps = amps;
@@ -140,23 +141,11 @@ public class IntakeIOSim implements IntakeIO {
     deployedSwitchPressed = pressed;
   }
 
-  /** Plugs in or unplugs the pretend left roller motor. */
-  public void setLeftRollerConnected(boolean connected) {
-    leftRollerConnected = connected;
-  }
-
-  /** Plugs in or unplugs the pretend right roller motor. */
-  public void setRightRollerConnected(boolean connected) {
-    rightRollerConnected = connected;
-  }
-
-  /** Plugs in or unplugs the pretend left deploy motor. */
+  /**
+   * Plugs in or unplugs the pretend left deploy motor. The other three motors' alerts are built the
+   * same way, so one test covers the pattern.
+   */
   public void setLeftDeployConnected(boolean connected) {
     leftDeployConnected = connected;
-  }
-
-  /** Plugs in or unplugs the pretend right deploy motor. */
-  public void setRightDeployConnected(boolean connected) {
-    rightDeployConnected = connected;
   }
 }

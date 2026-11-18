@@ -70,8 +70,7 @@ The code must be easy for students to read. **Keep it simple.** Students have li
 - Put units in names: `Degrees`, `Rotations`, `Volts`, `Amps`, `Rps`, `Seconds`.
 - Name every number. Constants are `LIKE_THIS`.
 - Above each method, write one plain sentence about what it does. Comments explain **why**, not what.
-- Mark any guessed number: `// TUNED, NOT DERIVED (date)`.
-- No `static` for settings that can change. Use normal fields. `static final` is fine for numbers that never change.
+- Mark any guessed number: `// TODO - PLACEHOLDER. Replace with ...`, saying where the real number will come from. For numbers from the build team's CAD: `// TODO - PLACEHOLDER. Replace with actual values when we have them from CAD`.
 - Match the style already in the repo. Don't reformat other files.
 - Don't add libraries.
 
@@ -101,7 +100,7 @@ The code must be easy for students to read. **Keep it simple.** Students have li
 
 - **Keep the 20 ms loop light.** Never call heavy code from `periodic()` or from a logging method. Send motor settings only when they change.
 - **No wall-clock time or random numbers in robot code.** For "has it been N seconds?", count `periodic()` loops (one loop = 20 ms). That way, replay and tests give the same answer, and tests don't have to wait.
-- **Normal fields, not `static`, for settings.** `static` settings are shared between copies of a class, and tests build many copies.
+- **Normal fields, not `static`, for settings.** `static` settings are shared between copies of a class, and tests build many copies. `static final` is fine for numbers that never change.
 - **Where each number lives:**
   - **Wiring** (CAN IDs, DIO ports) goes in the config file. The mechanism's constants class reads it with `RobotConfigLoader.getInt("mech.<name>")`, the way `HoodConstants` does.
   - **Design numbers** (current limits, angles, gear ratios) go in the mechanism's constants class, **typed once**. The real IO and the sim IO both read them from there.
@@ -123,14 +122,14 @@ The code must be easy for students to read. **Keep it simple.** Students have li
 Every step ends with: the project builds, the tests pass, the simulator runs, and the person can explain what changed. Before each step, explain the plan in plain words and wait for their OK.
 
 - **Step 0: Set up.** Confirm the branch. Look at any files that already show as changed, and help discard spacing-only changes.
-- **Step 1: Read, no changes.** Explain the mechanism's subsystem file in plain language, one section at a time, and answer questions. Start a **findings list** of anything that looks wrong. Don't fix findings yet. Add `TODO (date), CHECK WITH TEAM` comments.
+- **Step 1: Read, no changes.** Explain the mechanism's subsystem file in plain language, one section at a time, and answer questions. Start a **findings list** of anything that looks wrong. Don't fix findings yet. Mark each one in the code with a `// TODO NOTE FROM REFACTOR - ...` comment (no date), so it is easy to tell what the refactor added from what was there before.
 - **Step 2: Safety-net tests.** Before refactoring, add a smoke test (the robot starts) and a few tests of current behavior, so the refactor can't silently change it.
 - **Step 3: IO layer, part 1.** For a brand-new mechanism, start by copying `subsystems/template/` (see its `README.md`). For an existing one, add an `XIO` interface with `@AutoLog` inputs for the simplest part, for example the rollers. Add three versions: the real one (`XIOTalonFX`, with the motor code moved over **unchanged**), a sim one (`XIOSim`, which just remembers what it was told and has test setters), and a do-nothing one (`new XIO() {}`). The subsystem keeps only decisions and reads hardware only through `inputs`.
 - **Step 4: IO layer, the rest.** Do the same for the remaining hardware (arm, sensors). Rewrite the tests to use `XIOSim`, so they run instantly with no waiting.
 - **Step 5: Config.** CAN IDs and ports go into `config_alecto.properties`, read through the constants class. Design numbers are typed once in the constants class.
-- **Step 6: Alerts.** A Driver Station `Alert` for each motor that disconnects. An alert if the mechanism was told to move but hasn't arrived after N seconds (counted in loops). One test per alert.
+- **Step 6: Alerts.** A Driver Station `Alert` for each motor that disconnects. An alert if the mechanism was told to move but hasn't arrived after N seconds (counted in loops). A test for each kind of alert (one motor's disconnect alert is enough when they are all built the same way).
 - **Step 7: Small math tests.** Unit conversions (degrees ↔ motor rotations) and the stop or decision rules.
-- **Step 8: Simulator physics.** Only after the build team gives real numbers: length, mass, gearing, travel limits.
+- **Step 8: Simulator physics.** It needs real numbers from the build team: length, mass, gearing, travel limits. You may start with placeholder numbers if each one is marked `TODO - PLACEHOLDER`, the way the intake did, but the step is not done until they are replaced.
 - **Step 9: Notes.** A one-page tuning note for the wiki, the findings list for the team, and the checklist below ticked.
 
 **Testing recipe (used in Steps 4, 6 and 7):**
@@ -141,35 +140,59 @@ Every step ends with: the project builds, the tests pass, the simulator runs, an
 
 ## Simulator and visualization lessons
 
-**What the simulator shows today (no physics yet):**
+**What the simulator shows before Step 8 (no physics yet):**
 - The sim IO (`XIOSim`) only remembers what it was told. Nothing moves by itself, so currents and positions stay 0. That is expected until Step 8.
 - In the Sim GUI, an unwired DIO port reads `true`, so limit switches can look "pressed". Click them in the DIO panel to test the switch logic by hand.
 - A move alert ("told to move but has not arrived") **will** fire in the sim after N seconds, because the pretend arm never arrives. Click the matching switch to "arrive".
+
+**The intake is past this point.** The simulator now gives it `IntakeIOSimPhysics` (see Step 8 below). Its arm moves under simulated physics, and its two limit switches click on their own from the simulated angle. So don't click the intake's switches by hand, and its move alert should **not** fire unless something is wrong. Its rollers still just spin in the air, with no game pieces. `IntakeIOSim` (the "remembers only" version) is still used, but only by the tests.
+
+**Simulator keyboard:**
 - Keyboard 0 starts with only 4 buttons. To use more (for example the right bumper, button 8), raise the button count in Keyboard 0 Settings and assign a key.
 
 **Watching and replaying in AdvantageScope:**
 - Live: connect to the sim and set Live Mode to **Logging**, not Low Bandwidth, or the export is incomplete.
 - **Playback** (works today): File → Export Data → WPILOG, then open it later. Good for demos and reviews.
-- **True AdvantageKit replay** (re-running the code on an old log) also needs the sim to write a log file (`WPILOGWriter` in `Robot.java`) and `RobotContainer` to pick the real, sim or do-nothing IO by mode. Not set up yet; ask before touching those files.
+- **AdvantageKit replay** (re-running the code on an old log, to see what changed code would have decided) works on the `intake-nidhi` branch:
+  1. Record: run the sim as usual. `Robot.java` also saves an AdvantageKit log in `logs/` (named `akit_<date>.wpilog`). Logs exported from AdvantageScope and the `FRC_*.wpilog` files are NetworkTables recordings (their names start with `NT:`), so they can't be replayed.
+  2. Temporarily set `simMode = Mode.REPLAY` in `Constants.java`. Put it back to `Mode.SIM` afterwards.
+  3. Run the sim again. It replays the log in the `AKIT_LOG_PATH` setting, or the log open in AdvantageScope, or asks for a path. From the terminal: `AKIT_LOG_PATH=$PWD/logs/<file>.wpilog JAVA_HOME=~/wpilib/2026/jdk ./gradlew simulateJava --offline`
+  4. It writes `<file>_sim.wpilog`. Open both files in AdvantageScope and put the same value from each on one graph.
+- In replay, `RobotContainer`'s mode switch gives the intake the do-nothing IO (the same way it builds Drive), so every input comes from the log.
+- Replay shows what the code would **decide**. The recorded inputs (such as the arm's position) don't react to the new code. To see how the arm would **move** with new code, run the simulator instead (the intake has physics now).
+- Only mechanisms that use the IO pattern replay faithfully: Drive, Vision and the Intake today.
 
 **Physics (Step 8):**
 - Use the WPILib model that fits the shape: `SingleJointedArmSim` (arm, hood), `ElevatorSim` (elevator, climber), `FlywheelSim` or `DCMotorSim` (rollers, turret).
 - Its numbers (mass, length, gearing, travel limits) must be **measured by the build team**, not copied from the code's constants. Otherwise the simulator only agrees with the code.
 - Drive the simulated sensors (limit switches, encoders) from the simulated position, so homing and stop rules run on their own.
 - Write down what the sim cannot show: jams, binding, real current under load.
+- **Intake example:** `IntakeIOSimPhysics` runs the real `IntakeIOTalonFX` code on CTRE's simulated motors, with a `SingleJointedArmSim` for the arm, and drives the two limit switches from the simulated angle. Its tests are in `IntakePhysicsTest.java`. Its gear ratio comes from the code, but its other numbers (arm mass, pivot to center of mass, the retracted angle above level, the Kraken X60 motor) are **placeholders**: typical values for this kind of intake, not measurements. They are marked `TODO - PLACEHOLDER. Replace with actual values when we have them from CAD`. Until the build team gives real numbers, the arm moves, but maybe not at the real robot's speed.
+- `IntakeIOSimPhysics` is temporary code copied from the elevator pull request (#8). When that PR is merged, compare the two and match any fixes.
 
 **Pictures of the mechanism:**
 - **2D (`Mechanism2d`):** a simple stick drawing (for example, a line that swings out when the intake deploys). Needs no build-team numbers, only the angle the code already knows. Easy first visual.
-- **3D (AdvantageScope 3D field):** many top teams (6328 and others) log each moving part as a `Pose3d` (where it is and how it is turned) and load a 3D robot model into AdvantageScope. You then watch the real robot, or the sim, move in 3D: the turret turning, the hood tilting, the intake swinging out. Especially useful for a **turret**, where "which way is it pointing" is hard to see from numbers. Needs: a robot model exported from CAD (the build team), and one `Logger.recordOutput("…/Pose3d", …)` per moving part. Not done on this team yet; worth a trial on the turret.
+- **3D (AdvantageScope 3D field):** many top teams (6328 and others) log each moving part as a `Pose3d` (where it is and how it is turned) and load a 3D robot model into AdvantageScope. You then watch the real robot, or the sim, move in 3D: the turret turning, the hood tilting, the intake swinging out. Especially useful for a **turret**, where "which way is it pointing" is hard to see from numbers. Needs: a robot model exported from CAD (the build team), and one `Logger.recordOutput("…/Pose3d", …)` per moving part. Worth a trial on the turret.
+- **The intake has a first 3D view**, made of boxes because there is no CAD model yet:
+  - `IntakeSubsystem` logs `Mech/Intake/ComponentPoses` (where the arm is) and `Mech/Intake/ComponentPosesGoal` (where it was told to go).
+  - Its sizes (pivot place, arm length) are placeholders too, marked the same way.
+  - The model files are in `ascope_assets/Robot_GatorboticsIntake/`. Set AdvantageScope's custom assets folder to the repo's `ascope_assets/` folder to load them.
+  - A saved AdvantageScope layout is in `src/main/deploy/AdvantageScope-Layout-Intake.json`.
+  - The code that builds the model is in `src/test/java/frc/robot/view3d/` (`IntakeModel`, `Glb`, `ModelFiles`, `IntakeModelTest`). After you change a size, run the tests: `IntakeModelTest` rewrites the files and fails once on purpose, then passes when you run the tests again. This is temporary code copied from the elevator pull request (#8).
 
 ## Worked example: the Intake (branch `intake-nidhi`)
 
 **Files:**
 - `subsystems/mech/IntakeSubsystem.java`: decisions only
-- `IntakeIO.java`, `IntakeIOTalonFX.java` (the real hardware), `IntakeIOSim.java` (the pretend hardware)
+- `IntakeIO.java`: the interface (the list of methods every version has)
+- `IntakeIOTalonFX.java`: the real hardware
+- `IntakeIOSimPhysics.java`: the simulator's version, with arm physics (placeholder numbers)
+- `IntakeIOSim.java`: pretend hardware that only remembers what it was told. Used only by the tests.
 - `commands/mech/IntakeCommands.java`
 - `IntakeConstants` inside `Constants.java`
-- Tests: `src/test/java/frc/robot/subsystems/mech/IntakeRollerTest.java` and `IntakeSubsystemTest.java`
+- `RobotContainer` picks the version by mode: real robot → `IntakeIOTalonFX`, simulator → `IntakeIOSimPhysics`, replay → `new IntakeIO() {}` (does nothing).
+- Tests in `src/test/java/frc/robot/subsystems/mech/`: `IntakeSubsystemTest.java` (19 tests), `IntakeRollerTest.java` (4) and `IntakePhysicsTest.java` (6)
+- 3D view: `src/test/java/frc/robot/view3d/` (with `IntakeModelTest.java`, 5 tests), `ascope_assets/Robot_GatorboticsIntake/`, and `src/main/deploy/AdvantageScope-Layout-Intake.json`
 
 **Devices:**
 - 4 TalonFX motors on `TunerConstants.mechCANBus`: left roller 8, right roller 11, left deploy 9, right deploy 10
@@ -185,7 +208,11 @@ Every step ends with: the project builds, the tests pass, the simulator runs, an
 - one per motor for "disconnected"
 - "arm was told to move but has not arrived", after 2 s (100 loops)
 
-**Done so far:** Steps 0–6.
+**Done so far:**
+- Steps 0–6.
+- Replay (checked Nov 10: a teleop session replayed with every intake decision matching).
+- A first try at Step 8: arm physics in the simulator, with placeholder numbers until the build team measures the real ones.
+- A box-model 3D view in AdvantageScope (no CAD yet).
 
 **Findings for the team:**
 - switch polarity
@@ -221,7 +248,7 @@ This is the short student version. The long mentor version is in `mechanism-chec
 - [ ] Hardware code is in its own IO class, with a simulated version and a version that does nothing.
 - [ ] CAN IDs and ports are in the config file. Design numbers are typed once in the constants class.
 - [ ] Numbers to tune show on the dashboard.
-- [ ] Guessed numbers are marked TUNED, NOT DERIVED.
+- [ ] Guessed numbers are marked TODO - PLACEHOLDER.
 - [ ] The mechanism's file is short and holds only what is specific to it.
 
 **Make problems easy to see**

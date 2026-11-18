@@ -11,7 +11,9 @@ import org.littletonrobotics.junction.AutoLog;
  *
  * <ul>
  *   <li>IntakeIOTalonFX: the real motors.
- *   <li>IntakeIOSim: pretend hardware that remembers what it was told, for tests and simulation.
+ *   <li>IntakeIOSim: pretend hardware that remembers what it was told. Used only by tests.
+ *   <li>IntakeIOSimPhysics: the real motor code on CTRE's simulated motors, with arm physics. Used
+ *       by the simulator.
  *   <li>new IntakeIO() {}: does nothing at all, because every method below has an empty default.
  *       Use it to turn the intake off without unplugging anything.
  * </ul>
@@ -26,8 +28,11 @@ public interface IntakeIO {
   public static class IntakeIOInputs {
     public boolean leftRollerConnected = false;
     public boolean rightRollerConnected = false;
+    // No code reads the two roller currents. They are logged to look at, for example after a jam.
     public double leftRollerCurrentAmps = 0.0;
     public double rightRollerCurrentAmps = 0.0;
+    // The LEFT roller's limit. On the real robot the dashboard limit only changes the RIGHT roller
+    // (see IntakeIOTalonFX.setRollerCurrentLimitAmps), so this stays at the starting limit.
     public double leftRollerCurrentLimitAmps = 0.0;
 
     public boolean leftDeployConnected = false;
@@ -50,7 +55,7 @@ public interface IntakeIO {
   /** Runs both rollers at a speed from -1 (full reverse) to 1 (full forward). */
   public default void setRollerSpeed(double speed) {}
 
-  /** Sets the roller stator current limit, in amps. */
+  /** Sets the rollers' stator current limit, in amps. */
   public default void setRollerCurrentLimitAmps(double amps) {}
 
   /** Runs both deploy motors at a speed from -1 (retract) to 1 (deploy). */

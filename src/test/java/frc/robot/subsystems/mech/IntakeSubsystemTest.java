@@ -248,12 +248,10 @@ public class IntakeSubsystemTest {
 
   // ---------------- Jam detection ----------------
 
-  /**
-   * At 40 A the arm counts as jammed and stops. This checks the RULE only. KNOWN ISSUE
-   * (2026-11-01): the deploy motors' own current limit is also 40 A, so a real jammed motor hovers
-   * around 40 A and may never reach it. The old simulator test read 40.2 A once and 38.96 A another
-   * time.
-   */
+  // TODO NOTE FROM REFACTOR - the deploy motors' own current limit is also 40 A, so a real jammed
+  // motor hovers around 40 A and may never reach it. In earlier simulator runs, it read 40.2 A once
+  // and 38.96 A another time.
+  /** At 40 A the arm counts as jammed and stops. This checks the RULE only. */
   @Test
   public void currentAtJamThresholdStopsArm() {
     intake.setDeploySpeed(TEST_ARM_SPEED);
