@@ -9,7 +9,7 @@ import org.littletonrobotics.junction.Logger;
  * TEMPLATE: the decisions for a mechanism with one motor that runs at a set speed. It talks to the
  * hardware only through TemplateIO, so tests and the simulator can use TemplateIOSim.
  *
- * <p>It is not built in RobotContainer, so it never runs on the robot. Copy this folder to start a
+ * <p>RobotContainer does not create it, so it never runs on the robot. Copy this folder to start a
  * new mechanism; see README.md.
  */
 public class TemplateSubsystem extends SubsystemBase {
@@ -18,7 +18,7 @@ public class TemplateSubsystem extends SubsystemBase {
   private final TemplateIO io;
   private final TemplateIOInputsAutoLogged inputs = new TemplateIOInputsAutoLogged();
 
-  // Dashboard warning. Not private, so the tests in this folder can check it.
+  // Dashboard warning. Left without "private" on purpose, so the template test can check it.
   // TODO: put your mechanism's name and CAN ID in the message, like the intake's alerts.
   final Alert motorDisconnectedAlert = new Alert("Template: motor disconnected.", AlertType.kError);
 

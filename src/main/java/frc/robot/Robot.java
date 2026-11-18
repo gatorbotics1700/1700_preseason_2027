@@ -83,6 +83,9 @@ public class Robot extends LoggedRobot {
       case SIM:
         // Running a physics simulator, log to NT
         Logger.addDataReceiver(new NT4Publisher());
+        // Also save an AdvantageKit log file in the project's logs/ folder, so a sim session can
+        // be replayed later.
+        Logger.addDataReceiver(new WPILOGWriter("logs"));
         break;
 
       case REPLAY:

@@ -2,35 +2,48 @@ package frc.robot.subsystems.mech;
 
 import static edu.wpi.first.units.Units.*;
 
-import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
-import com.ctre.phoenix6.configs.MotionMagicConfigs;
-import com.ctre.phoenix6.configs.MotorOutputConfigs;
-import com.ctre.phoenix6.configs.Slot0Configs;
-import com.ctre.phoenix6.configs.TalonFXConfiguration;
-import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
-import com.ctre.phoenix6.hardware.TalonFX;
-import com.ctre.phoenix6.signals.InvertedValue;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants.IntakeConstants;
-import frc.robot.Constants.TunerConstants;
 import frc.robot.util.Calculations;
-import frc.robot.util.logging.TalonFXLogger;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
+// TODO NOTE FROM REFACTOR - the dashboard tuning numbers below are "public static", which makes
+// them global variables: any file in the robot code could read or change them, so a wrong value
+// would be hard to trace back. They also get created when Java first loads this class, not when
+// the robot builds the intake. They belong to this intake, so they should be normal private
+// fields. No other file uses them today, and the robot has only one intake, so this causes no bug
+// yet.
+/**
+ * The intake's decisions: when to run the rollers, and when to move, stop and re-zero the deploy
+ * arm. All hardware goes through an IntakeIO, so tests and the simulator can stand in for it.
+ */
 public class IntakeSubsystem extends SubsystemBase {
 
-  private final TalonFX leftIntakeMotor; // spins the rollers
-  private final TalonFX rightIntakeMotor; // spins the rollers
-  private final TalonFX leftDeployMotor; // deploys the entire intake
-  private final TalonFX rightDeployMotor; // deploys the entire intake
+  // The hardware layer: rollers, deploy arm and limit switches all go through it.
+  private final IntakeIO io;
+  private final IntakeIOInputsAutoLogged inputs = new IntakeIOInputsAutoLogged();
 
-  private final DigitalInput retractedLimitSwitch;
-  private final DigitalInput deployedLimitSwitch;
+  // Dashboard warnings. Left without "private" on purpose, so the intake tests can check them.
+  final Alert leftRollerDisconnectedAlert;
+  final Alert rightRollerDisconnectedAlert;
+  final Alert leftDeployDisconnectedAlert;
+  final Alert rightDeployDisconnectedAlert;
+  final Alert armNotArrivingAlert =
+      new Alert("Intake: arm was told to move but has not arrived.", AlertType.kWarning);
+
+  // Assume that the deploy or retract takes a max of 2 secs. If it takes longer, then warning is
+  // displayed.
+  private static final double MAX_MOVE_TIME_SECONDS = 2.0;
+  private static final double LOOP_TIME_SECONDS = 0.02; // periodic() runs every 20 ms
+  // We count loops instead of reading a clock, so a replayed log gives the same answer.
+  private static final int MAX_MOVE_LOOPS = (int) (MAX_MOVE_TIME_SECONDS / LOOP_TIME_SECONDS);
+  private int loopsSpentMoving = 0;
 
   private static final double SYSID_LIMIT_MARGIN_DEGREES = 3;
 
@@ -44,19 +57,14 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private IntakeDeployState intakeState;
 
-  private final TalonFXConfiguration deployTalonFXConfigs;
-  private final TalonFXConfiguration leftIntakeTalonFXConfigs;
-  private final TalonFXConfiguration rightIntakeTalonFXConfigs;
-
-  private static Slot0Configs slot0Configs;
-  private static MotionMagicConfigs motionMagicConfigs;
-  private static CurrentLimitsConfigs deployCurrentLimitConfigs;
-  private static CurrentLimitsConfigs leftIntakeCurrentLimitConfigs;
-  private static CurrentLimitsConfigs rightIntakeCurrentLimitConfigs;
-
-  private static MotionMagicExpoVoltage m_request;
-
-  // Tunable PID gains for intake deploy
+  // TODO NOTE FROM REFACTOR - these defaults disagree with the team's older "vaguely works" notes:
+  //   kG 0.2128, kS 0.25, kV 0.16, kA 0.01, kP 1, kI 0, kD 0.1, Expo kV 0.16, Expo kA 0.1.
+  // Expo kV and Expo kA below also look swapped compared with those notes. Which numbers did the
+  // robot actually run with? The robot goes back to these defaults on every restart, so the
+  // tested values belong here.
+  // Tuning hints from the same notes: kI 0 means no push from built-up error. Expo kV is around
+  // 0.12 V/rps (maybe 0.12-0.2). A larger Expo kA makes the move smoother and slower.
+  // PID gains for the deploy arm, tunable on the dashboard
   public static final LoggedNetworkNumber intakeKp =
       new LoggedNetworkNumber("/Tuning/Intake/kP", 6);
   public static final LoggedNetworkNumber intakeKi =
@@ -64,7 +72,7 @@ public class IntakeSubsystem extends SubsystemBase {
   public static final LoggedNetworkNumber intakeKd =
       new LoggedNetworkNumber("/Tuning/Intake/kD", 0.1);
 
-  // Tunable Feedfoward gains for intake deploy
+  // Feedforward gains for the deploy arm, tunable on the dashboard
   public static final LoggedNetworkNumber intakeKg =
       new LoggedNetworkNumber("/Tuning/Intake/kG", 0.0);
   public static final LoggedNetworkNumber intakeKs =
@@ -79,105 +87,55 @@ public class IntakeSubsystem extends SubsystemBase {
   public static final LoggedNetworkNumber intakeExpoKv =
       new LoggedNetworkNumber("/Tuning/Intake/Expo kV", 0.1);
 
+  // TODO NOTE FROM REFACTOR - see the 70 A vs 90 A note in IntakeConstants.
   public static final LoggedNetworkNumber intakeCurrentLimit =
-      new LoggedNetworkNumber("/Tuning/Intake/Intake Current Limit", 90);
+      new LoggedNetworkNumber(
+          "/Tuning/Intake/Intake Current Limit",
+          IntakeConstants.ROLLER_DASHBOARD_CURRENT_LIMIT_AMPS);
 
   private boolean useDeployPositionControl = false;
   private double desiredIntakeSpeed;
   private double desiredDeploySpeed;
 
-  // private BooleanSupplier isDeployed;
-
-  public IntakeSubsystem() {
-    leftIntakeMotor =
-        new TalonFX(IntakeConstants.LEFT_INTAKE_MOTOR_CAN_ID, TunerConstants.mechCANBus);
-    rightIntakeMotor =
-        new TalonFX(IntakeConstants.RIGHT_INTAKE_MOTOR_CAN_ID, TunerConstants.mechCANBus);
-    leftDeployMotor =
-        new TalonFX(IntakeConstants.INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID, TunerConstants.mechCANBus);
-    rightDeployMotor =
-        new TalonFX(IntakeConstants.INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID, TunerConstants.mechCANBus);
-
+  /**
+   * Builds the intake with any hardware layer: real, simulated, or one that does nothing.
+   * RobotContainer picks which one.
+   */
+  public IntakeSubsystem(IntakeIO io) {
+    this.io = io;
     desiredIntakeSpeed = 0;
-    retractedLimitSwitch = new DigitalInput(IntakeConstants.RETRACTED_LIMIT_SWITCH_PORT);
-    deployedLimitSwitch = new DigitalInput(IntakeConstants.DEPLOYED_LIMIT_SWITCH_PORT);
-
+    // TODO NOTE FROM REFACTOR - the code assumes the arm starts retracted. If the robot turns on
+    // with the arm out, the angle is wrong until the arm presses a limit switch.
     intakeState = IntakeDeployState.RETRACTED_STOPPED;
 
-    leftIntakeTalonFXConfigs =
-        new TalonFXConfiguration()
-            .withMotorOutput(
-                new MotorOutputConfigs().withInverted(InvertedValue.CounterClockwise_Positive));
+    leftRollerDisconnectedAlert =
+        makeDisconnectedAlert("left roller", IntakeConstants.LEFT_INTAKE_MOTOR_CAN_ID);
+    rightRollerDisconnectedAlert =
+        makeDisconnectedAlert("right roller", IntakeConstants.RIGHT_INTAKE_MOTOR_CAN_ID);
+    leftDeployDisconnectedAlert =
+        makeDisconnectedAlert("left deploy", IntakeConstants.INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID);
+    rightDeployDisconnectedAlert =
+        makeDisconnectedAlert("right deploy", IntakeConstants.INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID);
 
-    rightIntakeTalonFXConfigs =
-        new TalonFXConfiguration()
-            .withMotorOutput(
-                new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
-
-    deployTalonFXConfigs = new TalonFXConfiguration();
-
-    deployTalonFXConfigs.withMotorOutput(
-        new MotorOutputConfigs().withInverted(InvertedValue.Clockwise_Positive));
-
-    slot0Configs = deployTalonFXConfigs.Slot0;
-
-    slot0Configs.kG = intakeKg.get(); // 0.2128 vaguely works
-    slot0Configs.kS = intakeKs.get(); // 0.25 vaguely works
-    slot0Configs.kV = intakeKv.get(); // 0.16 vaguely works
-    slot0Configs.kA = intakeKa.get(); // 0.01 vaguely works
-
-    // Initial PID gains come from tunable LoggedNetworkNumbers
-    slot0Configs.kP = intakeKp.get(); // 1 vaguely works
-    slot0Configs.kI = intakeKi.get(); // no output for integrated error
-    slot0Configs.kD = intakeKd.get(); // 0.1 vaguely works
-
-    // MOTION MAGIC EXPO
-    motionMagicConfigs = deployTalonFXConfigs.MotionMagic;
-
-    motionMagicConfigs.MotionMagicCruiseVelocity = 0; // 0 gives us unlimited cruise velocity
-    motionMagicConfigs.MotionMagicExpo_kV =
-        intakeExpoKv.get(); // was 0.16 kV is around 0.12 V/rps, might be 0.12-0.2
-    motionMagicConfigs.MotionMagicExpo_kA =
-        intakeExpoKa
-            .get(); // was 0.1 Use a slower kA of 0.1 V/(rps/s) - the larger the kA, the smoother
-    // and slower
-
-    leftIntakeCurrentLimitConfigs = leftIntakeTalonFXConfigs.CurrentLimits;
-    leftIntakeCurrentLimitConfigs.StatorCurrentLimit = 70;
-    leftIntakeCurrentLimitConfigs.StatorCurrentLimitEnable = true;
-
-    rightIntakeCurrentLimitConfigs = rightIntakeTalonFXConfigs.CurrentLimits;
-    rightIntakeCurrentLimitConfigs.StatorCurrentLimit = 70;
-    rightIntakeCurrentLimitConfigs.StatorCurrentLimitEnable = true;
-
-    deployCurrentLimitConfigs = deployTalonFXConfigs.CurrentLimits;
-    deployCurrentLimitConfigs.StatorCurrentLimit = 40;
-    deployCurrentLimitConfigs.StatorCurrentLimitEnable = true;
-
-    leftDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
-    rightDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
-    leftIntakeMotor.getConfigurator().apply(leftIntakeTalonFXConfigs);
-    rightIntakeMotor.getConfigurator().apply(rightIntakeTalonFXConfigs);
-
-    m_request = new MotionMagicExpoVoltage(0);
-
-    leftIntakeMotor.set(0);
-    rightIntakeMotor.set(0);
-
-    // isDeployed =
-    //     () -> {
-    //       return false;
-    //     };
+    // Send the starting gains from the dashboard numbers to the motors.
+    updateSlot0Configs();
+    updateMotionMagicConfigs();
   }
 
   @Override
   public void periodic() {
-    // Update PID gains from NetworkTables if they've changed, and reapply configs
+    // Read the hardware first, so every decision below uses this loop's values.
+    io.updateInputs(inputs);
+    Logger.processInputs("Mech/Intake/IO", inputs);
+    updateAlerts();
+
+    // Send the dashboard's numbers to the motors. The IO layer only sends ones that changed.
     updateSlot0Configs();
     updateMotionMagicConfigs();
     updateCurrentLimitConfigs();
 
     shouldStop();
+    updateArmNotArrivingAlert();
     if (intakeState.equals(IntakeDeployState.RETRACTED_STOPPED)
         || intakeState.equals(IntakeDeployState.DEPLOYED_STOPPED)) {
       setDeploySpeed(0);
@@ -192,18 +150,50 @@ public class IntakeSubsystem extends SubsystemBase {
     intakeLogs();
   }
 
+  /** Makes a dashboard error saying which motor is disconnected, and its CAN ID. */
+  private Alert makeDisconnectedAlert(String motorName, int canId) {
+    return new Alert(
+        "Intake: " + motorName + " motor disconnected (CAN " + canId + ").", AlertType.kError);
+  }
+
+  /** Turns each motor's alert on while that motor is disconnected, and off when it is back. */
+  private void updateAlerts() {
+    leftRollerDisconnectedAlert.set(!inputs.leftRollerConnected);
+    rightRollerDisconnectedAlert.set(!inputs.rightRollerConnected);
+    leftDeployDisconnectedAlert.set(!inputs.leftDeployConnected);
+    rightDeployDisconnectedAlert.set(!inputs.rightDeployConnected);
+  }
+
+  /**
+   * Counts how many loops the arm has been moving, and warns if a move takes too long. A stuck,
+   * unpowered or jammed arm never reaches its target or a switch, so it stays "moving".
+   */
+  private void updateArmNotArrivingAlert() {
+    boolean isMoving =
+        intakeState.equals(IntakeDeployState.DEPLOYING)
+            || intakeState.equals(IntakeDeployState.RETRACTING);
+    if (isMoving) {
+      loopsSpentMoving = loopsSpentMoving + 1;
+    } else {
+      loopsSpentMoving = 0;
+    }
+    armNotArrivingAlert.set(loopsSpentMoving > MAX_MOVE_LOOPS);
+  }
+
+  /** Stops a moving arm when it hits a limit switch, gets close to its target, or jams. */
   private void shouldStop() {
-    // we only trust that the intake is in the deploy position deadband if we're actually using
-    // position control
+    // "Close to its target" only counts when the arm is being sent to a position, not when it is
+    // being run at a speed.
     boolean atPositionDeadband =
         useDeployPositionControl
             && Calculations.withinDeadband(
                 getDesiredAngle().getDegrees(),
                 getCurrentAngle().getDegrees(),
-                IntakeConstants.POSITION_DEADBAND_DEGREES, true);
+                IntakeConstants.POSITION_DEADBAND_DEGREES,
+                true);
     boolean currentLimitReached =
-        leftDeployMotor.getStatorCurrent().getValueAsDouble() >= 40
-            || rightDeployMotor.getStatorCurrent().getValueAsDouble() >= 40;
+        inputs.leftDeployCurrentAmps >= IntakeConstants.DEPLOY_JAM_CURRENT_AMPS
+            || inputs.rightDeployCurrentAmps >= IntakeConstants.DEPLOY_JAM_CURRENT_AMPS;
     if (intakeState.equals(IntakeDeployState.DEPLOYING)) {
       if (isDeployedLimitSwitchTriggered() || atPositionDeadband || currentLimitReached) {
         intakeState = IntakeDeployState.DEPLOYED_STOPPED;
@@ -215,11 +205,12 @@ public class IntakeSubsystem extends SubsystemBase {
     }
   }
 
+  /** Sends the arm toward its target angle. */
   private void applyDeployPositionControl() {
-    leftDeployMotor.setControl(
-        m_request.withPosition(degreesToRevs(getDesiredAngle().getDegrees())));
-    rightDeployMotor.setControl(
-        m_request.withPosition(degreesToRevs(getDesiredAngle().getDegrees())));
+    io.setDeployTargetRotations(degreesToRevs(getDesiredAngle().getDegrees()));
+    // Old experiment, turned off: lower the arm's current limit once it is out. leftDeployMotor
+    // and deployTalonFXConfigs now live in IntakeIOTalonFX, and isDeployed was never filled in,
+    // so this would need an IntakeIO method to work again.
     // if (isDeployed.getAsBoolean()
     //     && deployCurrentLimitConfigs.StatorCurrentLimit != 25
     //     && getCurrentAngle().getDegrees() > 30) {
@@ -233,6 +224,10 @@ public class IntakeSubsystem extends SubsystemBase {
     // }
   }
 
+  // TODO NOTE FROM REFACTOR - this runs every loop. While a switch stays pressed, it resets both
+  // deploy motors 50 times a second. Each reset waits for the motor to answer, which can slow the
+  // robot's loop. Resetting once, when the switch first becomes pressed, would fix it.
+  /** Resets the arm's angle when a limit switch is pressed, so small errors don't build up. */
   private void home() {
     if (isRetractedLimitSwitchTriggered()) {
       zeroIntakeDeploy(true);
@@ -241,6 +236,9 @@ public class IntakeSubsystem extends SubsystemBase {
     }
   }
 
+  // TODO NOTE FROM REFACTOR - true means RETRACT. The name reads the other way round, which makes
+  // mistakes easy.
+  /** Sends the arm in (true) or out (false). */
   public void setDesiredDeployPosition(boolean isRetracted) {
     if (isRetracted) {
       intakeState = IntakeDeployState.RETRACTING;
@@ -250,7 +248,7 @@ public class IntakeSubsystem extends SubsystemBase {
     useDeployPositionControl = true;
   }
 
-  /** Returns the stored desired angle (always the true target, independent of deadband). */
+  /** The angle the arm is headed for, or is resting at: retracted or deployed. */
   public Rotation2d getDesiredAngle() {
     Rotation2d desiredAngle;
     if (intakeState.equals(IntakeDeployState.RETRACTED_STOPPED)
@@ -265,10 +263,11 @@ public class IntakeSubsystem extends SubsystemBase {
     return desiredAngle;
   }
 
+  /** Runs the arm at a speed from -1 (retract) to 1 (deploy), instead of to a position. */
   public void setDeploySpeed(double speed) {
     useDeployPositionControl = false;
 
-    // based on the direction of the speed, we can determine whether we're extending or retracting
+    // The sign of the speed says which way the arm is going.
     if (speed > 0) {
       intakeState = IntakeDeployState.DEPLOYING; // TODO see if this is possibly flipped irl
     } else if (speed < 0) {
@@ -276,18 +275,21 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     desiredDeploySpeed = speed;
-    leftDeployMotor.set(speed); // TODO redundant but we can keep it for safety
-    rightDeployMotor.set(speed);
+    // periodic() sends this speed again every loop; sending it now too starts the arm sooner.
+    io.setDeploySpeed(speed);
   }
 
+  /** Runs the rollers at a speed from -1 to 1. */
   public void setIntakeSpeed(double speed) {
     desiredIntakeSpeed = speed;
-    leftIntakeMotor.set(desiredIntakeSpeed);
-    rightIntakeMotor.set(desiredIntakeSpeed);
+    io.setRollerSpeed(desiredIntakeSpeed);
   }
 
+  // TODO NOTE FROM REFACTOR - this uses the left deploy motor only; the right one is never
+  // checked. The "% 360" does nothing useful, because the arm never turns a full circle.
+  /** The arm's angle now: 0 = retracted, 95 = deployed. */
   public Rotation2d getCurrentAngle() {
-    double motorPositionRevs = leftDeployMotor.getPosition().getValueAsDouble();
+    double motorPositionRevs = inputs.leftDeployPositionRotations;
     double deployAngleDegrees =
         motorPositionRevs
             / IntakeConstants.DEPLOY_GEARBOX_RATIO
@@ -298,6 +300,7 @@ public class IntakeSubsystem extends SubsystemBase {
     return new Rotation2d(Math.toRadians(deployAngleDegrees));
   }
 
+  /** Turns an arm angle into deploy motor turns (rotations), through the gears. */
   public double degreesToRevs(double deployAngleDegrees) {
     return deployAngleDegrees
         / 360.0
@@ -306,32 +309,33 @@ public class IntakeSubsystem extends SubsystemBase {
         * IntakeConstants.DEPLOY_GEARBOX_RATIO;
   }
 
+  /** Tells the motors the arm is now fully in (true) or fully out (false). */
   public void zeroIntakeDeploy(boolean isRetracted) {
     if (isRetracted) {
-      leftDeployMotor.setPosition(degreesToRevs(IntakeConstants.RETRACTED_POSITION.getDegrees()));
-      rightDeployMotor.setPosition(degreesToRevs(IntakeConstants.RETRACTED_POSITION.getDegrees()));
-
+      io.resetDeployPositionRotations(
+          degreesToRevs(IntakeConstants.RETRACTED_POSITION.getDegrees()));
     } else {
-      leftDeployMotor.setPosition(degreesToRevs(IntakeConstants.EXTENDED_POSITION.getDegrees()));
-      rightDeployMotor.setPosition(degreesToRevs(IntakeConstants.EXTENDED_POSITION.getDegrees()));
+      io.resetDeployPositionRotations(
+          degreesToRevs(IntakeConstants.EXTENDED_POSITION.getDegrees()));
     }
   }
 
   public boolean isRetractedLimitSwitchTriggered() {
-    return retractedLimitSwitch.get();
+    return inputs.retractedSwitchPressed;
   }
 
   public boolean isDeployedLimitSwitchTriggered() {
-    return deployedLimitSwitch.get();
+    return inputs.deployedSwitchPressed;
   }
 
+  /** True if the arm is out, or on its way out. */
   public boolean isDeployed() {
     return intakeState.equals(IntakeDeployState.DEPLOYED_STOPPED)
         || intakeState.equals(IntakeDeployState.DEPLOYING);
   }
 
   private double getVelocityRadPerSec() {
-    double motorRPS = leftDeployMotor.getVelocity().getValueAsDouble();
+    double motorRPS = inputs.leftDeployVelocityRps;
     return motorRPS
         / IntakeConstants.DEPLOY_PULLEY_ONE_GEAR_RATIO
         / IntakeConstants.DEPLOY_PULLEY_TWO_GEAR_RATIO
@@ -340,47 +344,46 @@ public class IntakeSubsystem extends SubsystemBase {
         * Math.PI;
   }
 
+  // TODO NOTE FROM REFACTOR - when a test ends, the state is always set to RETRACTED_STOPPED, even
+  // if the arm is out.
   /**
-   * Called by SysId commands to indicate test is running; we log voltage/position/velocity in
-   * periodic().
+   * Marks a SysId test as running or done. SysId is a WPILib tool that runs the arm at set voltages
+   * and measures how it moves, to work out tuning gains.
    */
   private void setSysIdRunning(boolean running) {
     if (running) {
       intakeState = IntakeDeployState.SYSID;
     } else {
-      intakeState =
-          IntakeDeployState.RETRACTED_STOPPED; // TODO possibly change but it doesn't really matter
+      intakeState = IntakeDeployState.RETRACTED_STOPPED;
     }
   }
 
+  /** Sets up the SysId test: how fast the voltage rises, its top, and how long a test runs. */
   private SysIdRoutine sysIdRoutine() {
-    // config for our test. Sets voltage ramps, limits, and a logging callback
     SysIdRoutine.Config config =
         new SysIdRoutine.Config(
-            // this is the ramp rate for voltage during a test
+            // How fast the voltage rises in the slow test
             Volts.per(Second).of(2),
-            // this is the maximum voltage for the test
+            // The voltage for the fast test.
+            // TODO NOTE FROM REFACTOR - 18 V is more than the 12 V battery can give.
             Volts.of(18),
-            // this is the duration of the test.
-            // Note we use `until` when we return the command to abort if we hit intake deployed or
-            // retracted positions
+            // The longest a test can run. The commands below also stop it at either end of travel.
             Seconds.of(10),
             (state) -> Logger.recordOutput("Mech/Intake/SysID/SysIdState", state.toString()));
 
-    // mechanism for our test. Sets the voltage; we log voltage/position/velocity ourselves in
-    // periodic()
+    // How SysId moves the arm. We log voltage, position and speed ourselves in intakeLogs().
     SysIdRoutine.Mechanism mechanism =
         new SysIdRoutine.Mechanism(
-            (voltage) -> {
-              leftDeployMotor.setVoltage(voltage.in(Volts));
-              rightDeployMotor.setVoltage(voltage.in(Volts));
-            },
-            null, // Log via AdvantageKit in periodic() so data goes to the same log file
+            (voltage) -> io.setDeployVoltage(voltage.in(Volts)),
+            null, // null: we log it ourselves, so it goes in the same log file as everything else
             this,
             "intake");
     return new SysIdRoutine(config, mechanism);
   }
 
+  // TODO NOTE FROM REFACTOR - the margin puts these stops at 98 and -3 degrees, outside the
+  // travel, so a test can push the arm past its ends.
+  /** True when a SysId test has gone past either end of the arm's travel, so it should stop. */
   private boolean isSysIdOutOfBounds() {
     double angleDeg = getCurrentAngle().getDegrees();
     boolean isSysIdOutOfBounds =
@@ -391,7 +394,7 @@ public class IntakeSubsystem extends SubsystemBase {
     return isSysIdOutOfBounds;
   }
 
-  // run under a series of "flat" voltages to measure velocity behavior
+  /** SysId's slow test: raises the voltage slowly, to see how speed follows voltage. */
   public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
     return runOnce(() -> setSysIdRunning(true))
         .andThen(
@@ -402,7 +405,7 @@ public class IntakeSubsystem extends SubsystemBase {
         .withName("Intake SysId Quasistatic " + direction);
   }
 
-  // measure accelaration behavior
+  /** SysId's fast test: jumps straight to a set voltage, to see how quickly the arm speeds up. */
   public Command sysIdDynamic(SysIdRoutine.Direction direction) {
     return runOnce(() -> setSysIdRunning(true))
         .andThen(
@@ -413,83 +416,40 @@ public class IntakeSubsystem extends SubsystemBase {
         .withName("Intake SysId Dynamic " + direction);
   }
 
+  /** Sends the dashboard's deploy gains to the hardware. The hardware ignores unchanged ones. */
   public void updateSlot0Configs() {
-    double newKp = intakeKp.get();
-    double newKi = intakeKi.get();
-    double newKd = intakeKd.get();
-    double newKg = intakeKg.get();
-    double newKs = intakeKs.get();
-    double newKa = intakeKa.get();
-    double newKv = intakeKv.get();
-
-    if (newKp != slot0Configs.kP
-        || newKi != slot0Configs.kI
-        || newKd != slot0Configs.kD
-        || newKa != slot0Configs.kA
-        || newKv != slot0Configs.kV
-        || newKg != slot0Configs.kG
-        || newKs != slot0Configs.kS) {
-
-      slot0Configs.kP = newKp;
-      slot0Configs.kI = newKi;
-      slot0Configs.kD = newKd;
-      slot0Configs.kG = newKg;
-      slot0Configs.kS = newKs;
-      slot0Configs.kA = newKa;
-      slot0Configs.kV = newKv;
-      leftDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
-      rightDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
-    }
+    io.setDeployPidGains(intakeKp.get(), intakeKi.get(), intakeKd.get());
+    io.setDeployFeedforwardGains(intakeKg.get(), intakeKs.get(), intakeKv.get(), intakeKa.get());
   }
 
+  /** Sends the dashboard's Motion Magic Expo gains to the hardware. */
   public void updateMotionMagicConfigs() {
-    double newExpoKa = intakeExpoKa.get();
-    double newExpoKv = intakeExpoKv.get();
-
-    if (newExpoKa != motionMagicConfigs.MotionMagicExpo_kA
-        || newExpoKv != motionMagicConfigs.MotionMagicExpo_kV) {
-
-      motionMagicConfigs.MotionMagicExpo_kA = newExpoKa;
-      motionMagicConfigs.MotionMagicExpo_kV = newExpoKv;
-      leftDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
-      rightDeployMotor.getConfigurator().apply(deployTalonFXConfigs);
-    }
+    io.setDeployMotionMagicExpoGains(intakeExpoKv.get(), intakeExpoKa.get());
   }
 
+  /** Sends the dashboard's roller current limit to the hardware. */
   public void updateCurrentLimitConfigs() {
-    double newIntakeCurrentLimit = intakeCurrentLimit.get();
-
-    if (newIntakeCurrentLimit != rightIntakeCurrentLimitConfigs.StatorCurrentLimit) {
-      rightIntakeCurrentLimitConfigs.StatorCurrentLimit = newIntakeCurrentLimit;
-      rightIntakeMotor.getConfigurator().apply(rightIntakeTalonFXConfigs);
-    }
+    io.setRollerCurrentLimitAmps(intakeCurrentLimit.get());
   }
 
+  /** Logs what the intake decided this loop, for AdvantageScope. */
   public void intakeLogs() {
-    TalonFXLogger.log(leftDeployMotor, "Mech", "Intake", "Left Deploy");
-    TalonFXLogger.log(rightDeployMotor, "Mech", "Intake", "Right Deploy");
-    TalonFXLogger.log(leftIntakeMotor, "Mech", "Intake", "Left Intake");
-    TalonFXLogger.log(rightIntakeMotor, "Mech", "Intake", "Right Intake");
-
     Logger.recordOutput("Mech/Intake/Deploy/Current Angle", getCurrentAngle().getDegrees());
     Logger.recordOutput("Mech/Intake/Deploy/Desired Angle", getDesiredAngle().getDegrees());
     Logger.recordOutput("Mech/Intake/Deploy/Desired Speed", desiredDeploySpeed);
-    Logger.recordOutput(
-        "Mech/Intake/Deploy/Current Limit", deployCurrentLimitConfigs.StatorCurrentLimit);
+    Logger.recordOutput("Mech/Intake/Deploy/Current Limit", inputs.deployCurrentLimitAmps);
 
     Logger.recordOutput("Mech/Intake/Retracted Limit Switch", isRetractedLimitSwitchTriggered());
     Logger.recordOutput("Mech/Intake/Deployed Limit Switch", isDeployedLimitSwitchTriggered());
     Logger.recordOutput("Mech/Intake/IsDeployed", isDeployed());
     Logger.recordOutput("Mech/Intake/Intake/Desired Intake Speed", desiredIntakeSpeed);
-    Logger.recordOutput(
-        "Mech/Intake/Intake/Current Limit", leftIntakeCurrentLimitConfigs.StatorCurrentLimit);
+    Logger.recordOutput("Mech/Intake/Intake/Current Limit", inputs.leftRollerCurrentLimitAmps);
     Logger.recordOutput("Mech/Intake/intake deploy state", intakeState.toString());
     // SysID
     Logger.recordOutput(
         "Mech/Intake/SysID/intakeSysIDRunning", intakeState.equals(IntakeDeployState.SYSID));
     if (intakeState.equals(IntakeDeployState.SYSID)) {
-      Logger.recordOutput(
-          "Mech/Intake/SysID/intakeVoltage", leftDeployMotor.getMotorVoltage().getValueAsDouble());
+      Logger.recordOutput("Mech/Intake/SysID/intakeVoltage", inputs.leftDeployVoltageVolts);
       Logger.recordOutput(
           "Mech/Intake/SysID/intakePosition",
           getCurrentAngle().getRadians() / (2.0 * Math.PI)); // rotations
