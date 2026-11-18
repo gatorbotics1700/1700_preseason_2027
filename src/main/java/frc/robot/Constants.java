@@ -579,12 +579,20 @@ public final class Constants {
   }
 
   public static final class IntakeConstants {
-    public static final int LEFT_INTAKE_MOTOR_CAN_ID = 8;
-    public static final int RIGHT_INTAKE_MOTOR_CAN_ID = 11;
-    public static final int INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID = 9;
-    public static final int INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID = 10;
-    public static final int RETRACTED_LIMIT_SWITCH_PORT = 3;
-    public static final int DEPLOYED_LIMIT_SWITCH_PORT = 4;
+    // Wiring can differ from robot to robot, so these come from the robot's config file.
+    // Only config_alecto.properties has these keys; the other config files are for old robots.
+    public static final int LEFT_INTAKE_MOTOR_CAN_ID =
+        RobotConfigLoader.getInt("mech.intake_left_roller_can_id");
+    public static final int RIGHT_INTAKE_MOTOR_CAN_ID =
+        RobotConfigLoader.getInt("mech.intake_right_roller_can_id");
+    public static final int INTAKE_LEFT_DEPLOY_MOTOR_CAN_ID =
+        RobotConfigLoader.getInt("mech.intake_left_deploy_can_id");
+    public static final int INTAKE_RIGHT_DEPLOY_MOTOR_CAN_ID =
+        RobotConfigLoader.getInt("mech.intake_right_deploy_can_id");
+    public static final int RETRACTED_LIMIT_SWITCH_PORT =
+        RobotConfigLoader.getInt("mech.intake_retracted_switch_port");
+    public static final int DEPLOYED_LIMIT_SWITCH_PORT =
+        RobotConfigLoader.getInt("mech.intake_deployed_switch_port");
 
     public static final int DEPLOY_GEARBOX_RATIO = 5;
     public static final double DEPLOY_PULLEY_ONE_GEAR_RATIO = 42.0 / 18.0;
@@ -608,7 +616,27 @@ public final class Constants {
 
     public static final double POSITION_DEADBAND_DEGREES = 3;
 
+    // Current limits. These are the intake's own design numbers, the same on every robot, so they
+    // live here and not in the config files. IntakeIOTalonFX, IntakeIOSim and IntakeSubsystem
+    // all read them from here.
+
+    // TODO NOTE FROM REFACTOR - probably an error: the rollers start at 70 A, then the dashboard
+    // default of 90 A replaces it after the first loop, on the right roller only. The left roller
+    // stays at 70 A. Which one is right?
+    public static final double ROLLER_STATOR_CURRENT_LIMIT_AMPS = 70;
+    public static final double ROLLER_DASHBOARD_CURRENT_LIMIT_AMPS = 90;
+
+    public static final double DEPLOY_STATOR_CURRENT_LIMIT_AMPS = 40;
+    // TODO NOTE FROM REFACTOR - the jam rule uses the same 40 A as the deploy motors' own limit
+    // above, so a jammed motor hovers around 40 A and may never reach it. See
+    // IntakeSubsystemTest.currentAtJamThresholdStopsArm.
+    public static final double DEPLOY_JAM_CURRENT_AMPS = 40;
+
+    // TODO NOTE FROM REFACTOR - config_alecto.properties also has
+    // mech.robot_to_intake_yaw_degrees=180, but nothing reads it. This typed 180 is what Vision
+    // uses, so editing the config file changes nothing.
     public static final double ROBOT_TO_INTAKE_YAW_DEGREES = 180;
+    // TODO NOTE FROM REFACTOR - nothing uses this. Use it or delete it.
     public static final double DEPLOYED_CURRENT_LIMIT = 10.0; // amps
   }
 
