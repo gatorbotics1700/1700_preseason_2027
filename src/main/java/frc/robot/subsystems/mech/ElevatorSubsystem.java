@@ -51,6 +51,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private double targetPosition = 0.0;
   private boolean isHomed = false;
   private boolean wasAtBottom = false;
+  VoltageOut m_request = new VoltageOut(0);
 
   public ElevatorSubsystem() {
 
@@ -192,7 +193,6 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public void setVoltage(double voltage) {
-    VoltageOut m_request = new VoltageOut(0);
     elevatorMotor.setControl(m_request.withOutput(voltage));
   }
 
