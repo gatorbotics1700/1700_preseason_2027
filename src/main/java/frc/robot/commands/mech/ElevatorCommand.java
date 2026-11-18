@@ -19,11 +19,10 @@ public class ElevatorCommand extends Command {
 
   public Command HomeElevatorCommand() {
     return new InstantCommand(
-            () -> {
-              elevatorSubsystem.HomeElevator(Constants.ElevatorConstants.ELEVATOR_HOMING_SPEED);
-            },
-            elevatorSubsystem)
-        .until(() -> elevatorSubsystem.isAtBottomLimit());
+        () -> {
+          elevatorSubsystem.homeElevator(Constants.ElevatorConstants.ELEVATOR_HOMING_SPEED);
+        },
+        elevatorSubsystem);
   }
 
   public Command StopElevatorCommand() {

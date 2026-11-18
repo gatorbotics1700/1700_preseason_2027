@@ -571,6 +571,7 @@ public final class Constants {
     // TODO: Verify motor direction.
     public static final InvertedValue MOTOR_DIRECTION = InvertedValue.CounterClockwise_Positive;
     public static final double HEIGHT_TO_REVS = 57.5; // divide height by this to get revs
+    public static final double ELEVATOR_ZERO = 2.1; // TODO: replace with actual elevator zero point
   }
 
   public static final class WristConstants {
