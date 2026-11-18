@@ -1,24 +1,21 @@
 package frc.robot.subsystems.mech;
 
-import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
-
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
-import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
-
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 
 // TODO: make the elevator constant clearer by detailing the multiplications that happen
 public class ElevatorSubsystem extends SubsystemBase {
-  
+
   private final TalonFX elevatorMotor = new TalonFX(Constants.ElevatorConstants.ELEVATOR_MOTOR_ID);
 
   private final DigitalInput topLimitSwitch = new DigitalInput(8);
@@ -76,8 +73,9 @@ public class ElevatorSubsystem extends SubsystemBase {
     motorConfig.MotionMagic.MotionMagicExpo_kV = 0.16;
     motorConfig.MotionMagic.MotionMagicExpo_kA = 0.2;
 
-    //TODO: figure out soft limit threshold logic
-    //motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold = metersToMotorPosition(Constants.ElevatorConstants.MIN_HEIGHT);
+    // TODO: figure out soft limit threshold logic
+    // motorConfig.SoftwareLimitSwitch.ReverseSoftLimitThreshold =
+    // metersToMotorPosition(Constants.ElevatorConstants.MIN_HEIGHT);
 
     motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = false;
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = false;
@@ -127,7 +125,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     Logger.recordOutput("Commands/isAtBottomLimitSwitch", isAtBottomLimit());
   }
-
 
   private double heightToRevs(double height) { // height is in inches, returns revs of the motor
     return height / Constants.ElevatorConstants.HEIGHT_TO_REVS;
@@ -235,7 +232,9 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public boolean isAtTargetPosition() {
-    return isHomed && Math.abs(getElevatorPosition() - targetPosition) <= Constants.ElevatorConstants.POSITION_TOLERANCE;
+    return isHomed
+        && Math.abs(getElevatorPosition() - targetPosition)
+            <= Constants.ElevatorConstants.POSITION_TOLERANCE;
   }
 
   // check with build to see whether pressed is true or false

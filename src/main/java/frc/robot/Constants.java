@@ -567,7 +567,7 @@ public final class Constants {
     public static final double MIN_HEIGHT = 0.0;
     public static final double MAX_HEIGHT = 1.5; // TODO: Replace with actual maximum height
     public static final double POSITION_TOLERANCE = 0.02;
- // TODO: Replace with actual current height logic/ homing things when the time is nigh
+    // TODO: Replace with actual current height logic/ homing things when the time is nigh
     // TODO: Verify motor direction.
     public static final InvertedValue MOTOR_DIRECTION = InvertedValue.CounterClockwise_Positive;
     public static final double HEIGHT_TO_REVS = 57.5; // divide height by this to get revs
@@ -576,5 +576,9 @@ public final class Constants {
   public static final class WristConstants {
     public static final int RIGHT_WRIST_MOTOR_ID = 8;
     public static final int LEFT_WRIST_MOTOR_ID = 9;
+    public static final int CANCODER_ROLL_ENCODER_ID = 10;
+    public static final int CANCODER_PITCH_ENCODER_ID = 11;
+    public static final int VOLTAGE_REVERSE_MAX = -8;
+    public static final int VOLTAGE_MAX = 8;
   }
 }
