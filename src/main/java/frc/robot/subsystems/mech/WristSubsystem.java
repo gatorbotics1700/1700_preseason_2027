@@ -10,6 +10,7 @@ import com.ctre.phoenix6.configs.MotorOutputConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.controller.PIDController; // pid (converts position to voltage)
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -44,7 +45,7 @@ public class WristSubsystem extends SubsystemBase {
         new TalonFX(
             Constants.WristConstants.LEFT_WRIST_MOTOR_ID, Constants.TunerConstants.driveCANBus);
     // TODO find what we want the current limits to actally be
-    //TODO set neutral mode to brake, use elevator for reference
+    // TODO set neutral mode to brake, use elevator for reference
     leftTalonFXConfigs =
         new TalonFXConfiguration()
             .withMotorOutput(
@@ -57,10 +58,12 @@ public class WristSubsystem extends SubsystemBase {
     leftCurrentLimitConfigs = leftTalonFXConfigs.CurrentLimits;
     leftCurrentLimitConfigs.StatorCurrentLimit = 70;
     leftCurrentLimitConfigs.StatorCurrentLimitEnable = true;
+    leftTalonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     rightCurrentLimitConfigs = rightTalonFXConfigs.CurrentLimits;
     rightCurrentLimitConfigs.StatorCurrentLimit = 70;
     rightCurrentLimitConfigs.StatorCurrentLimitEnable = true;
+    rightTalonFXConfigs.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
     leftWristMotor.getConfigurator().apply(leftTalonFXConfigs);
     rightWristMotor.getConfigurator().apply(rightTalonFXConfigs);

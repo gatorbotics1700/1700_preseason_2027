@@ -8,16 +8,12 @@ import frc.robot.subsystems.mech.ElevatorSubsystem;
 // TODO: Add buttons in RobotContainer to call these commands when the elevator is moved up or down
 public class ElevatorCommand extends Command {
 
-  private final ElevatorSubsystem elevatorSubsystem;
-
   // Allowed position error in motor rotations
   private static final double ERROR = 1.0;
 
-  public ElevatorCommand() {
-    this.elevatorSubsystem = new ElevatorSubsystem();
-  }
+  public ElevatorCommand() {}
 
-  public Command HomeElevatorCommand() {
+  public Command HomeElevatorCommand(ElevatorSubsystem elevatorSubsystem) {
     return new InstantCommand(
             () -> {
               elevatorSubsystem.homeElevator(Constants.ElevatorConstants.ELEVATOR_HOMING_SPEED);
@@ -27,7 +23,7 @@ public class ElevatorCommand extends Command {
         .andThen(() -> elevatorSubsystem.zeroElevator());
   }
 
-  public Command StopElevatorCommand() {
+  public Command StopElevatorCommand(ElevatorSubsystem elevatorSubsystem) {
     return new InstantCommand(
         () -> {
           elevatorSubsystem.stop();
@@ -35,7 +31,7 @@ public class ElevatorCommand extends Command {
         elevatorSubsystem);
   }
 
-  public Command MoveElevatorCommand(double desiredHeight) {
+  public Command MoveElevatorCommand(double desiredHeight, ElevatorSubsystem elevatorSubsystem) {
     return new InstantCommand(
             () -> {
               elevatorSubsystem.moveToPosition(

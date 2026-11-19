@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.TunerConstants;
 import frc.robot.Constants.VisionConstants;
 import frc.robot.commands.drive.DriveCommands;
+import frc.robot.commands.mech.ElevatorCommand;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.GyroIO;
 import frc.robot.subsystems.drive.GyroIOPigeon2;
@@ -49,6 +50,7 @@ public class RobotContainer {
   private final Vision vision;
   private final ElevatorSubsystem elevatorSubsystem = new ElevatorSubsystem();
   private final WristSubsystem wristSubsystem = new WristSubsystem();
+  private final ElevatorCommand elevatorCommand = new ElevatorCommand();
 
   // Controllers
   private CommandXboxController controller = null; // port 0
@@ -315,6 +317,7 @@ public class RobotContainer {
   public void teleopInit() {
     configureDriverButtonBindings();
     configureCodriverButtonBindings();
+    elevatorCommand.HomeElevatorCommand(elevatorSubsystem);
   }
 
   public void periodic() {
