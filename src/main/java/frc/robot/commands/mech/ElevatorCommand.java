@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.Constants;
 import frc.robot.subsystems.mech.ElevatorSubsystem;
 
-// TODO: Add buttons in RobotContainer to call these commands when the elevator is moved up or down
+
 public class ElevatorCommand extends Command {
 
   private final ElevatorSubsystem elevatorSubsystem;

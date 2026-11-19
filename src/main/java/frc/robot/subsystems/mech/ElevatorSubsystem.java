@@ -138,7 +138,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     return revs * Constants.ElevatorConstants.HEIGHT_TO_REVS;
   }
 
-  public void moveToPosition(double currentHeight, double desiredHeight) { // height is in inches
+  public void PositmoveToion(double currentHeight, double desiredHeight) { // height is in inches
     if (!isHomed) {
       stop();
       return;
@@ -166,7 +166,7 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   public void moveElevator(double voltage) {
     // TODO make min and max voltage(the 12 rn) a constant
-    voltage = Math.max(-12.0, Math.min(12.0, voltage));
+    voltage = Math.max(Constants.ELEVATOR_MIN_VOLTAGE, Math.min(Constants.ELEVATOR_MAX_VOLTAGE, voltage));
 
     if (((isHomed && getElevatorPosition() >= Constants.ElevatorConstants.MAX_HEIGHT)
             // homing checks the position of the robot and makes sure its accurate

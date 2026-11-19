@@ -570,7 +570,14 @@ public final class Constants {
     // TODO: Replace with actual current height logic/ homing things when the time is nigh
     public static final InvertedValue MOTOR_DIRECTION = InvertedValue.Clockwise_Positive;
     public static final double HEIGHT_TO_REVS = 57.5; // divide height by this to get revs
-    public static final double ELEVATOR_ZERO = 0.5842; // TODO: replace with actual elevator zero point
+    public static final double ELEVATOR_ZERO = 0.5842; //inches // TODO: replace with actual elevator zero point
+    public static final double ELEVATOR_LEVEL_1_INCHES = 13.1;
+    public static final double ELEVATOR_LEVEL_2_INCHES = 29.045;
+    public static final double ELEVATOR_LEVEL_3_INCHES = 54.024;
+    public static final double ELEVATOR_LEVEL_4_INCHES = 59.022;
+    public static final double ELEVATOR_MIN_VOLTAGE = -12.0;
+    public static final double ELEVATOR_MAX_VOLTAGE = 12.0;
+
   }
 
   public static final class WristConstants {

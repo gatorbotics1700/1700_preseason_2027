@@ -224,17 +224,32 @@ public class RobotContainer {
       } else {
         controller_two = new CommandXboxController(1);
       }
-
+      
       controller_two
           .leftTrigger()
-          .onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(6)));
+          .onTrue(new InstantCommand(()->elevatorSubsystem.moveElevator(6)));
 
       controller_two
           .rightTrigger()
-          .onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(-6)));
+          .onTrue(new InstantCommand(()->elevatorSubsystem.moveElevator(-6)));
 
       controller_two.a().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.stop()));
-    }
+
+      controller_two
+        .a()
+        .onTrue(new ElevatorCommand.MoveElevatorCommand(Constants.ELEVATOR_LEVEL_1_INCHES));
+
+        controller_two
+        .b()
+        .onTrue(new ElevatorCommand.MoveElevatorCommand(Constants.ELEVATOR_LEVEL_2_INCHES));
+
+        controller_two
+        .x()
+        .onTrue(new ElevatorCommand.MoveElevatorCommand(Constants.ELEVATOR_LEVEL_3_INCHES));
+
+        controller_two
+        .y()
+        .onTrue(new ElevatorCommand.MoveElevatorCommand(Constants.ELEVATOR_LEVEL_4_INCHES));
   }
 
   public Command getAutonomousCommand() {
