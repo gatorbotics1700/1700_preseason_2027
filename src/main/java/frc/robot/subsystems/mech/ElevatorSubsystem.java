@@ -198,15 +198,15 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   // TODO log values of the limit switches, desired position, anything that would be helpful.
   public void zeroElevator() {
-    elevatorMotor.stopMotor();
+    // elevatorMotor.stopMotor();
     elevatorMotor.setPosition(0);
 
     targetPosition = Constants.ElevatorConstants.MIN_HEIGHT;
 
-    motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
-    motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
+    // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
+    // motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
-    elevatorMotor.getConfigurator().apply(motorConfig.SoftwareLimitSwitch);
+    // elevatorMotor.getConfigurator().apply(motorConfig.SoftwareLimitSwitch);
   }
 
   public boolean getIsHomed() {
@@ -248,10 +248,6 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public void stop() {
-    elevatorMotor.stopMotor();
-  }
-
-  public void stopMotorVoltage() {
     elevatorMotor.setVoltage(0);
   }
 
