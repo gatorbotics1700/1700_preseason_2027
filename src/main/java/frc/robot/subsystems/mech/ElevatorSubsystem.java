@@ -3,6 +3,7 @@ package frc.robot.subsystems.mech;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicExpoVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -50,6 +51,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private double targetPosition = 0.0;
   private boolean isHomed = false;
   private boolean wasAtBottom = false;
+  VoltageOut m_request = new VoltageOut(0);
 
   public ElevatorSubsystem() {
 
@@ -109,6 +111,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     if (atBottom && motorVelocity < 0) {
       stop();
     }
+    // elevatorMotor.setVoltage(-2);
   }
 
   private void logElevatorMethods() {
@@ -195,7 +198,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   public void setVoltage(double voltage) {
-    elevatorMotor.setVoltage(voltage);
+    elevatorMotor.setControl(m_request.withOutput(voltage));
   }
 
   // TODO log values of the limit switches, desired position, anything that would be helpful.

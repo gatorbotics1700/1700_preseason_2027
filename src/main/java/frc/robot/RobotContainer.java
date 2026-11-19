@@ -227,17 +227,13 @@ public class RobotContainer {
 
       controller_two
           .leftTrigger()
-          .onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(2)));
+          .onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(6)));
 
       controller_two
           .rightTrigger()
-          .onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(-2)));
+          .onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.setVoltage(-6)));
 
       controller_two.a().onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.stop()));
-
-      controller_two
-          .b()
-          .onTrue(elevatorSubsystem.runOnce(() -> elevatorSubsystem.stopMotorVoltage()));
     }
   }
 

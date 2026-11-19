@@ -568,8 +568,7 @@ public final class Constants {
     public static final double MAX_HEIGHT = 1.5; // TODO: Replace with actual maximum height
     public static final double POSITION_TOLERANCE = 0.02;
     // TODO: Replace with actual current height logic/ homing things when the time is nigh
-    // TODO: Verify motor direction.
-    public static final InvertedValue MOTOR_DIRECTION = InvertedValue.CounterClockwise_Positive;
+    public static final InvertedValue MOTOR_DIRECTION = InvertedValue.Clockwise_Positive;
     public static final double HEIGHT_TO_REVS = 57.5; // divide height by this to get revs
     public static final double ELEVATOR_ZERO = 2.1; // TODO: replace with actual elevator zero point
   }
