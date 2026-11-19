@@ -24,7 +24,7 @@ public class ElevatorCommand extends Command {
             },
             elevatorSubsystem)
         .until(() -> elevatorSubsystem.isAtBottomLimit())
-        .andThen(StopElevatorCommand());
+        .andThen(() -> elevatorSubsystem.zeroElevator());
   }
 
   public Command StopElevatorCommand() {

@@ -193,8 +193,6 @@ public class ElevatorSubsystem extends SubsystemBase {
     // the bottom or not so it needs to check if it is at the bottom
     // to find the position until it gets there
     moveElevator(speed);
-    zeroElevator();
-    isHomed = true;
   }
 
   public void setVoltage(double voltage) {
@@ -212,6 +210,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
     elevatorMotor.getConfigurator().apply(motorConfig.SoftwareLimitSwitch);
+    isHomed = true;
   }
 
   public boolean getIsHomed() {
