@@ -117,7 +117,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     SmartDashboard.putNumber("Elevator/HeightMeters", getElevatorPosition());
 
     SmartDashboard.putNumber("Elevator/TargetMeters", targetPosition);
-    // TOOK OUT MOTOR POSITION STUFF - CHECK
+
     // SmartDashboard.putNumber("Elevator/MotorRotations", getCurrentPosition());
 
     SmartDashboard.putBoolean("Elevator/Homed", isHomed);
@@ -190,10 +190,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     // the bottom or not so it needs to check if it is at the bottom
     // to find the position until it gets there
     moveElevator(speed);
-
-    while (!isAtBottomLimit()) {}
     zeroElevator();
-    setVoltage(0);
     isHomed = true;
   }
 
@@ -226,9 +223,9 @@ public class ElevatorSubsystem extends SubsystemBase {
     return revsToHeight(elevatorMotor.getPosition().getValueAsDouble());
   }
 
-  // public double getTargetPosition() {
-  //   return targetPosition;
-  // }
+  public double getTargetPosition() {
+    return targetPosition;
+  }
 
   // public boolean atDesiredPosition(
   //     double desiredRotations, double errorRotations) { // TODO rename target postion to have
@@ -236,11 +233,11 @@ public class ElevatorSubsystem extends SubsystemBase {
   //   return Math.abs(getCurrentPosition() - desiredRotations) <= errorRotations;
   // }
 
-  // public boolean isAtTargetPosition() {
-  //   return isHomed
-  //       && Math.abs(getElevatorPosition() - targetPosition)
-  //           <= Constants.ElevatorConstants.POSITION_TOLERANCE;
-  // }
+  public boolean isAtTargetPosition() {
+    return isHomed
+        && Math.abs(getElevatorPosition() - targetPosition)
+            <= Constants.ElevatorConstants.POSITION_TOLERANCE;
+  }
 
   // check with build to see whether pressed is true or false
   public boolean isAtBottomLimit() {
