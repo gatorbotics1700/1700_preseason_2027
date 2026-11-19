@@ -115,13 +115,13 @@ public class ElevatorSubsystem extends SubsystemBase {
   }
 
   private void logElevatorMethods() {
-    SmartDashboard.putBoolean("Elevator/AtTarget", isAtTargetPosition());
+    // SmartDashboard.putBoolean("Elevator/AtTarget", isAtTargetPosition());
 
     SmartDashboard.putNumber("Elevator/HeightMeters", getElevatorPosition());
 
     SmartDashboard.putNumber("Elevator/TargetMeters", targetPosition);
 
-    SmartDashboard.putNumber("Elevator/MotorRotations", getCurrentPosition());
+    // SmartDashboard.putNumber("Elevator/MotorRotations", getCurrentPosition());
 
     SmartDashboard.putBoolean("Elevator/Homed", isHomed);
 
@@ -136,11 +136,6 @@ public class ElevatorSubsystem extends SubsystemBase {
 
   private double revsToHeight(double revs) { // revs of the motor, returns height in inches
     return revs * Constants.ElevatorConstants.HEIGHT_TO_REVS;
-  }
-
-  private void goToHeight(double currentHeight, double desiredHeight) { // height is in inches
-    double revs = heightToRevs(desiredHeight - currentHeight);
-    elevatorMotor.setControl(motionMagicRequest.withPosition(revs));
   }
 
   public void moveToPosition(double currentHeight, double desiredHeight) { // height is in inches
@@ -174,9 +169,13 @@ public class ElevatorSubsystem extends SubsystemBase {
     voltage = Math.max(-12.0, Math.min(12.0, voltage));
 
     if (((isHomed && getElevatorPosition() >= Constants.ElevatorConstants.MAX_HEIGHT)
+            // homing checks the position of the robot and makes sure its accurate
+            // this means that if the Elevator Position is greater or equal to the max height
             || isAtTopLimit())
         && voltage > 0) {
+      // if the elevator hits the top limit switch and the elevator is trying to go up
       voltage = 0;
+      // the voltage is set to zero to stop the robot from going up further
     }
 
     if (((isHomed && getElevatorPosition() <= Constants.ElevatorConstants.MIN_HEIGHT)
@@ -184,12 +183,16 @@ public class ElevatorSubsystem extends SubsystemBase {
         && voltage < 0) {
       voltage = 0;
     }
-
+    // this means if the Elevator's placement is lower or equal to the
+    // minimum height the voltage will be set to 0 to stop the robot from going further down
     elevatorMotor.setVoltage(voltage);
   }
 
-  public void HomeElevator(double speed) {
-    elevatorMotor.set(speed);
+  public void homeElevator(double speed) {
+    // the home thing needs to check if it is at
+    // the bottom or not so it needs to check if it is at the bottom
+    // to find the position until it gets there
+    moveElevator(speed);
   }
 
   public void setVoltage(double voltage) {
@@ -199,36 +202,37 @@ public class ElevatorSubsystem extends SubsystemBase {
   // TODO log values of the limit switches, desired position, anything that would be helpful.
   public void zeroElevator() {
     // elevatorMotor.stopMotor();
-    elevatorMotor.setPosition(0);
+    elevatorMotor.setPosition(Constants.ElevatorConstants.ELEVATOR_ZERO);
 
     targetPosition = Constants.ElevatorConstants.MIN_HEIGHT;
 
     // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     // motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
-    // elevatorMotor.getConfigurator().apply(motorConfig.SoftwareLimitSwitch);
+    elevatorMotor.getConfigurator().apply(motorConfig.SoftwareLimitSwitch);
   }
 
   public boolean getIsHomed() {
     return isHomed;
   }
 
-  public double getCurrentPosition() {
-    return elevatorMotor.getPosition().getValueAsDouble();
-  }
+  // public double getCurrentPosition() {
+  //   return elevatorMotor.getPosition().getValueAsDouble();
+  // }
 
   public double getElevatorPosition() {
-    return revsToHeight(getCurrentPosition());
+    return revsToHeight(elevatorMotor.getPosition().getValueAsDouble());
   }
 
   public double getTargetPosition() {
     return targetPosition;
   }
 
-  public boolean atDesiredPosition(
-      double desiredRotations, double errorRotations) { // TODO rename target postion to have meters
-    return Math.abs(getCurrentPosition() - desiredRotations) <= errorRotations;
-  }
+  // public boolean atDesiredPosition(
+  //     double desiredRotations, double errorRotations) { // TODO rename target postion to have
+  // meters
+  //   return Math.abs(getCurrentPosition() - desiredRotations) <= errorRotations;
+  // }
 
   public boolean isAtTargetPosition() {
     return isHomed
