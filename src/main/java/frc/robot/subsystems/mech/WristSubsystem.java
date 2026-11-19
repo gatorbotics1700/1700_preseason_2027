@@ -44,7 +44,7 @@ public class WristSubsystem extends SubsystemBase {
         new TalonFX(
             Constants.WristConstants.LEFT_WRIST_MOTOR_ID, Constants.TunerConstants.driveCANBus);
     // TODO find what we want the current limits to actally be
-
+    //TODO set neutral mode to brake, use elevator for reference
     leftTalonFXConfigs =
         new TalonFXConfiguration()
             .withMotorOutput(
