@@ -36,6 +36,7 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.NT4Publisher;
 import org.littletonrobotics.junction.wpilog.WPILOGReader;
 import org.littletonrobotics.junction.wpilog.WPILOGWriter;
+import frc.robot.subsystems.mech.WristSubsystem;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -58,6 +59,7 @@ public class Robot extends LoggedRobot {
     Logger.recordMetadata("GitDate", BuildConstants.GIT_DATE);
     Logger.recordMetadata("GitBranch", BuildConstants.GIT_BRANCH);
     Logger.recordMetadata("RoboRIO_Serial", RobotConfigLoader.getSerialNumber());
+
     switch (BuildConstants.DIRTY) {
       case 0:
         Logger.recordMetadata("GitDirty", "All changes committed");
@@ -194,6 +196,7 @@ public class Robot extends LoggedRobot {
 
     CommandScheduler.getInstance().cancelAll();
     robotContainer.teleopInit();
+
     // System.out.println("IN TELEOP INIT");
     // CommandScheduler.getInstance()
     //     .schedule(

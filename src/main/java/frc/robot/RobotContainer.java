@@ -317,6 +317,7 @@ public class RobotContainer {
     configureDriverButtonBindings();
     configureCodriverButtonBindings();
     elevatorCommand.HomeElevatorCommand(elevatorSubsystem);
+    wristSubsystem.setVoltage(0, 0.);
   }
 
   public void periodic() {
