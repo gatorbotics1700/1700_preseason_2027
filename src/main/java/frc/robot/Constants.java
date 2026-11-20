@@ -561,8 +561,9 @@ public final class Constants {
   }
 
   public static final class ElevatorConstants {
-    public static final int ELEVATOR_MOTOR_ID = 11;
-    public static final int ELEVATOR_HOMING_SPEED = -2;
+    public static final int ELEVATOR_MOTOR_ID =
+        (int) RobotConfigLoader.getDouble("tuner.elevator_motor");
+    public static final double ELEVATOR_HOMING_SPEED = -2;
     public static final double GEAR_RATIO = 5.0;
     public static final double MIN_HEIGHT = 0.0;
     public static final double MAX_HEIGHT = 1.5; // TODO: Replace with actual maximum height
@@ -575,7 +576,9 @@ public final class Constants {
   }
 
   public static final class WristConstants {
-    public static final int RIGHT_WRIST_MOTOR_ID = 8;
-    public static final int LEFT_WRIST_MOTOR_ID = 9;
+    public static final int RIGHT_WRIST_MOTOR_ID =
+        (int) RobotConfigLoader.getDouble("tuner.right_wrist_motor");
+    public static final int LEFT_WRIST_MOTOR_ID =
+        (int) RobotConfigLoader.getDouble("tuner.left_wrist_motor");
   }
 }
