@@ -119,6 +119,8 @@ public class ElevatorSubsystem extends SubsystemBase {
 
     SmartDashboard.putNumber("Elevator/HeightInches", getElevatorPosition());
 
+    SmartDashboard.putNumber("Elevator/Revs", elevatorMotor.getPosition().getValueAsDouble());
+
     SmartDashboard.putNumber("Elevator/TargetMeters", targetPosition);
 
     // SmartDashboard.putNumber("Elevator/MotorRotations", getCurrentPosition());
@@ -161,6 +163,7 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
 
     double revs = heightToRevs(desiredHeight - currentHeight);
+
     elevatorMotor.setControl(motionMagicRequest.withPosition(revs));
   }
 

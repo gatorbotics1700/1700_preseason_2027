@@ -38,12 +38,8 @@ public class WristSubsystem extends SubsystemBase {
   private final LoggedNetworkNumber wristkD = new LoggedNetworkNumber("", 0.001);
 
   public WristSubsystem() {
-    rightWristMotor =
-        new TalonFX(
-            Constants.WristConstants.RIGHT_WRIST_MOTOR_ID, Constants.TunerConstants.driveCANBus);
-    leftWristMotor =
-        new TalonFX(
-            Constants.WristConstants.LEFT_WRIST_MOTOR_ID, Constants.TunerConstants.driveCANBus);
+    rightWristMotor = new TalonFX(Constants.WristConstants.RIGHT_WRIST_MOTOR_ID);
+    leftWristMotor = new TalonFX(Constants.WristConstants.LEFT_WRIST_MOTOR_ID);
     // TODO find what we want the current limits to actally be
     // TODO set neutral mode to brake, use elevator for reference
     leftTalonFXConfigs =
@@ -76,6 +72,8 @@ public class WristSubsystem extends SubsystemBase {
   }
 
   public void periodic() {
+    rightWristMotor.setVoltage(0);
+    leftWristMotor.setVoltage(0);
     Logger.recordOutput("Mech/Wrist/RightMotorVoltage", getRightMotorVoltage());
     Logger.recordOutput("Mech/Wrist/LeftMotorVoltage", getLeftMotorVoltage());
   }
