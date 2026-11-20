@@ -15,6 +15,7 @@ package frc.robot;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -210,6 +211,18 @@ public class RobotContainer {
           .rightTrigger()
           .onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(5.0, -5.0)));
       controller.a().onTrue(wristSubsystem.runOnce(() -> wristSubsystem.setVoltage(0, 0)));
+      controller
+          .start()
+          .onTrue(
+              Commands.runOnce(
+                      () -> {
+                        drive.setPose(
+                            new Pose2d(
+                                drive.getPose().getTranslation(),
+                                new Rotation2d(Math.toRadians(0))));
+                      },
+                      drive)
+                  .ignoringDisable(true));
     }
   }
 
