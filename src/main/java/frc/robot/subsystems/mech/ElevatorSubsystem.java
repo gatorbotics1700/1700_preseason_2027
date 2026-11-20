@@ -117,7 +117,7 @@ public class ElevatorSubsystem extends SubsystemBase {
   private void logElevatorMethods() {
     // SmartDashboard.putBoolean("Elevator/AtTarget", isAtTargetPosition());
 
-    SmartDashboard.putNumber("Elevator/HeightMeters", getElevatorPosition());
+    SmartDashboard.putNumber("Elevator/HeightInches", getElevatorPosition());
 
     SmartDashboard.putNumber("Elevator/TargetMeters", targetPosition);
 
@@ -202,14 +202,16 @@ public class ElevatorSubsystem extends SubsystemBase {
   // TODO log values of the limit switches, desired position, anything that would be helpful.
   public void zeroElevator() {
     // elevatorMotor.stopMotor();
-    elevatorMotor.setPosition(Constants.ElevatorConstants.ELEVATOR_ZERO);
+    elevatorMotor.setPosition(heightToRevs(Constants.ElevatorConstants.ELEVATOR_ZERO_INCHES));
 
     targetPosition = Constants.ElevatorConstants.MIN_HEIGHT;
+
+    isHomed = true;
 
     // motorConfig.SoftwareLimitSwitch.ForwardSoftLimitEnable = true;
     // motorConfig.SoftwareLimitSwitch.ReverseSoftLimitEnable = true;
 
-    elevatorMotor.getConfigurator().apply(motorConfig.SoftwareLimitSwitch);
+    // elevatorMotor.getConfigurator().apply(motorConfig.SoftwareLimitSwitch);
   }
 
   public boolean getIsHomed() {

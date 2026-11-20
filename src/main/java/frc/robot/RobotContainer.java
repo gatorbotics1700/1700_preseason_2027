@@ -166,7 +166,6 @@ public class RobotContainer {
   // driver buttons = wrist
 
   public void configureDriverButtonBindings() {
-    CommandScheduler.getInstance().getActiveButtonLoop().clear();
 
     if (DriverStation.isJoystickConnected(0)) {
       if (Constants.currentMode == Constants.Mode.SIM
@@ -217,7 +216,6 @@ public class RobotContainer {
   // codriver buttons = elevator
 
   public void configureCodriverButtonBindings() {
-    CommandScheduler.getInstance().getActiveButtonLoop().clear();
 
     if (DriverStation.isJoystickConnected(1)) {
       if (Constants.currentMode == Constants.Mode.SIM
@@ -315,6 +313,7 @@ public class RobotContainer {
   }
 
   public void teleopInit() {
+    CommandScheduler.getInstance().getActiveButtonLoop().clear();
     configureDriverButtonBindings();
     configureCodriverButtonBindings();
     elevatorCommand.HomeElevatorCommand(elevatorSubsystem);
