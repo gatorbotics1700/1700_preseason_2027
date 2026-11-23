@@ -57,7 +57,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private IntakeDeployState intakeState;
 
-  // TODO NOTE FROM REFACTOR - 
+  // TODO NOTE FROM REFACTOR -
   // Expo kV and Expo kA below also look swapped compared with those notes. Which numbers did the
   // robot actually run with? The robot goes back to these defaults on every restart, so the
   // tested values belong here.
@@ -88,8 +88,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private static final LoggedNetworkNumber intakeCurrentLimit =
       new LoggedNetworkNumber(
-          "/Tuning/Intake/Intake Current Limit",
-          IntakeConstants.ROLLER_STATOR_CURRENT_LIMIT_AMPS);
+          "/Tuning/Intake/Intake Current Limit", IntakeConstants.ROLLER_STATOR_CURRENT_LIMIT_AMPS);
 
   private boolean useDeployPositionControl = false;
   private double desiredIntakeSpeed;

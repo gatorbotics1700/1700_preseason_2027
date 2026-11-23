@@ -620,9 +620,6 @@ public final class Constants {
     // live here and not in the config files. IntakeIOTalonFX, IntakeIOSim and IntakeSubsystem
     // all read them from here.
 
-    // TODO NOTE FROM REFACTOR - probably an error: the rollers start at 70 A, then the dashboard
-    // default of 90 A replaces it after the first loop, on the right roller only. The left roller
-    // stays at 70 A. Which one is right?
     public static final double ROLLER_STATOR_CURRENT_LIMIT_AMPS = 70;
 
     public static final double DEPLOY_STATOR_CURRENT_LIMIT_AMPS = 40;
@@ -631,12 +628,8 @@ public final class Constants {
     // IntakeSubsystemTest.currentAtJamThresholdStopsArm.
     public static final double DEPLOY_JAM_CURRENT_AMPS = 40;
 
-    // TODO NOTE FROM REFACTOR - config_alecto.properties also has
-    // mech.robot_to_intake_yaw_degrees=180, but nothing reads it. This typed 180 is what Vision
-    // uses, so editing the config file changes nothing.
-    public static final double ROBOT_TO_INTAKE_YAW_DEGREES = 180;
-    // TODO NOTE FROM REFACTOR - nothing uses this. Use it or delete it.
-    public static final double DEPLOYED_CURRENT_LIMIT = 10.0; // amps
+    public static final double ROBOT_TO_INTAKE_YAW_DEGREES =
+        RobotConfigLoader.getDouble("mech.robot_to_intake_yaw_degrees");
   }
 
   public static final class ShooterConstants {
