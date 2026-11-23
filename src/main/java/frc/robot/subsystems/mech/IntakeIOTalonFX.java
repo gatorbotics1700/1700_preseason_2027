@@ -156,8 +156,6 @@ public class IntakeIOTalonFX implements IntakeIO {
     rightRollerMotor.set(speed);
   }
 
-  // TODO NOTE FROM REFACTOR - only the RIGHT roller gets the new limit; the left one keeps 70 A.
-  // Kept on purpose so the refactor changes nothing.
   /** Applies a new roller current limit, only when it changed. */
   @Override
   public void setRollerCurrentLimitAmps(double amps) {
