@@ -39,7 +39,8 @@ public class HoodCommands {
       if (Calculations.withinDeadband(
           hoodSubsystem.getCurrentAngle().getDegrees(),
           hoodSubsystem.getDesiredAngle().getDegrees(),
-          HoodConstants.HOOD_POSITION_DEADBAND_DEGREES, true)) {
+          HoodConstants.HOOD_POSITION_DEADBAND_DEGREES,
+          true)) {
         return true;
       } else if (hoodSubsystem.isCurrentLimitReached()) {
         hoodSubsystem.setDesiredAngle(hoodSubsystem.getCurrentAngle());

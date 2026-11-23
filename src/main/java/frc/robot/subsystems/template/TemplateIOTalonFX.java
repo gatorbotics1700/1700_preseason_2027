@@ -14,12 +14,12 @@ import frc.robot.Constants.TunerConstants;
  */
 public class TemplateIOTalonFX implements TemplateIO {
 
-  // TODO: move to the config file when you copy this (see README.md). This class is never built on
+  // TODO: move to the config file when you copy this (see README.md). Nothing creates this class on
   // the robot, so this placeholder never reaches a real motor.
   private static final int MOTOR_CAN_ID = 0;
 
   // TODO: move to Constants.java when you copy this (see README.md).
-  // PLACEHOLDERS, TUNED, NOT DERIVED (2026-11-06): ask a mentor for your mechanism's limits.
+  // TODO - PLACEHOLDER. Replace with your mechanism's limits; ask a mentor.
   // Stator limit: caps the motor's own current, which limits torque and heat.
   private static final double STATOR_CURRENT_LIMIT_AMPS = 40;
   // Supply limit: caps what the motor draws from the battery, to help prevent brownouts.
