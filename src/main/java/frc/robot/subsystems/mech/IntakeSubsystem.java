@@ -57,41 +57,39 @@ public class IntakeSubsystem extends SubsystemBase {
 
   private IntakeDeployState intakeState;
 
-  // TODO NOTE FROM REFACTOR - these defaults disagree with the team's older "vaguely works" notes:
-  //   kG 0.2128, kS 0.25, kV 0.16, kA 0.01, kP 1, kI 0, kD 0.1, Expo kV 0.16, Expo kA 0.1.
+  // TODO NOTE FROM REFACTOR - 
   // Expo kV and Expo kA below also look swapped compared with those notes. Which numbers did the
   // robot actually run with? The robot goes back to these defaults on every restart, so the
   // tested values belong here.
   // Tuning hints from the same notes: kI 0 means no push from built-up error. Expo kV is around
   // 0.12 V/rps (maybe 0.12-0.2). A larger Expo kA makes the move smoother and slower.
   // PID gains for the deploy arm, tunable on the dashboard
-  public static final LoggedNetworkNumber intakeKp =
+  private static final LoggedNetworkNumber intakeKp =
       new LoggedNetworkNumber("/Tuning/Intake/kP", 6);
-  public static final LoggedNetworkNumber intakeKi =
+  private static final LoggedNetworkNumber intakeKi =
       new LoggedNetworkNumber("/Tuning/Intake/kI", 0.0);
-  public static final LoggedNetworkNumber intakeKd =
+  private static final LoggedNetworkNumber intakeKd =
       new LoggedNetworkNumber("/Tuning/Intake/kD", 0.1);
 
   // Feedforward gains for the deploy arm, tunable on the dashboard
-  public static final LoggedNetworkNumber intakeKg =
+  private static final LoggedNetworkNumber intakeKg =
       new LoggedNetworkNumber("/Tuning/Intake/kG", 0.0);
-  public static final LoggedNetworkNumber intakeKs =
+  private static final LoggedNetworkNumber intakeKs =
       new LoggedNetworkNumber("/Tuning/Intake/kS", 0.0);
-  public static final LoggedNetworkNumber intakeKv =
+  private static final LoggedNetworkNumber intakeKv =
       new LoggedNetworkNumber("/Tuning/Intake/kV", 0.16);
-  public static final LoggedNetworkNumber intakeKa =
+  private static final LoggedNetworkNumber intakeKa =
       new LoggedNetworkNumber("/Tuning/Intake/kA", 0.01);
 
-  public static final LoggedNetworkNumber intakeExpoKa =
+  private static final LoggedNetworkNumber intakeExpoKa =
       new LoggedNetworkNumber("/Tuning/Intake/Expo kA", 0.16);
-  public static final LoggedNetworkNumber intakeExpoKv =
+  private static final LoggedNetworkNumber intakeExpoKv =
       new LoggedNetworkNumber("/Tuning/Intake/Expo kV", 0.1);
 
-  // TODO NOTE FROM REFACTOR - see the 70 A vs 90 A note in IntakeConstants.
-  public static final LoggedNetworkNumber intakeCurrentLimit =
+  private static final LoggedNetworkNumber intakeCurrentLimit =
       new LoggedNetworkNumber(
           "/Tuning/Intake/Intake Current Limit",
-          IntakeConstants.ROLLER_DASHBOARD_CURRENT_LIMIT_AMPS);
+          IntakeConstants.ROLLER_STATOR_CURRENT_LIMIT_AMPS);
 
   private boolean useDeployPositionControl = false;
   private double desiredIntakeSpeed;
@@ -236,8 +234,6 @@ public class IntakeSubsystem extends SubsystemBase {
     }
   }
 
-  // TODO NOTE FROM REFACTOR - true means RETRACT. The name reads the other way round, which makes
-  // mistakes easy.
   /** Sends the arm in (true) or out (false). */
   public void setDesiredDeployPosition(boolean isRetracted) {
     if (isRetracted) {

@@ -624,7 +624,6 @@ public final class Constants {
     // default of 90 A replaces it after the first loop, on the right roller only. The left roller
     // stays at 70 A. Which one is right?
     public static final double ROLLER_STATOR_CURRENT_LIMIT_AMPS = 70;
-    public static final double ROLLER_DASHBOARD_CURRENT_LIMIT_AMPS = 90;
 
     public static final double DEPLOY_STATOR_CURRENT_LIMIT_AMPS = 40;
     // TODO NOTE FROM REFACTOR - the jam rule uses the same 40 A as the deploy motors' own limit

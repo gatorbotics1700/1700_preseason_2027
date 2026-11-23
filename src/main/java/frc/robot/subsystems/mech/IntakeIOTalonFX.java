@@ -165,6 +165,10 @@ public class IntakeIOTalonFX implements IntakeIO {
       rightRollerCurrentLimitConfigs.StatorCurrentLimit = amps;
       rightRollerMotor.getConfigurator().apply(rightRollerConfigs);
     }
+    if (amps != leftRollerCurrentLimitConfigs.StatorCurrentLimit) {
+      leftRollerCurrentLimitConfigs.StatorCurrentLimit = amps;
+      leftRollerMotor.getConfigurator().apply(leftRollerConfigs);
+    }
   }
 
   /** Runs both deploy motors at the same speed. */
